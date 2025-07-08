@@ -19,6 +19,7 @@ class UserTest extends TestCase
         $this->userModel = new User($this->db);
 
         // Clear and re-create the users table for each test
+        $this->db->getConnection()->exec('DROP TABLE IF EXISTS user_activities');
         $this->db->getConnection()->exec('DROP TABLE IF EXISTS users');
         $this->db->getConnection()->exec('
             CREATE TABLE users (
@@ -136,5 +137,70 @@ class UserTest extends TestCase
         // Ensure user is no longer found
         $user = $this->userModel->getUserById($userId);
         $this->assertNull($user);
+    }
+
+    public function testGetAllUsers()
+    {
+        $this->userModel->register('User One', 'one@example.com', password_hash('pass1', PASSWORD_DEFAULT));
+        $this->userModel->register('User Two', 'two@example.com', password_hash('pass2', PASSWORD_DEFAULT));
+
+        $users = $this->userModel->getAllUsers();
+        $this->assertIsArray($users);
+        $this->assertCount(2, $users);
+        $this->assertEquals('User One', $users[0]['name']);
+    }
+
+    public function testUpdateUserRole()
+    {
+        $userId = $this->userModel->register('Role User', 'role@example.com', password_hash('role123', PASSWORD_DEFAULT));
+        $this->assertIsInt($userId);
+
+        $this->assertTrue($this->userModel->updateUserRole($userId, 'admin'));
+
+        $user = $this->userModel->getUserById($userId);
+        $this->assertEquals('admin', $user['role']);
+    }
+
+    public function testRememberMeTokens()
+    {
+        $userId = $this->userModel->register('Remember User', 'remember@example.com', password_hash('remember123', PASSWORD_DEFAULT));
+        $this->assertIsInt($userId);
+
+        $token = bin2hex(random_bytes(32));
+        $expires = date('Y-m-d H:i:s', strtotime('+1 day'));
+
+        $this->assertTrue($this->userModel->setRememberToken($userId, $token, $expires));
+
+        $user = $this->userModel->getUserByRememberToken($token);
+        $this->assertIsArray($user);
+        $this->assertEquals($userId, $user['id']);
+
+        $this->assertTrue($this->userModel->clearRememberToken($userId));
+
+        $user = $this->userModel->getUserByRememberToken($token);
+        $this->assertNull($user);
+    }
+
+    public function testGetTotalUsers()
+    {
+        $this->assertEquals(0, $this->userModel->getTotalUsers());
+        $this->userModel->register('User A', 'a@example.com', password_hash('passA', PASSWORD_DEFAULT));
+        $this->assertEquals(1, $this->userModel->getTotalUsers());
+        $this->userModel->register('User B', 'b@example.com', password_hash('passB', PASSWORD_DEFAULT));
+        $this->assertEquals(2, $this->userModel->getTotalUsers());
+    }
+
+    public function testGetNewRegistrationsToday()
+    {
+        $this->assertEquals(0, $this->userModel->getNewRegistrationsToday());
+
+        // Register a user today
+        $this->userModel->register('Today User', 'today@example.com', password_hash('today123', PASSWORD_DEFAULT));
+        $this->assertEquals(1, $this->userModel->getNewRegistrationsToday());
+
+        // Register a user for yesterday (won't count for today)
+        $yesterday = date('Y-m-d H:i:s', strtotime('-1 day'));
+        $this->db->getConnection()->exec("INSERT INTO users (name, email, password, created_at) VALUES ('Yesterday User', 'yesterday@example.com', '" . password_hash('yesterday123', PASSWORD_DEFAULT) . "', '$yesterday')");
+        $this->assertEquals(1, $this->userModel->getNewRegistrationsToday());
     }
 }

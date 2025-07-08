@@ -164,7 +164,10 @@ class User
         $stmt = $this->db->getConnection()->prepare($sql);
         $stmt->execute([$token]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $user ?? null;
+        if ($user === false) {
+            return null;
+        }
+        return $user;
     }
 
     public function clearRememberToken($userId)
