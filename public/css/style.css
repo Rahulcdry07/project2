@@ -1,0 +1,211 @@
+/* General Body Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    background: linear-gradient(135deg, #e0f2f7 0%, #c8e6c9 100%); /* Light, fresh gradient */
+    color: #333;
+    line-height: 1.6;
+}
+
+/* Dashboard Container */
+.dashboard-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #ffffff; /* White background for the main content */
+    margin: 20px auto;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Soft shadow */
+    max-width: 1200px;
+    overflow: hidden;
+}
+
+/* Header */
+.dashboard-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Deep, vibrant gradient */
+    color: #fff;
+    padding: 25px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}
+
+.dashboard-header h1 {
+    margin: 0;
+    font-size: 2.2rem;
+    display: flex;
+    align-items: center;
+}
+
+.dashboard-header h1 .fas {
+    margin-right: 15px;
+    font-size: 1.8rem;
+}
+
+.user-info {
+    font-size: 1.1rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.logout-button {
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    color: #fff;
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-left: 20px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.logout-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: #fff;
+}
+
+.logout-button .fas {
+    margin-right: 8px;
+}
+
+.profile-button {
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    color: #fff;
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-left: 20px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    text-decoration: none;
+}
+
+.profile-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: #fff;
+}
+
+.profile-button .fas {
+    margin-right: 8px;
+}
+
+/* Main Content */
+.dashboard-main {
+    flex-grow: 1;
+    padding: 40px;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background-color: #f8f9fa; /* Light background for cards */
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); /* Subtle card shadow */
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #e0e0e0;
+}
+
+.stat-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card .fas {
+    font-size: 3.5rem;
+    color: #667eea; /* Accent color */
+    margin-bottom: 15px;
+}
+
+.stat-card h3 {
+    font-size: 1.5rem;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.stat-card p {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+}
+
+/* Recent Activity */
+.recent-activity {
+    background-color: #f8f9fa;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e0e0e0;
+}
+
+.recent-activity h2 {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+}
+
+.recent-activity ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.recent-activity li {
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+    color: #555;
+    display: flex;
+    align-items: center;
+}
+
+.recent-activity li:last-child {
+    border-bottom: none;
+}
+
+.recent-activity li .fas {
+    margin-right: 10px;
+    color: #28a745; /* Success color */
+}
+
+/* Footer */
+.dashboard-footer {
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+    font-size: 0.9rem;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .dashboard-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    .user-info {
+        margin-top: 10px;
+    }
+    .dashboard-main {
+        padding: 20px;
+    }
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<ruleset name="RegistrationWebsite">
+    <description>The coding standard for the Registration Website.</description>
+
+    <!-- Use the PSR12 coding standard -->
+    <rule ref="PSR12"/>
+
+    <!-- Exclude the Composer vendor directory -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+
+    <!-- Scan only the src directory -->
+    <file>src</file>
+</ruleset>

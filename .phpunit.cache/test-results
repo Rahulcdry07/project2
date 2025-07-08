@@ -1,0 +1,1 @@
+{"version":1,"defects":{"UserTest::testUserRegistrationAndLogin":7,"UserTest::testEmailVerification":7,"UserTest::testPasswordReset":7,"UserTest::testUserDeletion":7},"times":{"UserTest::testUserRegistrationAndLogin":1.945,"UserTest::testEmailVerification":0.652,"UserTest::testPasswordReset":2.6,"UserTest::testUserDeletion":0.646}}
