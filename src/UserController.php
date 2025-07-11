@@ -19,6 +19,11 @@ class UserController extends BaseController
         $this->activityLogger = $activityLogger;
     }
 
+    public function index()
+    {
+        include __DIR__ . '/../../public/index.html';
+    }
+
     public function register()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {

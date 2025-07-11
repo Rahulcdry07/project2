@@ -1,11 +1,15 @@
-# Ignore environment files
+# Dependencies
+/node_modules
+
+# Database
+/src/database.sqlite
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Misc
+.DS_Store
 .env
-
-# Ignore vendor directory
-/vendor/
-
-# Ignore log files
-/src/logs/*.log
-
-# Ignore session files
-/tmp/sessions/

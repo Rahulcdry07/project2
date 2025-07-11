@@ -11,7 +11,7 @@ describe('Admin Panel', () => {
         ],
       },
     }).as('getUsers');
-    cy.visit('/admin.php');
+    cy.visit('/admin.html');
   });
 
   it('should fetch and display users on load', () => {
