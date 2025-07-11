@@ -1,12 +1,14 @@
 <?php
 
 require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/logger.php';
 use App\User;
 use App\Database;
+use Psr\Log\LoggerInterface;
 
 header('Content-Type: application/json');
 
-$db = new Database(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, 8889);
+$db = new Database(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT);
 
 $data = json_decode(file_get_contents('php://input'), true);
 $token = $data['token'] ?? '';
@@ -17,7 +19,7 @@ if (empty($token) || empty($newPassword)) {
     exit;
 }
 
-$userModel = new App\User($db);
+$userModel = new App\User($db, $log);
 $user = $userModel->getUserByResetToken($token);
 
 if (!$user || strtotime($user['reset_token_expires_at']) < time()) {

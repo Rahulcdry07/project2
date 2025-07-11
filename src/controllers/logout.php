@@ -1,14 +1,18 @@
 <?php
+
 require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/logger.php';
 require_once __DIR__ . '/../User.php';
 require_once __DIR__ . '/../Database.php';
+
+use Psr\Log\LoggerInterface;
 
 header('Content-Type: application/json');
 
 // Clear remember me token from database and cookie
 if (isset($_SESSION['user_id'])) {
-    $db = new App\Database(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, 8889);
-    $userModel = new App\User($db);
+    $db = new App\Database(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT);
+    $userModel = new App\User($db, $log);
     $userModel->clearRememberToken($_SESSION['user_id']);
 }
 setcookie('remember_me', '', ['expires' => time() - 3600, 'path' => '/', 'httponly' => true, 'secure' => true, 'samesite' => 'Lax']);

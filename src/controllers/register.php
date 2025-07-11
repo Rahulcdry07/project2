@@ -1,14 +1,16 @@
 <?php
 
 require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/logger.php';
 require_once __DIR__ . '/../User.php';
 
 use App\User;
 use App\Database;
+use Psr\Log\LoggerInterface;
 
 header('Content-Type: application/json');
 
-$db = new Database(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, 8889);
+$db = new Database(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name'] ?? '');
@@ -34,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $userModel = new User($db);
+    $userModel = new User($db, $log);
 
     // Check if email already exists
     if ($userModel->getUserByEmail($email)) {
@@ -60,7 +62,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Simulate sending verification email
         $verificationLink = 'http://localhost:8000/verify-email.html?token=' . $verificationToken;
-        global $log;
         $log->warning("Email Verification Link for " . $email . ": " . $verificationLink);
 
         echo json_encode(['success' => true, 'message' => 'Registration successful! Please check your email for verification.']);

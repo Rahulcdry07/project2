@@ -1,29 +1,56 @@
 document.addEventListener('DOMContentLoaded', () => {
     const userTableBody = document.getElementById('user-table-body');
-    const messageDiv = document.querySelector('.message');
+    const alertContainer = document.getElementById('alert-container');
+
+    // --- Modals ---
+    const roleModal = document.getElementById('role-modal');
+    const deleteModal = document.getElementById('delete-modal');
+    const closeModalButtons = document.querySelectorAll('.close-button');
+    const confirmRoleChangeBtn = document.getElementById('confirm-role-change');
+    const cancelDeleteBtn = document.getElementById('cancel-delete');
+    const confirmDeleteBtn = document.getElementById('confirm-delete');
+
+    let currentUserId = null; // To store the user ID for modal actions
 
     function showMessage(message, type = 'info') {
-        messageDiv.textContent = message;
-        messageDiv.className = `alert alert-${type}`;
-        messageDiv.style.display = 'block';
-        setTimeout(() => {
-            messageDiv.style.display = 'none';
-        }, 5000);
+        alertContainer.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
     }
 
+    function openModal(modal, userId, userName) {
+        currentUserId = userId;
+        if (modal === roleModal) {
+            document.getElementById('modal-user-name').textContent = userName;
+        } else if (modal === deleteModal) {
+            document.getElementById('delete-user-name').textContent = userName;
+        }
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        roleModal.style.display = 'none';
+        deleteModal.style.display = 'none';
+    }
+
+    closeModalButtons.forEach(button => button.onclick = closeModal);
+    window.onclick = (event) => {
+        if (event.target == roleModal || event.target == deleteModal) {
+            closeModal();
+        }
+    };
+
+    // --- API Calls ---
     async function fetchUsers() {
         try {
             const response = await fetch('/api/admin/users');
             const result = await response.json();
-
             if (result.success) {
                 populateUserTable(result.users);
+                updateStats(result.users);
             } else {
                 showMessage(result.message || 'Failed to load users.', 'error');
             }
         } catch (error) {
-            console.error('Error fetching users:', error);
-            showMessage('Network error. Failed to load users.', 'error');
+            showMessage('Network error. Could not fetch users.', 'error');
         }
     }
 
@@ -38,75 +65,96 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${user.role}</td>
                 <td>${user.is_verified ? 'Yes' : 'No'}</td>
                 <td class="action-buttons">
-                    <button data-id="${user.id}" data-role="${user.role}" class="toggle-role-btn">${user.role === 'admin' ? 'Demote' : 'Promote'}</button>
-                    <button data-id="${user.id}" class="delete-user-btn delete">Delete</button>
+                    <button class="edit-role" data-id="${user.id}" data-name="${user.name}"><i class="fas fa-edit"></i></button>
+                    <button class="delete-user" data-id="${user.id}" data-name="${user.name}"><i class="fas fa-trash-alt"></i></button>
                 </td>
             `;
             userTableBody.appendChild(row);
         });
-
-        attachEventListeners();
     }
 
-    function attachEventListeners() {
-        document.querySelectorAll('.toggle-role-btn').forEach(button => {
-            button.addEventListener('click', async (e) => {
-                const userId = e.target.dataset.id;
-                const currentRole = e.target.dataset.role;
-                const newRole = currentRole === 'admin' ? 'user' : 'admin';
-
-                try {
-                    const formData = new FormData();
-                    formData.append('user_id', userId);
-                    formData.append('new_role', newRole);
-
-                    const response = await fetch('/api/admin/user/role', {
-                        method: 'POST',
-                        body: formData,
-                    });
-                    const result = await response.json();
-
-                    if (result.success) {
-                        showMessage(result.message, 'success');
-                        fetchUsers(); // Refresh table
-                    } else {
-                        showMessage(result.message || 'Failed to change role.', 'error');
-                    }
-                } catch (error) {
-                    console.error('Error changing role:', error);
-                    showMessage('Network error. Failed to change role.', 'error');
-                }
-            });
-        });
-
-        document.querySelectorAll('.delete-user-btn').forEach(button => {
-            button.addEventListener('click', async (e) => {
-                const userId = e.target.dataset.id;
-                if (confirm('Are you sure you want to delete this user?')) {
-                    try {
-                        const formData = new FormData();
-                        formData.append('user_id', userId);
-
-                        const response = await fetch('/api/admin/user/delete', {
-                            method: 'POST',
-                            body: formData,
-                        });
-                        const result = await response.json();
-
-                        if (result.success) {
-                            showMessage(result.message, 'success');
-                            fetchUsers(); // Refresh table
-                        } else {
-                            showMessage(result.message || 'Failed to delete user.', 'error');
-                        }
-                    } catch (error) {
-                        console.error('Error deleting user:', error);
-                        showMessage('Network error. Failed to delete user.', 'error');
-                    }
-                }
-            });
-        });
+    function updateStats(users) {
+        document.getElementById('total-users').textContent = users.length;
+        const verifiedCount = users.filter(u => u.is_verified).length;
+        document.getElementById('verified-users').textContent = verifiedCount;
+        // In a real app, the "new users today" would come from a separate API endpoint
+        // For now, we'll just leave it as a placeholder.
+        document.getElementById('new-registrations-today').textContent = 'N/A';
     }
 
-    fetchUsers(); // Initial load
+    // --- Event Listeners ---
+    userTableBody.addEventListener('click', (e) => {
+        const button = e.target.closest('button');
+        if (!button) return;
+
+        const userId = button.dataset.id;
+        const userName = button.dataset.name;
+
+        if (button.classList.contains('edit-role')) {
+            openModal(roleModal, userId, userName);
+        } else if (button.classList.contains('delete-user')) {
+            openModal(deleteModal, userId, userName);
+        }
+    });
+
+    confirmRoleChangeBtn.addEventListener('click', async () => {
+        const newRole = document.getElementById('role-select').value;
+        if (!currentUserId) return;
+
+        try {
+            const formData = new FormData();
+            formData.append('user_id', currentUserId);
+            formData.append('new_role', newRole);
+
+            const response = await fetch('/api/admin/user_role', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showMessage('User role updated successfully!', 'success');
+                fetchUsers(); // Refresh the user table
+            } else {
+                showMessage(result.message || 'Failed to update user role.', 'error');
+            }
+        } catch (error) {
+            showMessage('Network error. Could not update role.', 'error');
+        } finally {
+            closeModal();
+        }
+    });
+
+    cancelDeleteBtn.addEventListener('click', closeModal);
+
+    confirmDeleteBtn.addEventListener('click', async () => {
+        if (!currentUserId) return;
+
+        try {
+            const formData = new FormData();
+            formData.append('user_id', currentUserId);
+
+            const response = await fetch('/api/admin/user/delete', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showMessage('User deleted successfully!', 'success');
+                fetchUsers(); // Refresh the user table
+            } else {
+                showMessage(result.message || 'Failed to delete user.', 'error');
+            }
+        } catch (error) {
+            showMessage('Network error. Could not delete user.', 'error');
+        } finally {
+            closeModal();
+        }
+    });
+
+    // Initial Load
+    fetchUsers();
 });

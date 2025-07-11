@@ -1,17 +1,25 @@
 <?php
 
 require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/logger.php';
 require_once __DIR__ . '/../../User.php';
 
 use App\User;
 use App\Database;
+use Psr\Log\LoggerInterface;
 
 header('Content-Type: application/json');
 
-$db = new Database(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, 8889);
+$db = new Database(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT);
 
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['success' => false, 'message' => 'Unauthorized.']);
+    exit;
+}
+
+// Verify CSRF token
+if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+    echo json_encode(['success' => false, 'message' => 'Invalid CSRF token.']);
     exit;
 }
 
@@ -32,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $userModel = new App\User($db);
+    $userModel = new App\User($db, $log);
     $user = $userModel->getUserById($userId);
 
     if (!$user || !password_verify($currentPassword, $user['password'])) {

@@ -3,14 +3,17 @@
 namespace App;
 
 use PDO;
+use Psr\Log\LoggerInterface;
 
 class User
 {
     private $db;
+    private $logger;
 
-    public function __construct(Database $db)
+    public function __construct(Database $db, LoggerInterface $logger)
     {
         $this->db = $db;
+        $this->logger = $logger;
     }
 
     public function login($email, $password)
@@ -18,6 +21,8 @@ class User
         $user = $this->db->select('SELECT * FROM users WHERE email = ?', [$email]);
 
         if (empty($user)) {
+            // To prevent timing attacks, we run a dummy password check
+            password_verify($password, 'dummy_hash_to_prevent_timing_attack');
             return 'email_not_found';
         }
 
@@ -95,8 +100,7 @@ class User
                 return false;
             }
         } catch (PDOException $e) {
-            global $log;
-            $log->error("Error registering user: " . $e->getMessage());
+            $this->logger->error("Error registering user: " . $e->getMessage());
             return false;
         }
     }
@@ -108,8 +112,7 @@ class User
         try {
             return $stmt->execute([$token, $userId]);
         } catch (PDOException $e) {
-            global $log;
-            $log->error("Error setting email verification token: " . $e->getMessage());
+            $this->logger->error("Error setting email verification token: " . $e->getMessage());
             return false;
         }
     }
@@ -145,8 +148,7 @@ class User
         try {
             return $stmt->execute([$userId]);
         } catch (PDOException $e) {
-            global $log;
-            $log->error("Error deleting user: " . $e->getMessage());
+            $this->logger->error("Error deleting user: " . $e->getMessage());
             return false;
         }
     }
@@ -160,14 +162,31 @@ class User
 
     public function getUserByRememberToken($token)
     {
-        $sql = "SELECT * FROM users WHERE remember_token = ? AND remember_token_expires_at > NOW()";
-        $stmt = $this->db->getConnection()->prepare($sql);
-        $stmt->execute([$token]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($user === false) {
+        if (strpos($token, ':') === false) {
             return null;
         }
-        return $user;
+
+        list($selector, $validator) = explode(':', $token, 2);
+
+        if (empty($selector) || empty($validator)) {
+            return null;
+        }
+
+        // Query for the selector. Note that we are not using the validator in the SQL query.
+        $sql = "SELECT * FROM users WHERE remember_token LIKE ? AND remember_token_expires_at > NOW()";
+        $stmt = $this->db->getConnection()->prepare($sql);
+        $stmt->execute([$selector . ':%']);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user) {
+            list(, $hashedValidator) = explode(':', $user['remember_token'], 2);
+            // Use password_verify to securely check the validator against the hashed version.
+            if (password_verify($validator, $hashedValidator)) {
+                return $user;
+            }
+        }
+
+        return null;
     }
 
     public function clearRememberToken($userId)
@@ -175,6 +194,21 @@ class User
         $sql = "UPDATE users SET remember_token = NULL, remember_token_expires_at = NULL WHERE id = ?";
         $stmt = $this->db->getConnection()->prepare($sql);
         return $stmt->execute([$userId]);
+    }
+
+    public function assignPlan($userId, $planId)
+    {
+        $sql = "UPDATE users SET current_plan_id = ? WHERE id = ?";
+        $stmt = $this->db->getConnection()->prepare($sql);
+        return $stmt->execute([$planId, $userId]);
+    }
+
+    public function getUserPlan($userId)
+    {
+        $sql = "SELECT p.name as plan_name, p.price, p.features FROM users u JOIN plans p ON u.current_plan_id = p.id WHERE u.id = ?";
+        $stmt = $this->db->getConnection()->prepare($sql);
+        $stmt->execute([$userId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function getTotalUsers()

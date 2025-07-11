@@ -1,7 +1,7 @@
 -- Database setup for registration website
 -- Run this in phpMyAdmin or MySQL command line
 
-USE registration;
+USE registration_db;
 
 -- Create users table
 CREATE TABLE IF NOT EXISTS users (
@@ -16,7 +16,9 @@ CREATE TABLE IF NOT EXISTS users (
     email_verification_token VARCHAR(255) NULL,
     role VARCHAR(50) DEFAULT 'user' NOT NULL,
     remember_token VARCHAR(255) NULL,
-    remember_token_expires_at DATETIME NULL
+    remember_token_expires_at DATETIME NULL,
+    current_plan_id INT NULL,
+    FOREIGN KEY (current_plan_id) REFERENCES plans(id) ON DELETE SET NULL
 );
 
 -- Insert sample data (optional)

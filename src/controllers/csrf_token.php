@@ -1,5 +1,7 @@
 <?php
 
+ob_start();
+
 require_once __DIR__ . '/../config/config.php';
 
 if (empty($_SESSION['csrf_token'])) {
@@ -8,3 +10,5 @@ if (empty($_SESSION['csrf_token'])) {
 
 header('Content-Type: application/json');
 echo json_encode(['token' => $_SESSION['csrf_token']]);
+
+die(ob_get_clean());

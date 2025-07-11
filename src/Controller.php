@@ -2,104 +2,50 @@
 
 namespace App;
 
-require_once __DIR__ . '/config/config.php';
+use Psr\Log\LoggerInterface;
 
 class Controller
 {
-    public function index()
+    private $db;
+    private $logger;
+    private $userModel;
+    private $activityLogger;
+    private $planModel;
+    private $subscriptionModel;
+    private $userController;
+    private $adminController;
+    private $apiController;
+
+    public function __construct(Database $db, LoggerInterface $logger, User $userModel, ActivityLogger $activityLogger, Plan $planModel, Subscription $subscriptionModel)
     {
-      // Render the home page
-        include __DIR__ . '/views/home.php';
+        $this->db = $db;
+        $this->logger = $logger;
+        $this->userModel = $userModel;
+        $this->activityLogger = $activityLogger;
+        $this->planModel = $planModel;
+        $this->subscriptionModel = $subscriptionModel;
+        $this->userController = new UserController($db, $logger, $userModel, $activityLogger);
+        $this->adminController = new AdminController($db, $logger, $userModel, $activityLogger);
+        $this->apiController = new ApiController($db, $logger, $userModel, $activityLogger, $planModel, $subscriptionModel);
     }
 
-    public function register()
+    public function __call($name, $arguments)
     {
-        require_once __DIR__ . '/controllers/register.php';
+        if (method_exists($this->userController, $name)) {
+            return call_user_func_array([$this->userController, $name], $arguments);
+        } elseif (method_exists($this->adminController, $name)) {
+            return call_user_func_array([$this->adminController, $name], $arguments);
+        } elseif (method_exists($this->apiController, $name)) {
+            return call_user_func_array([$this->apiController, $name], $arguments);
+        } else {
+            $this->notFound();
+        }
     }
 
-    public function getUsers()
+    private function notFound()
     {
-        header('Content-Type: application/json');
-        $db = new \App\Database();
-        $users = $db->select('SELECT id, name, email, created_at FROM users');
-        echo json_encode($users);
+        header("HTTP/1.0 404 Not Found");
+        echo '404 Not Found';
+        exit;
     }
-
-    public function login()
-    {
-        require_once __DIR__ . '/controllers/login.php';
-    }
-
-    public function csrfToken()
-    {
-        require_once __DIR__ . '/controllers/csrf_token.php';
-    }
-
-    public function logout()
-    {
-        require_once __DIR__ . '/controllers/logout.php';
-    }
-
-    public function forgotPassword()
-    {
-        require_once __DIR__ . '/controllers/forgot_password.php';
-    }
-
-    public function resetPassword()
-    {
-        require_once __DIR__ . '/controllers/reset_password.php';
-    }
-
-    public function verifyEmail()
-    {
-        require_once __DIR__ . '/controllers/verify_email.php';
-    }
-
-    public function apiProfile()
-    {
-        require_once __DIR__ . '/controllers/api/profile.php';
-    }
-
-    public function apiProfileUpdate()
-    {
-        require_once __DIR__ . '/controllers/api/profile_update.php';
-    }
-
-    public function apiProfileChangePassword()
-    {
-        require_once __DIR__ . '/controllers/api/change_password.php';
-    }
-
-    public function apiProfileDelete()
-    {
-        require_once __DIR__ . '/controllers/api/profile_delete.php';
-    }
-
-    public function admin()
-    {
-      // Render the admin page
-        include __DIR__ . '/../public/admin.html';
-    }
-
-    public function apiAdminUsers()
-    {
-        require_once __DIR__ . '/controllers/api/admin/users.php';
-    }
-
-    public function apiAdminUserRole()
-    {
-        require_once __DIR__ . '/controllers/api/admin/user_role.php';
-    }
-
-    public function apiAdminUserDelete() {
-    require_once __DIR__ . '/controllers/api/admin/user_delete.php';
-  }
-
-  public function apiRecentActivities() {
-    require_once __DIR__ . '/controllers/api/recent_activities.php';
-  }
-
-  public function apiDashboardStats() {
-    require_once __DIR__ . '/controllers/api/dashboard_stats.php';
-  }
 }

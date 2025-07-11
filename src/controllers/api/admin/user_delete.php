@@ -1,16 +1,18 @@
 <?php
 
 require_once __DIR__ . '/../../../config/config.php';
+require_once __DIR__ . '/../../../config/logger.php';
 require_once __DIR__ . '/../../../User.php';
 
 use App\User;
 use App\Database;
+use Psr\Log\LoggerInterface;
 
 header('Content-Type: application/json');
 
 session_start();
 
-$db = new Database(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, 8889);
+$db = new Database(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT);
 
 // Check if user is logged in and is an admin
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
@@ -26,7 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $userModel = new App\User($db);
+    $userModel = new App\User($db, $log);
+    $activityLogger = new App\ActivityLogger($db);
 
     // Prevent admin from deleting their own account
     if ($userIdToDelete == $_SESSION['user_id']) {
@@ -34,23 +37,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    // Check if the user exists before logging and deleting
+    $userToDelete = $userModel->getUserById($userIdToDelete);
+    if (!$userToDelete) {
+        echo json_encode(['success' => false, 'message' => 'User not found.']);
+        exit;
+    }
+
+    // Log user deletion activity BEFORE deleting the user
+    $activityLogger->logActivity($userIdToDelete, 'user_deletion', 'User account deleted by admin.', $_SERVER['REMOTE_ADDR']);
+
     if ($userModel->deleteUser($userIdToDelete)) {
-        // Log user deletion activity
-        $activityLogger = new App\ActivityLogger($db);
-        $activityLogger->logActivity($userIdToDelete, 'user_deletion', 'User account deleted by admin.', $_SERVER['REMOTE_ADDR']);
-
-        // Destroy session after successful deletion
-        $_SESSION = array();
-        if (ini_get("session.use_cookies")) {
-            $params = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 42000,
-                $params["path"], $params["domain"],
-                $params["secure"], $params["httponly"]
-            );
-        }
-        session_destroy();
-
-        echo json_encode(['success' => true, 'message' => 'Your account has been deleted successfully.']);
+        echo json_encode(['success' => true, 'message' => 'User deleted successfully.']);
     } else {
         echo json_encode(['success' => false, 'message' => 'Failed to delete user.']);
     }

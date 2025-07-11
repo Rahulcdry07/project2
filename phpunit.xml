@@ -14,8 +14,8 @@
         <!-- Define constants for database connection for testing -->
         <const name="DB_HOST" value="127.0.0.1"/>
         <const name="DB_USER" value="root"/>
-        <const name="DB_PASSWORD" value="root"/>
+        <const name="DB_PASSWORD" value="Root@123"/>
         <const name="DB_NAME" value="registration_test"/> <!-- Use a separate test database -->
-        <const name="DB_PORT" value="8889"/>
+        <const name="DB_PORT" value="3306"/>
     </php>
 </phpunit>

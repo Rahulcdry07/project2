@@ -14,29 +14,7 @@ async function fetchCSRFToken() {
     }
 }
 
-// Show message to user
-function showMessage(message, type = 'info') {
-    const messageDiv = document.querySelector('.message');
-    console.log('showMessage called. messageDiv:', messageDiv);
-    if (messageDiv) {
-        messageDiv.textContent = message;
-        messageDiv.className = `alert message alert-${type}`;
-        messageDiv.style.display = 'block';
-        console.log('Message displayed. messageDiv.style.display:', messageDiv.style.display);
-        
-        // Auto-hide after 5 seconds
-        setTimeout(() => {
-            messageDiv.style.display = 'none';
-            console.log('Message hidden.');
-        }, 5000);
-    }
-}
 
-// Validate email format
-function isValidEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-}
 
 // Handle form submission
     async function handleLogin(event) {
@@ -89,6 +67,25 @@ function isValidEmail(email) {
             credentials: 'same-origin'
         });
         
+        if (!response.ok) {
+            let errorMessage = 'Login failed. Please try again.';
+            try {
+                const errorResult = await response.json();
+                console.error('Login API error response:', errorResult);
+                if (errorResult.message) {
+                    errorMessage = errorResult.message;
+                } else if (errorResult.errors) {
+                    // If the server sends specific field errors, display them
+                    errorMessage = Object.values(errorResult.errors).join('\n');
+                }
+            } catch (jsonError) {
+                console.error('Failed to parse error response JSON:', jsonError);
+                errorMessage = `Server error: ${response.status} ${response.statusText}`;
+            }
+            showMessage(errorMessage, 'error');
+            return; // Stop execution if response is not OK
+        }
+
         const result = await response.json();
         console.log('Login API response result:', result);
         
@@ -109,19 +106,19 @@ function isValidEmail(email) {
             }, 1000);
             
         } else {
-            // Show error message
-            showMessage(result.message || 'Login failed. Please try again.', 'error');
-            
-            // If account is locked, show additional info
+            // This block handles cases where response.ok is true, but result.success is false
+            // (e.g., custom application-level errors returned with 200 OK status)
+            let errorMessage = result.message || 'Login failed. Please try again.';
             if (result.locked_until) {
                 const lockTime = new Date(result.locked_until);
                 const timeRemaining = Math.ceil((lockTime - new Date()) / (1000 * 60));
-                showMessage(`Account temporarily locked. Try again in ${timeRemaining} minutes.`, 'error');
+                errorMessage = `Account temporarily locked. Try again in ${timeRemaining} minutes.`;
             }
+            showMessage(errorMessage, 'error');
         }
         
     } catch (error) {
-        console.error('Login error:', error);
+        console.error('Login network error:', error);
         showMessage('Network error. Please check your connection and try again.', 'error');
     } finally {
         // Reset loading state
@@ -137,30 +134,25 @@ function checkExistingLogin() {
     const loginTime = localStorage.getItem('login_time');
     
     if (userId && loginTime) {
-        // Check if session is still valid (24 hours)
         const loginDate = new Date(loginTime);
         const now = new Date();
         const hoursSinceLogin = (now - loginDate) / (1000 * 60 * 60);
         
         if (hoursSinceLogin < 24) {
-            // Redirect to dashboard if already logged in
             window.location.href = '/dashboard.html';
-            return;
+            return true; // Redirecting
         } else {
-            // Clear expired session
-            localStorage.removeItem('user_id');
-            localStorage.removeItem('user_email');
-            localStorage.removeItem('user_name');
-            localStorage.removeItem('login_time');
+            localStorage.clear();
         }
     }
+    return false; // Not redirecting
 }
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log('DOMContentLoaded fired.');
-    // Check if already logged in
-    checkExistingLogin();
+    if (checkExistingLogin()) {
+        return; // Stop execution if redirecting
+    }
     
     // Disable submit button until CSRF token is fetched
     const loginBtn = document.getElementById('loginBtn');

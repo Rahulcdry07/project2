@@ -1,26 +1,34 @@
 <?php
 
 require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/logger.php';
 require_once __DIR__ . '/../../User.php';
 
 use App\User;
 use App\Database;
+use Psr\Log\LoggerInterface;
 
 header('Content-Type: application/json');
 
 session_start();
 
-$db = new Database(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, 8889);
+$db = new Database(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT);
 
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['success' => false, 'message' => 'Unauthorized.']);
     exit;
 }
 
+// Verify CSRF token
+if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+    echo json_encode(['success' => false, 'message' => 'Invalid CSRF token.']);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $userId = $_SESSION['user_id'];
     $name = trim($_POST['name'] ?? '');
-    $email = trim($_POST['email'] ?? '');
+    $email = trim($_POST['email'] ?? '';
 
     // Sanitize name for display
     $sanitizedName = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
@@ -35,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $userModel = new App\User($db);
+    $userModel = new App\User($db, $log);
 
     // Check if new email already exists for another user
     $existingUser = $userModel->getUserByEmail($email);

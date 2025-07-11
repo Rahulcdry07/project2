@@ -1,14 +1,16 @@
 <?php
 
 require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/logger.php';
 require_once __DIR__ . '/../User.php';
 
 use App\User;
 use App\Database;
+use Psr\Log\LoggerInterface;
 
 header('Content-Type: application/json');
 
-$db = new Database(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, 8889);
+$db = new Database(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT);
 
 // Verify CSRF token
 if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
@@ -20,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'];
     $password = $_POST['password'];
 
-    $user = new User($db);
+    $user = new User($db, $log);
     $loggedInUser = $user->login($email, $password);
 
     if ($loggedInUser === 'email_not_found') {
@@ -42,10 +44,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Handle "Remember Me"
         if (isset($_POST['remember_me']) && $_POST['remember_me'] === 'on') {
-            $rememberToken = bin2hex(random_bytes(32));
+            $selector = bin2hex(random_bytes(16));
+            $validator = bin2hex(random_bytes(32));
+            $db_token = $selector . ':' . password_hash($validator, PASSWORD_DEFAULT);
+            $cookie_token = $selector . ':' . $validator;
+
             $expires = date('Y-m-d H:i:s', strtotime('+30 days')); // Token valid for 30 days
-            $user->setRememberToken($loggedInUser['id'], $rememberToken, $expires);
-            setcookie('remember_me', $rememberToken, ['expires' => strtotime('+30 days'), 'path' => '/', 'httponly' => true, 'secure' => true, 'samesite' => 'Lax']);
+            $user->setRememberToken($loggedInUser['id'], $db_token, $expires);
+            setcookie('remember_me', $cookie_token, ['expires' => strtotime('+30 days'), 'path' => '/', 'httponly' => true, 'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off', 'samesite' => 'Lax']);
         }
 
         echo json_encode(['success' => true, 'user' => $loggedInUser]);

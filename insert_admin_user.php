@@ -1,12 +1,13 @@
 <?php
-require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/src/config/config.php';
+require_once __DIR__ . '/src/config/logger.php';
 
 use App\Database;
 use App\User;
 
-$db = new Database();
-$userModel = new User();
+$db = new Database(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT);
+$userModel = new User($db, $log);
 
 $email = 'admin@example.com';
 $password = 'adminpassword';

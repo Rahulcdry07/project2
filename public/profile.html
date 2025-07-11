@@ -5,46 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile - SecureReg</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/nav.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f0f2f5;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            padding: 0;
-            min-height: 100vh;
+            padding-top: 70px; /* Adjusted for fixed nav */
+        }
+
+        .profile-page-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 20px;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .profile-card, .actions-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            padding: 2rem;
+            border: 1px solid #e8e8e8;
+        }
+
+        .profile-card {
+            flex: 2;
+        }
+
+        .actions-card {
+            flex: 1;
+        }
+
+        .card-header {
             display: flex;
             align-items: center;
-            justify-content: center;
-        }
-
-        .profile-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            padding: 3rem;
-            width: 100%;
-            max-width: 600px;
-            animation: slideIn 0.6s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .profile-container h1 {
-            text-align: center;
+            font-size: 1.5rem;
             color: #333;
-            font-size: 2.2rem;
             margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .card-header i {
+            color: #667eea;
+            margin-right: 15px;
         }
 
         .form-group {
@@ -57,46 +66,67 @@
             left: 15px;
             top: 50%;
             transform: translateY(-50%);
-            color: #667eea;
-            z-index: 1;
+            color: #999;
         }
 
         .form-control {
             width: 100%;
-            padding: 15px 15px 15px 45px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
+            padding: 12px 15px 12px 45px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
             font-size: 1rem;
             transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.9);
+            background: #f9f9f9;
             box-sizing: border-box;
         }
 
         .form-control:focus {
             outline: none;
             border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-            transform: translateY(-2px);
+            background: #fff;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+
+        .form-control[readonly] {
+            background-color: #e9ecef;
+            cursor: not-allowed;
         }
 
         .btn-submit {
             width: 100%;
-            padding: 15px;
+            padding: 12px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
         }
 
         .btn-submit:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.25);
+        }
+
+        .btn-delete {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            color: #dc3545;
+            border: 1px solid #dc3545;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .btn-delete:hover {
+            background: #dc3545;
+            color: white;
         }
 
         .alert {
@@ -104,110 +134,86 @@
             border-radius: 8px;
             margin-bottom: 1.5rem;
             display: none;
-            animation: slideDown 0.3s ease-out;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
 
         .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background: #d4edda; color: #155724; border: 1px solid #c3e6cb;
         }
 
         .alert-error {
-            background-color: #dc3545;
-            color: #fff;
-            border: 1px solid #dc3545;
-            font-weight: bold;
-            font-size: 1.1rem;
-            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
-        }
-
-        .links {
-            text-align: center;
-            margin-top: 2rem;
-        }
-
-        .links a {
-            color: #667eea;
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: color 0.3s ease;
-        }
-
-        .links a:hover {
-            color: #764ba2;
-            text-decoration: underline;
+            background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;
         }
     </style>
 </head>
 <body>
-    <div class="profile-container">
-        <h1><i class="fas fa-user-circle"></i> User Profile</h1>
+    <nav class="main-nav">
+        <div class="nav-container">
+            <a href="dashboard.html" class="nav-brand">SecureReg</a>
+            <div class="nav-links">
+                <a href="dashboard.html" title="Home"><i class="fas fa-home"></i></a>
+                <a href="profile.html">Profile</a>
+                <a href="pricing.html">Pricing</a>
+                <a href="admin.html" id="admin-panel-link" style="display: none;">Admin</a>
+                <a href="#" id="logout-link">Logout</a>
+            </div>
+        </div>
+    </nav>
 
-        <div id="alert-container">
-            <div class="alert message" style="display: none;"></div>
+    <div class="profile-page-container">
+        <div class="profile-card">
+            <div class="card-header">
+                <i class="fas fa-user-edit"></i>
+                <h2>Edit Profile</h2>
+            </div>
+            <div id="alert-container-profile"></div>
+            <form id="profileForm">
+                <div class="form-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="name" name="name" class="form-control" placeholder="Full Name" required>
+                </div>
+                <div class="form-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="email" name="email" class="form-control" placeholder="Email Address" required>
+                </div>
+                <div class="form-group">
+                    <i class="fas fa-calendar-alt"></i>
+                    <input type="text" id="created_at" name="created_at" class="form-control" placeholder="Registration Date" readonly>
+                </div>
+                <div class="form-group">
+                    <i class="fas fa-check-circle"></i>
+                    <input type="text" id="is_verified" name="is_verified" class="form-control" placeholder="Email Verified" readonly>
+                </div>
+                <button type="submit" class="btn-submit">Update Profile</button>
+            </form>
         </div>
 
-        <form id="profileForm">
-            <div class="form-group">
-                <i class="fas fa-user"></i>
-                <input type="text" id="name" name="name" class="form-control" placeholder="Full Name" required>
+        <div class="actions-card">
+            <div class="card-header">
+                <i class="fas fa-shield-alt"></i>
+                <h2>Account Actions</h2>
             </div>
-
-            <div class="form-group">
-                <i class="fas fa-envelope"></i>
-                <input type="email" id="email" name="email" class="form-control" placeholder="Email Address" required>
-            </div>
-
-            <div class="form-group">
-                <i class="fas fa-calendar-alt"></i>
-                <input type="text" id="created_at" name="created_at" class="form-control" placeholder="Registration Date" readonly>
-            </div>
-
-            <div class="form-group">
-                <i class="fas fa-check-circle"></i>
-                <input type="text" id="is_verified" name="is_verified" class="form-control" placeholder="Email Verified" readonly>
-            </div>
-
-            <button type="submit" class="btn-submit">Update Profile</button>
-        </form>
-
-        <hr style="margin: 2rem 0; border-color: #eee;">
-
-        <h2>Change Password</h2>
-        <form id="changePasswordForm">
-            <div class="form-group">
-                <i class="fas fa-lock"></i>
-                <input type="password" id="current_password" name="current_password" class="form-control" placeholder="Current Password" required>
-            </div>
-            <div class="form-group">
-                <i class="fas fa-lock"></i>
-                <input type="password" id="new_password" name="new_password" class="form-control" placeholder="New Password" required>
-            </div>
-            <div class="form-group">
-                <i class="fas fa-lock"></i>
-                <input type="password" id="confirm_new_password" name="confirm_new_password" class="form-control" placeholder="Confirm New Password" required>
-            </div>
-            <button type="submit" class="btn-submit">Change Password</button>
-        </form>
-
-        <div class="links">
-            <a href="dashboard.html">Back to Dashboard</a>
-            <button id="delete-account-button" class="btn-submit" style="background-color: #dc3545; margin-top: 1rem;">Delete Account</button>
+            <div id="alert-container-password"></div>
+            <form id="changePasswordForm">
+                <div class="form-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="current_password" name="current_password" class="form-control" placeholder="Current Password" required>
+                </div>
+                <div class="form-group">
+                    <i class="fas fa-key"></i>
+                    <input type="password" id="new_password" name="new_password" class="form-control" placeholder="New Password" required>
+                </div>
+                <div class="form-group">
+                    <i class="fas fa-key"></i>
+                    <input type="password" id="confirm_new_password" name="confirm_new_password" class="form-control" placeholder="Confirm New Password" required>
+                </div>
+                <button type="submit" class="btn-submit">Change Password</button>
+            </form>
+            <hr style="margin: 2rem 0; border-color: #eee;">
+            <button id="delete-account-button" class="btn-delete">Delete Account</button>
         </div>
     </div>
 
     <script src="js/profile.js"></script>
+    <script src="js/nav.js"></script>
 </body>
 </html>

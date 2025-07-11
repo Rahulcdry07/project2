@@ -4,56 +4,95 @@ namespace App;
 
 class Router
 {
-    private $controller;
+    private $userController;
+    private $adminController;
+    private $apiController;
 
-    public function __construct(Controller $controller)
+    public function __construct(UserController $userController, AdminController $adminController, ApiController $apiController)
     {
-        $this->controller = $controller;
+        $this->userController = $userController;
+        $this->adminController = $adminController;
+        $this->apiController = $apiController;
     }
 
-    public function route($routeName, $params)
+    public function route($uri)
     {
-        switch ($routeName) {
-            case 'home':
-                return $this->controller->index();
-            case 'register':
-                return $this->controller->register();
-            case 'api/users':
-                return $this->controller->getUsers();
-            case 'login':
-                return $this->controller->login();
-            case 'csrf_token':
-                return $this->controller->csrfToken();
-            case 'logout':
-                return $this->controller->logout();
-            case 'forgot_password':
-                return $this->controller->forgotPassword();
-            case 'reset-password':
-                return $this->controller->resetPassword();
-            case 'verify_email':
-                return $this->controller->verifyEmail();
-            case 'api_profile':
-                return $this->controller->apiProfile();
-            case 'api_profile_update':
-                return $this->controller->apiProfileUpdate();
-            case 'api_profile_change_password':
-                return $this->controller->apiProfileChangePassword();
-            case 'api_profile_delete':
-                return $this->controller->apiProfileDelete();
-            case 'admin':
-                return $this->controller->admin();
-            case 'api_admin_users':
-                return $this->controller->apiAdminUsers();
-            case 'api_admin_user_role':
-                return $this->controller->apiAdminUserRole();
-            case 'api_admin_user_delete':
-        return $this->controller->apiAdminUserDelete();
-      case 'api_recent_activities':
-        return $this->controller->apiRecentActivities();
-      case 'api_dashboard_stats':
-        return $this->controller->apiDashboardStats();
+        switch ($uri) {
+            case '':
+            case '/':
+                (new \App\Controller())->index();
+                break;
+            
+            // User routes
+            case '/register':
+                $this->userController->register();
+                break;
+            case '/login':
+                $this->userController->login();
+                break;
+            case '/logout':
+                $this->userController->logout();
+                break;
+            case '/forgot-password':
+                $this->userController->forgotPassword();
+                break;
+            case '/reset-password':
+                $this->userController->resetPassword();
+                break;
+            case '/verify-email':
+                $this->userController->verifyEmail();
+                break;
+
+            // Admin routes
+            case '/admin':
+                $this->adminController->index();
+                break;
+            case '/api/admin/users':
+                $this->adminController->getUsers();
+                break;
+            case '/api/admin/user_role':
+                $this->adminController->userRole();
+                break;
+            case '/api/admin/user_delete':
+                $this->adminController->userDelete();
+                break;
+
+            // API routes
+            case '/api/profile':
+                $this->userController->api_profile();
+                break;
+            case '/api/profile_update':
+                $this->userController->apiProfileUpdate();
+                break;
+            case '/api/profile_change_password':
+                $this->userController->changePassword();
+                break;
+            case '/api/profile_delete':
+                $this->userController->deleteProfile();
+                break;
+            case '/api/recent-activities':
+                $this->apiController->recent_activities();
+                break;
+            case '/api/dashboard-stats':
+                $this->apiController->dashboard_stats();
+                break;
+            case '/api/plans':
+                $this->apiController->plans();
+                break;
+            case '/api/subscribe':
+                $this->apiController->subscribe();
+                break;
+            case '/api/user-plan':
+                $this->apiController->user_plan();
+                break;
+            case '/csrf_token':
+                $this->userController->csrfToken();
+                break;
+
             default:
-                echo 'Route not found!';
+                header("HTTP/1.0 404 Not Found");
+                echo '404 Not Found';
+                break;
         }
     }
 }

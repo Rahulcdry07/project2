@@ -103,4 +103,20 @@ class ActivityLoggerTest extends TestCase
         $this->assertCount(1, $activities);
         $this->assertEquals('profile_update', $activities[0]['activity_type']);
     }
+
+    public function testGetRecentActivitiesNoActivities()
+    {
+        $activities = $this->activityLogger->getRecentActivities();
+        $this->assertEmpty($activities);
+    }
+
+    public function testGetRecentActivitiesForUserNoActivities()
+    {
+        // Insert a dummy user
+        $this->db->getConnection()->exec("INSERT INTO users (name, email, password) VALUES ('No Activity User', 'noactivity@example.com', '" . password_hash('pass', PASSWORD_DEFAULT) . "')");
+        $userId = $this->db->getConnection()->lastInsertId();
+
+        $activities = $this->activityLogger->getRecentActivitiesForUser($userId);
+        $this->assertEmpty($activities);
+    }
 }

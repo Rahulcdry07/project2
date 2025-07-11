@@ -1,23 +1,25 @@
 <?php
+
 require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/logger.php';
 require_once __DIR__ . '/../../ActivityLogger.php';
 require_once __DIR__ . '/../../User.php';
 
-header('Content-Type: application/json');
+use Psr\Log\LoggerInterface;
 
-session_start();
+header('Content-Type: application/json');
 
 // Only allow admin to view all activities, otherwise show user's own activities
 $userId = null;
 if (isset($_SESSION['user_id'])) {
-    $userModel = new App\User(new App\Database(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, 8889));
+    $userModel = new App\User(new App\Database(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT), $log);
     $loggedInUser = $userModel->getUserById($_SESSION['user_id']);
     if ($loggedInUser && $loggedInUser['role'] !== 'admin') {
         $userId = $_SESSION['user_id'];
     }
 }
 
-$db = new App\Database(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, 8889);
+$db = new App\Database(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT);
 $activityLogger = new App\ActivityLogger($db);
 
 if ($userId) {

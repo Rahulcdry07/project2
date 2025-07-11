@@ -8,6 +8,7 @@ use PDOException;
 class Database
 {
     private $conn;
+    private $allowedTables = ['users', 'user_activities', 'plans', 'user_subscriptions'];
 
     public function __construct($dbHost, $dbUser, $dbPassword, $dbName, $dbPort)
     {
@@ -20,13 +21,25 @@ class Database
         try {
             $this->conn = new PDO($dsn, $dbUser, $dbPassword, $options);
         } catch (PDOException $e) {
-            die('Connection failed: ' . $e->getMessage());
+            // Log the detailed error message to the server's error log
+            error_log('Database Connection Failed: ' . $e->getMessage());
+            // Show a generic error message to the user
+            die('An internal server error occurred. Please try again later.');
         }
     }
 
     public function insert($table, $data)
     {
-        $columns = implode(',', array_keys($data));
+        if (!in_array($table, $this->allowedTables)) {
+            throw new \Exception("Table not allowed: $table");
+        }
+
+        // Quote table and column names to prevent SQL injection.
+        $table = '`' . str_replace('`', '``', $table) . '`';
+        $columns = implode(', ', array_map(function ($column) {
+            return '`' . str_replace('`', '``', $column) . '`';
+        }, array_keys($data)));
+
         $placeholders = ':' . implode(', :', array_keys($data));
 
         $sql = "INSERT INTO {$table} ({$columns}) VALUES ({$placeholders})";

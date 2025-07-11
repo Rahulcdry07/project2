@@ -1,12 +1,14 @@
 <?php
 
 require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/logger.php';
 use App\User;
 use App\Database;
+use Psr\Log\LoggerInterface;
 
 header('Content-Type: application/json');
 
-$db = new Database(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, 8889);
+$db = new Database(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT);
 
 $data = json_decode(file_get_contents('php://input'), true);
 $email = $data['email'] ?? '';
@@ -16,7 +18,7 @@ if (empty($email)) {
     exit;
 }
 
-$userModel = new App\User($db);
+$userModel = new App\User($db, $log);
 $user = $userModel->getUserByEmail($email);
 
 if (!$user) {
@@ -36,7 +38,6 @@ $userModel->updateResetToken($user['id'], $token, $expires);
 $resetLink = 'http://localhost:8000/reset-password.html?token=' . $token;
 
 // For debugging, you can log the email content or display it
-global $log;
 $log->warning("Password Reset Link for " . $email . ": " . $resetLink);
 
 echo json_encode(['success' => true, 'message' => 'If your email address is in our database, you will receive a password reset link.']);

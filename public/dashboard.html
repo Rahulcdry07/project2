@@ -4,56 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - SecureReg</title>
+    <!-- The React app will inject its own styles and scripts -->
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/nav.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <div class="dashboard-container">
-        <header class="dashboard-header">
-            <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
-            <div class="user-info">
-                Welcome, <span id="dashboard-username"></span>! (<span id="dashboard-user-role"></span>)
-                <a href="profile.html" class="profile-button"><i class="fas fa-user-circle"></i> Profile</a>
-                <button id="logout-button" class="logout-button"><i class="fas fa-sign-out-alt"></i> Logout</button>
-            </div>
-        </header>
-        <main class="dashboard-main">
-            <section class="stats-grid">
-                <div class="stat-card">
-                    <i class="fas fa-users"></i>
-                    <h3>Total Users</h3>
-                    <p id="total-users">1,234</p>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-user-plus"></i>
-                    <h3>New Registrations (Today)</h3>
-                    <p id="new-registrations-today">56</p>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-globe"></i>
-                    <h3>Online Users</h3>
-                    <p id="online-users">78</p>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-chart-line"></i>
-                    <h3>Activity Score</h3>
-                    <p>85%</p>
-                </div>
-            </section>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
 
-            </section>
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
 
-            <section class="recent-activity">
-                <h2>Recent Activity</h2>
-                <ul id="activity-list">
-                    <!-- Activities will be loaded here by JavaScript -->
-                </ul>
-            </section>
-        </main>
-        <footer class="dashboard-footer">
-            <p>&copy; 2025 SecureReg. All rights reserved.</p>
-        </footer>
-    </div>
-    <script src="js/dashboard.js"></script>
+      To begin the development, run `npm start` in the `dashboard-app` directory.
+      To create a production bundle, use `npm run build`.
+    -->
+    <script src="/dashboard-app/build/static/js/main.aee20e51.js"></script>
+    
 </body>
 </html>
