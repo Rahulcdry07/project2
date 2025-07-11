@@ -48,21 +48,6 @@ const User = sequelize.define('User', {
   remember_token: {
     type: DataTypes.STRING,
   },
-}, {
-  hooks: {
-    beforeCreate: async (user) => {
-      if (user.password) {
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(user.password, salt);
-      }
-    },
-    beforeUpdate: async (user) => {
-      if (user.changed('password')) {
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(user.password, salt);
-      }
-    },
-  },
 });
 
 // Add a method to the User model to compare passwords

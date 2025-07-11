@@ -144,7 +144,8 @@ app.put('/api/profile', authenticate, async (req, res) => {
 
 // --- ADMIN ROUTES ---
 
-app.get('/api/admin/users', authenticate, isAdmin, async (req, res) => {
+// Get all users
+app.get('/api/admin/users', isAdmin, async (req, res) => {
     try {
         const users = await User.findAll();
         res.json(users);
@@ -153,7 +154,8 @@ app.get('/api/admin/users', authenticate, isAdmin, async (req, res) => {
     }
 });
 
-app.put('/api/admin/users/:id/role', authenticate, isAdmin, async (req, res) => {
+// Update a user's role
+app.put('/api/admin/users/:id/role', isAdmin, async (req, res) => {
     try {
         const user = await User.findByPk(req.params.id);
         if (user) {
@@ -168,7 +170,8 @@ app.put('/api/admin/users/:id/role', authenticate, isAdmin, async (req, res) => 
     }
 });
 
-app.delete('/api/admin/users/:id', authenticate, isAdmin, async (req, res) => {
+// Delete a user
+app.delete('/api/admin/users/:id', isAdmin, async (req, res) => {
     try {
         const user = await User.findByPk(req.params.id);
         if (user) {
@@ -181,6 +184,7 @@ app.delete('/api/admin/users/:id', authenticate, isAdmin, async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
 
 // Sync the database and start the server
 sequelize.sync().then(() => {
