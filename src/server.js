@@ -233,7 +233,7 @@ app.put('/api/admin/users/:id/role', isAdmin, async (req, res) => {
 });
 
 // Delete a user
-app.delete('/api/admin/users/:id', isAdmin, async (req, res) => {
+app.delete('/api/admin/users/:id', authenticate, isAdmin, async (req, res) => {
     try {
         const user = await User.findByPk(req.params.id);
         if (user) {
