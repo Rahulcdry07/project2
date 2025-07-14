@@ -3,24 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Admin Dashboard - SecureReg</title>
+    <link rel="stylesheet" href="css/landing.css">
 </head>
 <body>
-    <h1>Admin Dashboard</h1>
-    <h2>Users</h2>
-    <table id="user-table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="user-table-body"></tbody>
-    </table>
-    <script src="admin.js"></script>
+    <div id="nav-container"></div>
+    <div class="container">
+        <header class="main-header">
+            <h1>Admin Dashboard</h1>
+        </header>
+        <h2>Users</h2>
+        <table id="user-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="user-table-body"></tbody>
+        </table>
+    </div>
+    <script>
+        // Fetch and insert the navigation bar
+        fetch('/includes/admin_nav.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('nav-container').innerHTML = data;
+                // Hide Admin link on Admin page
+                const adminLink = document.getElementById('admin-panel-link');
+                if (adminLink) {
+                    adminLink.style.display = 'none';
+                }
+                attachLogoutHandler(); // Explicitly call after content is loaded
+            });
+
+        function attachLogoutHandler() {
+            const logoutButton = document.getElementById('logout-link');
+            if (logoutButton) {
+                logoutButton.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    try {
+                        const response = await fetch('/api/logout', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+                        });
+                        const result = await response.json();
+                        if (result.message === 'Logout successful.') {
+                            localStorage.removeItem('token');
+                            window.location.href = 'login.html';
+                        } else {
+                            alert('Logout failed: ' + (result.message || 'Unknown error'));
+                        }
+                    } catch (error) {
+                        alert('Network error during logout.');
+                    }
+                });
+            }
+        }
+    </script>
+    <script src="js/admin.js"></script>
 </body>
 </html>

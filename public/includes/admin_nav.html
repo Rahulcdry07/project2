@@ -1,37 +1,11 @@
-<nav class="main-nav">
-    <div class="nav-container">
-        <a href="dashboard.html" class="nav-brand">SecureReg</a>
+<nav class="main-nav"> 
+      <div class="nav-container"> 
+        <a href="/dashboard.html" class="nav-brand">SecureReg</a>
         <div class="nav-links">
-            <a href="dashboard.html" title="Home"><i class="fas fa-home"></i></a>
+            <a href="/dashboard.html">Dashboard</a>
             <a href="profile.html">Profile</a>
-                <a href="admin.html" id="admin-panel-link">Admin</a>
+            <a href="admin.html" id="admin-panel-link">Admin</a>
             <a href="#" id="logout-link">Logout</a>
-        </div>
-    </div>
+       </div>
+    </div> 
 </nav>
-<script>
-    // Dedicated logout script for the admin panel to avoid conflicts.
-    document.addEventListener('DOMContentLoaded', () => {
-        const logoutButton = document.getElementById('logout-link');
-        if (logoutButton) {
-            logoutButton.addEventListener('click', async (e) => {
-                e.preventDefault();
-                try {
-                    const response = await fetch('/logout', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        localStorage.clear();
-                        window.location.href = 'login.html';
-                    } else {
-                        alert('Logout failed: ' + (result.message || 'Unknown error'));
-                    }
-                } catch (error) {
-                    alert('Network error during logout.');
-                }
-            });
-        }
-    });
-</script>

@@ -1,0 +1,23 @@
+<nav class="main-nav">
+    <div class="nav-container">
+        <a href="/" class="nav-brand">SecureReg</a>
+        <div class="nav-links">
+            <a href="/dashboard.html">Dashboard</a>
+            <a href="/profile.html">Profile</a>
+            <a href="#" id="logout-link">Logout</a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Handle logout
+    const logoutLink = document.getElementById('logout-link');
+    if (logoutLink) {
+        logoutLink.addEventListener('click', async (e) => {
+            e.preventDefault();
+            await fetch('/api/logout', { method: 'POST' });
+            localStorage.removeItem('token');
+            localStorage.removeItem('user_role');
+            window.location.href = '/login.html';
+        });
+    }
+</script>
