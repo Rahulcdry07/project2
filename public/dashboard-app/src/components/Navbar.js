@@ -60,6 +60,10 @@ const Navbar = () => {
         }
     };
 
+    if (location.pathname === '/login' || location.pathname === '/register') {
+        return null;
+    }
+
     return (
         <nav className="navbar navbar-expand-lg navbar-light bg-light">
             <div className="container-fluid">

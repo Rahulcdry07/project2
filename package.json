@@ -5,11 +5,17 @@
   "main": "src/server.js",
   "scripts": {
     "start": "nodemon src/server.js",
-    "start:ci": "node src/server.js",
-    "cy:run": "start-server-and-test start:ci http://localhost:3000 \"cypress run\"",
+    "start:ci": "NODE_ENV=test node src/server.js",
+    "start:coverage-server": "nyc --reporter=lcov --reporter=text --reporter=html node src/server.js",
+    "start:coverage": "nyc --reporter=lcov --reporter=text --reporter=html node src/server.js",
+    "cy:run": "nyc --reporter=lcov --reporter=text --reporter=html npm run cy:run-without-coverage",
+    "cy:run-without-coverage": "NODE_ENV=test start-server-and-test start:ci http://localhost:3000 \"cypress run\"",
     "cy:open": "start-server-and-test start http://localhost:3000 \"cypress open\"",
     "cy:run:routing": "start-server-and-test start:ci http://localhost:3000 \"cypress run --spec cypress/e2e/routing.cy.js\"",
-    "test:backend": "mocha test/backend.test.js"
+    
+    "test:backend": "mocha test/backend.test.js --timeout 10000",
+    "coverage": "nyc npm run test:backend",
+    "lint": "eslint . --ignore-pattern public/dashboard-app/build/"
   },
   "keywords": [],
   "author": "Gemini",
@@ -28,7 +34,12 @@
   },
   "devDependencies": {
     "chai": "^5.2.1",
+    "eslint": "^9.31.0",
+    "eslint-plugin-cypress": "^5.1.0",
+    "globals": "^16.3.0",
     "mocha": "^11.7.1",
+    "nyc": "^17.1.0",
+    "sinon": "^21.0.0",
     "supertest": "^7.1.3"
   }
 }
