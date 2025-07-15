@@ -2,8 +2,8 @@ const { defineConfig } = require("cypress");
 
 module.exports = defineConfig({
   e2e: {
-    baseUrl: 'http://localhost:3000', // Assuming you serve your project on port 8000
-    supportFile: false,
+    baseUrl: 'http://localhost:3000',
+    supportFile: 'cypress/support/e2e.js',
     specPattern: "cypress/e2e/**/*.cy.js",
   },
 

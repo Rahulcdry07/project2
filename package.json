@@ -5,20 +5,30 @@
   "main": "src/server.js",
   "scripts": {
     "start": "nodemon src/server.js",
-    "cy:run": "start-server-and-test start http://localhost:3000 \"cypress run\"",
-    "cy:open": "start-server-and-test start http://localhost:3000 \"cypress open\""
+    "start:ci": "node src/server.js",
+    "cy:run": "start-server-and-test start:ci http://localhost:3000 \"cypress run\"",
+    "cy:open": "start-server-and-test start http://localhost:3000 \"cypress open\"",
+    "cy:run:routing": "start-server-and-test start:ci http://localhost:3000 \"cypress run --spec cypress/e2e/routing.cy.js\"",
+    "test:backend": "mocha test/backend.test.js"
   },
   "keywords": [],
   "author": "Gemini",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
     "cypress": "^14.5.1",
-    "express": "^5.1.0",
+    "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^7.0.5",
     "nodemon": "^3.1.10",
     "sequelize": "^6.37.7",
     "sqlite3": "^5.1.7",
     "start-server-and-test": "^2.0.4"
+  },
+  "devDependencies": {
+    "chai": "^5.2.1",
+    "mocha": "^11.7.1",
+    "supertest": "^7.1.3"
   }
 }

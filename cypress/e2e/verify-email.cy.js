@@ -1,23 +1,36 @@
 describe('Email Verification', () => {
   it('should show a success message when the token is valid', () => {
-    cy.intercept('POST', '/api/verify-email', {
-      statusCode: 200,
-      body: { message: 'Email verified successfully. You can now log in.' },
+    cy.intercept('POST', 'http://localhost:3000/api/verify-email', (req) => {
+      req.reply({
+        statusCode: 200,
+        body: { message: 'Email verified successfully. You can now log in.' },
+      });
     }).as('verifyEmail');
 
-    cy.visit('/verify-email.html?token=test-token');
+    cy.log('Intercepting verify-email request for success:', 'test-token');
+
+    cy.visit('/verify-email?token=test-token');
+    cy.get('#root').should('be.visible');
+    cy.get('.card').should('be.visible'); // Ensure the card is visible
     cy.wait('@verifyEmail');
-    cy.get('#message').should('contain.text', 'Email verified successfully.');
+    cy.contains('Email verified successfully.');
+    cy.url().should('include', '/login');
   });
 
   it('should show an error message when the token is invalid', () => {
-    cy.intercept('POST', '/api/verify-email', {
-      statusCode: 400,
-      body: { error: 'Invalid verification token.' },
+    cy.intercept('POST', 'http://localhost:3000/api/verify-email', (req) => {
+      req.reply({
+        statusCode: 400,
+        body: { error: 'Invalid verification token.' },
+      });
     }).as('verifyEmail');
 
-    cy.visit('/verify-email.html?token=invalid-token');
+    cy.log('Intercepting verify-email request for error:', 'invalid-token');
+
+    cy.visit('/verify-email?token=invalid-token');
+    cy.get('#root').should('be.visible');
+    cy.get('.card').should('be.visible'); // Ensure the card is visible
     cy.wait('@verifyEmail');
-    cy.get('#message').should('contain.text', 'Error: Invalid verification token.');
+    cy.contains('Error: Invalid verification token.');
   });
 });
