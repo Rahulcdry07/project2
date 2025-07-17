@@ -1,6 +1,7 @@
 describe('Admin Panel', () => {
   beforeEach(() => {
     cy.loginAsAdmin();
+    cy.visit('http://localhost:3001/admin');
 
     const regularUser = {
       username: 'testuser',
@@ -11,8 +12,9 @@ describe('Admin Panel', () => {
     cy.request('POST', 'http://localhost:3000/api/test/verify-user', { email: regularUser.email });
 
     cy.intercept('GET', '/api/admin/users').as('getUsers');
-    cy.visit('/admin');
+    cy.visit('http://localhost:3001/admin');
     cy.wait('@getUsers');
+    cy.get('h1').should('be.visible');
   });
 
   it('should load the admin page and see both users', () => {
@@ -20,7 +22,7 @@ describe('Admin Panel', () => {
     cy.get('tbody tr').should('have.length', 2);
   });
 
-  it("should update a user's role from user to admin", () => {
+  it('should update a user\'s role from user to admin', () => {
     cy.intercept('PUT', '/api/admin/users/*/role').as('updateRole');
     cy.contains('tbody tr', 'testuser').find('.form-select').select('admin');
     cy.wait('@updateRole').its('response.statusCode').should('eq', 200);

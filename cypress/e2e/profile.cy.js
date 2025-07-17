@@ -5,25 +5,16 @@ describe('Profile Page', () => {
       email: 'test@example.com',
       password: 'password123',
     };
-    cy.request({ method: 'POST', url: 'http://localhost:3000/api/register', body: user, failOnStatusCode: false });
-    cy.request('POST', 'http://localhost:3000/api/test/verify-user', { email: user.email });
-
-    // Log in via API and set token
-    cy.request('POST', 'http://localhost:3000/api/login', { email: user.email, password: user.password })
-      .then((response) => {
-        const token = response.body.token;
-        expect(token).to.exist;
-        cy.visit('/dashboard', {
-          onBeforeLoad: (win) => {
-            win.localStorage.setItem('token', token);
-          },
-        });
-      });
-    cy.contains('h1', 'Dashboard');
+    cy.login();
+    cy.visit('http://localhost:3001/profile');
+    cy.get('#root').should('be.visible');
+    cy.wait(2000); // Add a wait to allow React to render
+    cy.contains('h2', 'Your Profile');
   });
 
   it('should load the profile page', () => {
-    cy.visit('/profile');
+    cy.visit('http://localhost:3001/profile');
+    cy.get('h2').should('be.visible');
     cy.get('#root').should('be.visible');
     cy.contains('h2', 'Your Profile');
     cy.get('#username').should('be.visible'); // Ensure elements are visible before typing
@@ -31,11 +22,11 @@ describe('Profile Page', () => {
   });
 
   it('should update profile information', () => {
-    cy.visit('/profile');
+    cy.visit('http://localhost:3001/profile');
     cy.get('#root').should('be.visible');
     cy.get('#username').should('be.visible').clear().type('updateduser');
     cy.get('#email').should('be.visible').clear().type('updated@example.com');
-    cy.intercept('PUT', 'http://localhost:3000/api/profile').as('updateProfile');
+    cy.intercept('PUT', '/api/profile').as('updateProfile');
     cy.get('button[type="submit"]').should('be.visible').click();
     cy.wait('@updateProfile');
     cy.contains('Profile updated successfully!');

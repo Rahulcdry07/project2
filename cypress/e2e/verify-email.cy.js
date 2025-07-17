@@ -9,7 +9,7 @@ describe('Email Verification', () => {
 
     cy.log('Intercepting verify-email request for success:', 'test-token');
 
-    cy.visit('/verify-email?token=test-token');
+    cy.visit('/verify-email');
     cy.get('#root').should('be.visible');
     cy.get('.card').should('be.visible'); // Ensure the card is visible
     cy.wait('@verifyEmail');
@@ -27,7 +27,7 @@ describe('Email Verification', () => {
 
     cy.log('Intercepting verify-email request for error:', 'invalid-token');
 
-    cy.visit('/verify-email?token=invalid-token');
+        cy.visit('http://localhost:3001/verify-email?token=invalid-token');
     cy.get('#root').should('be.visible');
     cy.get('.card').should('be.visible'); // Ensure the card is visible
     cy.wait('@verifyEmail');

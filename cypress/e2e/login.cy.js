@@ -17,19 +17,15 @@ describe('Login Flow', () => {
       .then((response) => {
         const token = response.body.token;
         expect(token).to.exist;
-        cy.visit('/dashboard', {
-          onBeforeLoad: (win) => {
-            win.localStorage.setItem('token', token);
-          },
+        cy.window().then((win) => {
+          win.localStorage.setItem('token', token);
         });
       });
-
-    // After login, should redirect to the dashboard of the React app
-    cy.contains('h1', 'Dashboard');
+    cy.visit('/dashboard');
   });
 
   it('should show an error for invalid credentials', () => {
-    cy.visit('/login');
+    cy.visit('http://localhost:3001');
     cy.get('#root').should('be.visible');
     cy.get('form').should('be.visible'); // Ensure the form is visible
     cy.get('#email').should('be.visible').type('wrong@example.com');

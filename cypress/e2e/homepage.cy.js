@@ -1,6 +1,6 @@
 describe('Homepage', () => {
     beforeEach(() => {
-        cy.visit('/');
+        cy.visit('http://localhost:3001');
     });
 
     it('should display welcome message and navigation links', () => {
@@ -15,7 +15,7 @@ describe('Homepage', () => {
     });
 
     it('should navigate to register page', () => {
-        cy.visit('/'); // Go back to homepage
+        cy.visit('http://localhost:3001'); // Go back to homepage
         cy.contains('Register').click();
         cy.url().should('include', '/register');
     });

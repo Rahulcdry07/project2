@@ -1,6 +1,6 @@
 describe('Register Flow', () => {
   it('should allow a user to register and redirect to login', () => {
-    cy.visit('/register');
+    cy.visit('http://localhost:3001/register');
     cy.get('#root').should('be.visible');
     cy.get('form').should('be.visible'); // Ensure the form is visible
     cy.get('#username').should('be.visible').type('newuser');
@@ -26,7 +26,7 @@ describe('Register Flow', () => {
     };
     cy.request({ method: 'POST', url: 'http://localhost:3000/api/register', body: existingUser, failOnStatusCode: false });
 
-    cy.visit('/register');
+    cy.visit('http://localhost:3001/register');
     cy.get('#root').should('be.visible');
     cy.get('form').should('be.visible'); // Ensure the form is visible
     cy.get('#username').should('be.visible').type(existingUser.username);

@@ -16,7 +16,7 @@ describe('Forgot Password Flow', () => {
     cy.request({ method: 'POST', url: 'http://localhost:3000/api/register', body: user, failOnStatusCode: false });
     cy.request('POST', 'http://localhost:3000/api/test/verify-user', { email: user.email });
 
-    cy.visit('/forgot-password');
+    cy.visit('http://localhost:3001/forgot-password');
     cy.get('#root').should('be.visible');
     cy.get('form').should('be.visible'); // Ensure the form is visible
     cy.get('#email').should('be.visible').type(user.email);
@@ -36,10 +36,10 @@ describe('Forgot Password Flow', () => {
     cy.request('POST', 'http://localhost:3000/api/test/verify-user', { email: user.email });
 
     // Request a password reset link
-    cy.request('POST', 'http://localhost:3000/api/forgot-password', { email: user.email });
+    cy.request('POST', '/api/forgot-password', { email: user.email });
 
     // Get the reset token from the test endpoint
-    cy.request('POST', 'http://localhost:3000/api/test/get-reset-token', { email: user.email })
+    cy.request('POST', '/api/test/get-reset-token', { email: user.email })
       .then((response) => {
         const resetToken = response.body.resetToken;
         expect(resetToken).to.exist;
