@@ -1,0 +1,42 @@
+.glassy-card {
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(10px) saturate(1.1);
+  box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+  border: none;
+  border-radius: 1.5rem;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+
+.profile-picture-upload {
+  transition: box-shadow 0.2s, border 0.2s;
+  cursor: pointer;
+}
+.profile-picture-upload:hover {
+  box-shadow: 0 4px 24px rgba(0,123,255,0.12);
+  border: 1.5px solid #007bff33;
+}
+.profile-picture-upload input[type="file"] {
+  display: none;
+}
+
+.profile-link-btn {
+  transition: background 0.2s, color 0.2s;
+}
+.profile-link-btn:hover {
+  background: #e3f2fd;
+  color: #007bff;
+}
+
+.progress-bar {
+  transition: width 0.6s cubic-bezier(.4,2,.6,1);
+}
+
+@media (max-width: 767.98px) {
+  .glassy-card {
+    padding: 1rem !important;
+  }
+  .profile-picture-upload {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+} 
