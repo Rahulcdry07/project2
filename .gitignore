@@ -18,14 +18,21 @@ yarn-error.log
 # Database
 *.sqlite
 *.sqlite3
+*.db
 /src/database.sqlite
+/src/test-database.sqlite
+/public/dashboard-app/src/database.sqlite
 
 # IDE and editor files
 .idea/
 .vscode/
 *.swp
 *.swo
+*.swn
+*~
+*.bak
 .DS_Store
+.phpunit.cache/
 
 # Testing
 /coverage
@@ -43,3 +50,5 @@ lerna-debug.log*
 # Temp files
 .tmp/
 tmp/
+tmp/sessions/
+*.tmp
