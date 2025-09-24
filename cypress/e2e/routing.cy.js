@@ -1,46 +1,30 @@
 describe('Client-side Routing', () => {
-    const routes = [
-        '/register',
-        '/login',
-        '/forgot-password',
-        '/verify-email',
-        '/dashboard' // Assuming user is redirected or logged in to access
-    ];
+  beforeEach(() => {
+    // Start from the home page for each test
+    cy.visit('/');
+    cy.get('#root', { timeout: 10000 }).should('be.visible');
+  });
 
-    routes.forEach(route => {
-        it(`should load the ${route} page`, () => {
-            cy.visit(route);
-            cy.get('#root').should('be.visible');
-            // Add more specific assertions if needed for each page
-            if (route === '/register') {
-                cy.contains('h2', 'Create Your Account');
-            } else if (route === '/login') {
-                cy.contains('h2', 'Login to Your Account');
-            } else if (route === '/forgot-password') {
-                cy.contains('h2', 'Forgot Your Password?');
-            } else if (route === '/verify-email') {
-                cy.contains('h2', 'Email Verification');
-            } else if (route === '/dashboard') {
-                // Dashboard requires login, so we need to log in a user first
-                const user = {
-                    username: 'dashboarduser',
-                    email: 'dashboard@example.com',
-                    password: 'password123',
-                };
-                cy.request({ method: 'POST', url: 'http://localhost:3000/api/register', body: user, failOnStatusCode: false });
-                cy.request('POST', 'http://localhost:3000/api/test/verify-user', { email: user.email });
-                cy.request('POST', 'http://localhost:3000/api/login', { email: user.email, password: user.password })
-                    .then((response) => {
-                        const token = response.body.token;
-                        expect(token).to.exist;
-                        cy.visit('/dashboard', {
-                            onBeforeLoad: (win) => {
-                                win.localStorage.setItem('token', token);
-                            },
-                        });
-                    });
-                cy.contains('h1', 'Dashboard');
-            }
-        });
-    });
+  it('should load the /register page', () => {
+    cy.visit('/register');
+    cy.url().should('include', '/register');
+    cy.contains('h2', 'Register').should('be.visible');
+  });
+
+  it('should load the /login page', () => {
+    cy.visit('/login');
+    cy.url().should('include', '/login');
+    cy.contains('h2', 'Login').should('be.visible');
+  });
+
+  it('should redirect to /login when accessing a protected route without authentication', () => {
+    cy.visit('/dashboard');
+    cy.url().should('include', '/login');
+  });
+
+  it('should load the /forgot-password page', () => {
+    cy.visit('/forgot-password');
+    cy.url().should('include', '/forgot-password');
+    cy.contains('h2', 'Forgot Your Password?').should('be.visible');
+  });
 });

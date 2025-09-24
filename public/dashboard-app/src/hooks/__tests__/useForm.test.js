@@ -1,14 +1,19 @@
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react';
 import useForm from '../useForm';
 
 describe('useForm Hook', () => {
-  test('initializes with correct values', () => {
+  // Basic initialization and functionality
+  test('initializes with correct values and functions', () => {
     const initialValues = { name: '', email: '' };
     const { result } = renderHook(() => useForm(initialValues));
 
+    // Check initial state
     expect(result.current.values).toEqual(initialValues);
     expect(result.current.errors).toEqual({});
+    expect(result.current.touched).toEqual({});
     expect(result.current.isSubmitting).toBe(false);
+    
+    // Check functions exist
     expect(typeof result.current.handleChange).toBe('function');
     expect(typeof result.current.handleBlur).toBe('function');
     expect(typeof result.current.handleSubmit).toBe('function');
@@ -16,25 +21,79 @@ describe('useForm Hook', () => {
     expect(typeof result.current.resetForm).toBe('function');
   });
 
-  test('updates values on handleChange', () => {
+  // Value updates
+  test('updates values when handleChange is called', () => {
     const initialValues = { name: '', email: '' };
     const { result } = renderHook(() => useForm(initialValues));
 
+    // Update name field
     act(() => {
       result.current.handleChange({
         target: { name: 'name', value: 'John Doe' }
       });
     });
 
-    expect(result.current.values).toEqual({ name: 'John Doe', email: '' });
+    // Check updated values
+    expect(result.current.values.name).toBe('John Doe');
+    expect(result.current.values.email).toBe('');
+
+    // Update email field
+    act(() => {
+      result.current.handleChange({
+        target: { name: 'email', value: 'john@example.com' }
+      });
+    });
+
+    // Check both fields are updated
+    expect(result.current.values).toEqual({ 
+      name: 'John Doe', 
+      email: 'john@example.com' 
+    });
   });
 
-  test('validates form fields on blur', () => {
+  // Validation - Required fields
+  test('validates required fields on blur', () => {
     const initialValues = { name: '', email: '' };
     const validationRules = {
       name: { required: true, message: 'Name is required' },
-      email: { 
-        required: true, 
+      email: { required: true, message: 'Email is required' }
+    };
+
+    const { result } = renderHook(() => 
+      useForm(initialValues, validationRules)
+    );
+
+    // Trigger blur on empty name field
+    act(() => {
+      result.current.handleBlur({
+        target: { name: 'name', value: '' }
+      });
+    });
+
+    // Check error is set
+    expect(result.current.errors.name).toBe('Name is required');
+    expect(result.current.touched.name).toBe(true);
+
+    // Fill the name field and blur again
+    act(() => {
+      result.current.handleChange({
+        target: { name: 'name', value: 'John Doe' }
+      });
+      result.current.handleBlur({
+        target: { name: 'name', value: 'John Doe' }
+      });
+    });
+
+    // Check error is cleared
+    expect(result.current.errors.name).toBeUndefined();
+  });
+
+  // Validation - Pattern validation
+  test('validates patterns on blur', () => {
+    const initialValues = { email: '' };
+    const validationRules = {
+      email: {
+        required: true,
         message: 'Email is required',
         pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
         patternMessage: 'Invalid email format'
@@ -45,65 +104,39 @@ describe('useForm Hook', () => {
       useForm(initialValues, validationRules)
     );
 
-    // Test empty field validation
-    act(() => {
-      result.current.handleBlur({
-        target: { name: 'name', value: '' }
-      });
-    });
-
-    expect(result.current.errors).toEqual({ name: 'Name is required' });
-
-    // Test pattern validation
+    // Enter invalid email and blur
     act(() => {
       result.current.handleChange({
         target: { name: 'email', value: 'invalid-email' }
       });
-
       result.current.handleBlur({
         target: { name: 'email', value: 'invalid-email' }
       });
     });
 
-    expect(result.current.errors).toEqual({ 
-      name: 'Name is required',
-      email: 'Invalid email format'
-    });
+    // Check pattern error
+    expect(result.current.errors.email).toBe('Invalid email format');
 
-    // Test valid input clearing errors
+    // Enter valid email and blur
     act(() => {
       result.current.handleChange({
-        target: { name: 'name', value: 'John Doe' }
+        target: { name: 'email', value: 'valid@example.com' }
       });
-
       result.current.handleBlur({
-        target: { name: 'name', value: 'John Doe' }
+        target: { name: 'email', value: 'valid@example.com' }
       });
     });
 
-    expect(result.current.errors).toEqual({ 
-      email: 'Invalid email format'
-    });
-
-    // Test valid email
-    act(() => {
-      result.current.handleChange({
-        target: { name: 'email', value: 'john@example.com' }
-      });
-
-      result.current.handleBlur({
-        target: { name: 'email', value: 'john@example.com' }
-      });
-    });
-
-    expect(result.current.errors).toEqual({});
+    // Check error is cleared
+    expect(result.current.errors.email).toBeUndefined();
   });
 
-  test('validates minLength rule', () => {
+  // Validation - Min length
+  test('validates minimum length on blur', () => {
     const initialValues = { password: '' };
     const validationRules = {
-      password: { 
-        required: true, 
+      password: {
+        required: true,
         message: 'Password is required',
         minLength: 6,
         minLengthMessage: 'Password must be at least 6 characters'
@@ -114,36 +147,35 @@ describe('useForm Hook', () => {
       useForm(initialValues, validationRules)
     );
 
-    // Test too short password
+    // Enter short password and blur
     act(() => {
       result.current.handleChange({
         target: { name: 'password', value: '12345' }
       });
-
       result.current.handleBlur({
         target: { name: 'password', value: '12345' }
       });
     });
 
-    expect(result.current.errors).toEqual({ 
-      password: 'Password must be at least 6 characters'
-    });
+    // Check min length error
+    expect(result.current.errors.password).toBe('Password must be at least 6 characters');
 
-    // Test valid password
+    // Enter valid password and blur
     act(() => {
       result.current.handleChange({
         target: { name: 'password', value: '123456' }
       });
-
       result.current.handleBlur({
         target: { name: 'password', value: '123456' }
       });
     });
 
-    expect(result.current.errors).toEqual({});
+    // Check error is cleared
+    expect(result.current.errors.password).toBeUndefined();
   });
 
-  test('handles form submission with validation', async () => {
+  // Form submission with validation
+  test('validates all fields on form submission', async () => {
     const initialValues = { name: '', email: '' };
     const validationRules = {
       name: { required: true, message: 'Name is required' },
@@ -155,16 +187,39 @@ describe('useForm Hook', () => {
       useForm(initialValues, validationRules, onSubmit)
     );
 
-    // Test submission with empty values
+    // Submit empty form
     await act(async () => {
       await result.current.handleSubmit({ preventDefault: jest.fn() });
     });
 
-    expect(result.current.errors).toEqual({ 
-      name: 'Name is required', 
-      email: 'Email is required' 
+    // Check all fields are validated
+    expect(result.current.errors).toEqual({
+      name: 'Name is required',
+      email: 'Email is required'
     });
+    
+    // Check all fields are marked as touched
+    expect(result.current.touched).toEqual({
+      name: true,
+      email: true
+    });
+    
+    // Check onSubmit was not called
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  // Successful form submission
+  test('calls onSubmit with form values when validation passes', async () => {
+    const initialValues = { name: '', email: '' };
+    const validationRules = {
+      name: { required: true, message: 'Name is required' },
+      email: { required: true, message: 'Email is required' }
+    };
+
+    const onSubmit = jest.fn();
+    const { result } = renderHook(() => 
+      useForm(initialValues, validationRules, onSubmit)
+    );
 
     // Fill out the form
     act(() => {
@@ -176,23 +231,23 @@ describe('useForm Hook', () => {
       });
     });
 
-    // Test successful submission
+    // Submit the form
     await act(async () => {
       await result.current.handleSubmit({ preventDefault: jest.fn() });
     });
 
-    expect(result.current.errors).toEqual({});
-    expect(onSubmit).toHaveBeenCalledWith({ 
-      name: 'John Doe', 
-      email: 'john@example.com' 
+    // Check onSubmit was called with correct values
+    expect(onSubmit).toHaveBeenCalledWith({
+      name: 'John Doe',
+      email: 'john@example.com'
     });
-    expect(result.current.isSubmitting).toBe(false);
   });
 
-  test('sets isSubmitting state during submission', async () => {
+  // Submission state management
+  test('sets and resets isSubmitting state during form submission', async () => {
     const initialValues = { name: 'John Doe', email: 'john@example.com' };
     
-    // Create a delayed mock submission function
+    // Create a delayed submission function
     const onSubmit = jest.fn(() => new Promise(resolve => {
       setTimeout(resolve, 100);
     }));
@@ -207,7 +262,7 @@ describe('useForm Hook', () => {
       submitPromise = result.current.handleSubmit({ preventDefault: jest.fn() });
     });
 
-    // Check if isSubmitting is true during submission
+    // Check isSubmitting is true during submission
     expect(result.current.isSubmitting).toBe(true);
 
     // Wait for submission to complete
@@ -215,51 +270,60 @@ describe('useForm Hook', () => {
       await submitPromise;
     });
 
-    // Check if isSubmitting is reset to false
+    // Check isSubmitting is reset to false
     expect(result.current.isSubmitting).toBe(false);
   });
 
-  test('setFieldValue updates specific field', () => {
+  // Field value setter
+  test('setFieldValue updates a specific field value', () => {
     const initialValues = { name: '', email: '' };
     const { result } = renderHook(() => useForm(initialValues));
 
+    // Set field value directly
     act(() => {
       result.current.setFieldValue('name', 'John Doe');
     });
 
-    expect(result.current.values).toEqual({ name: 'John Doe', email: '' });
+    // Check value is updated
+    expect(result.current.values.name).toBe('John Doe');
+    expect(result.current.values.email).toBe('');
   });
 
-  test('resetForm restores initial values', () => {
+  // Form reset
+  test('resetForm restores initial values and clears errors/touched state', () => {
     const initialValues = { name: '', email: '' };
     const { result } = renderHook(() => useForm(initialValues));
 
-    // Change values
+    // Change values and create errors/touched state
     act(() => {
       result.current.handleChange({
         target: { name: 'name', value: 'John Doe' }
       });
-      result.current.handleChange({
-        target: { name: 'email', value: 'john@example.com' }
+      result.current.handleBlur({
+        target: { name: 'name', value: 'John Doe' }
       });
     });
 
-    expect(result.current.values).toEqual({ name: 'John Doe', email: 'john@example.com' });
+    expect(result.current.values.name).toBe('John Doe');
+    expect(result.current.touched.name).toBe(true);
 
     // Reset form
     act(() => {
       result.current.resetForm();
     });
 
+    // Check everything is reset
     expect(result.current.values).toEqual(initialValues);
     expect(result.current.errors).toEqual({});
+    expect(result.current.touched).toEqual({});
   });
 
-  test('handles custom validators', () => {
+  // Custom validators
+  test('applies custom validators on blur and submission', async () => {
     const initialValues = { password: '', confirmPassword: '' };
     const customValidators = {
       confirmPassword: (value, values) => {
-        if (value !== values.password) {
+        if (value && value !== values.password) {
           return 'Passwords do not match';
         }
         return '';
@@ -270,39 +334,78 @@ describe('useForm Hook', () => {
       useForm(initialValues, {}, null, customValidators)
     );
 
-    // Set password
+    // Set password and confirmPassword to different values
     act(() => {
       result.current.handleChange({
         target: { name: 'password', value: 'password123' }
       });
-    });
-
-    // Set different confirm password
-    act(() => {
       result.current.handleChange({
         target: { name: 'confirmPassword', value: 'password456' }
       });
-      
       result.current.handleBlur({
         target: { name: 'confirmPassword', value: 'password456' }
       });
     });
 
-    expect(result.current.errors).toEqual({ 
-      confirmPassword: 'Passwords do not match'
-    });
+    // Check custom validator error
+    expect(result.current.errors.confirmPassword).toBe('Passwords do not match');
 
-    // Set matching confirm password
+    // Set matching passwords
     act(() => {
       result.current.handleChange({
         target: { name: 'confirmPassword', value: 'password123' }
       });
-      
       result.current.handleBlur({
         target: { name: 'confirmPassword', value: 'password123' }
       });
     });
 
-    expect(result.current.errors).toEqual({});
+    // Check error is cleared
+    expect(result.current.errors.confirmPassword).toBeUndefined();
+  });
+  
+  // Form submission with custom validation
+  test('validates with custom validators on submission', async () => {
+    const initialValues = { password: 'password123', confirmPassword: 'wrong' };
+    const customValidators = {
+      confirmPassword: (value, values) => {
+        if (value !== values.password) {
+          return 'Passwords do not match';
+        }
+        return '';
+      }
+    };
+    
+    const onSubmit = jest.fn();
+    const { result } = renderHook(() => 
+      useForm(initialValues, {}, onSubmit, customValidators)
+    );
+    
+    // Submit form with mismatched passwords
+    await act(async () => {
+      await result.current.handleSubmit({ preventDefault: jest.fn() });
+    });
+    
+    // Check custom validation error
+    expect(result.current.errors.confirmPassword).toBe('Passwords do not match');
+    expect(onSubmit).not.toHaveBeenCalled();
+    
+    // Fix the password and submit again
+    act(() => {
+      result.current.handleChange({
+        target: { name: 'confirmPassword', value: 'password123' }
+      });
+    });
+    
+    await act(async () => {
+      await result.current.handleSubmit({ preventDefault: jest.fn() });
+    });
+    
+    // Check submission succeeds
+    expect(result.current.errors.confirmPassword).toBeUndefined();
+    expect(onSubmit).toHaveBeenCalledWith({
+      password: 'password123',
+      confirmPassword: 'password123'
+    });
   });
 });

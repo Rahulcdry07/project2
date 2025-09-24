@@ -1,255 +1,299 @@
 import React from 'react';
-import { render, screen, waitFor, act } from '@testing-library/react';
-import { AuthProvider, AuthContext } from '../../contexts/AuthContext';
-import { authAPI } from '../../services/api';
-
-// Mock localStorage
-const localStorageMock = (() => {
-  let store = {};
-  return {
-    getItem: jest.fn(key => store[key] || null),
-    setItem: jest.fn((key, value) => {
-      store[key] = value.toString();
-    }),
-    removeItem: jest.fn(key => {
-      delete store[key];
-    }),
-    clear: jest.fn(() => {
-      store = {};
-    })
-  };
-})();
-Object.defineProperty(window, 'localStorage', { value: localStorageMock });
-
-// Mock API calls
-jest.mock('../../services/api', () => ({
-  authAPI: {
-    validateToken: jest.fn(),
-    login: jest.fn(),
-    logout: jest.fn()
-  }
-}));
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { AuthProvider, AuthContext, useAuth } from '../AuthContext';
+import { rest } from 'msw';
+import { server, baseUrl } from '../../mocks/server';
 
 // Test component that consumes auth context
 const TestComponent = () => {
-  const auth = React.useContext(AuthContext);
+  const { user, isAuthenticated, loading, login, logout, updateUser } = useAuth();
+  
   return (
     <div>
-      <div data-testid="is-authenticated">{auth.isAuthenticated.toString()}</div>
-      <div data-testid="loading">{auth.loading.toString()}</div>
-      <div data-testid="user">{JSON.stringify(auth.user)}</div>
-      <button onClick={() => auth.login('testuser', 'password123')}>Login</button>
-      <button onClick={() => auth.logout()}>Logout</button>
-      <button onClick={() => auth.updateUser({ id: 1, username: 'updated' })}>Update User</button>
+      <div data-testid="auth-status">
+        {loading ? 'Loading...' : isAuthenticated ? 'Authenticated' : 'Not authenticated'}
+      </div>
+      <div data-testid="user-data">{user ? JSON.stringify(user) : 'No user'}</div>
+      
+      <button 
+        onClick={() => login('test@example.com', 'password123')}
+        disabled={loading}
+      >
+        Login
+      </button>
+      
+      <button 
+        onClick={() => logout()}
+        disabled={!isAuthenticated || loading}
+      >
+        Logout
+      </button>
+      
+      <button 
+        onClick={() => updateUser({ ...user, username: 'updated-username' })}
+        disabled={!isAuthenticated || loading}
+      >
+        Update User
+      </button>
     </div>
   );
 };
 
 describe('AuthContext', () => {
+  let user;
+  
   beforeEach(() => {
-    // Clear mocks and localStorage before each test
-    jest.clearAllMocks();
-    localStorageMock.clear();
+    // Setup userEvent
+    user = userEvent.setup();
+    // Clear localStorage
+    window.localStorage.clear();
+    // Reset MSW handlers
+    server.resetHandlers();
   });
 
-  test('provides initial context values', () => {
+  test('provides initial unauthenticated state', async () => {
     render(
       <AuthProvider>
         <TestComponent />
       </AuthProvider>
     );
     
-    expect(screen.getByTestId('is-authenticated').textContent).toBe('false');
-    expect(screen.getByTestId('loading').textContent).toBe('true');
-    expect(screen.getByTestId('user').textContent).toBe('null');
-  });
-
-  test('attempts to validate token on mount if token exists', async () => {
-    const mockUser = { id: 1, username: 'testuser' };
-    const mockToken = 'valid-token';
+    // Initially should show loading
+    expect(screen.getByTestId('auth-status')).toHaveTextContent('Loading...');
     
-    // Set token in localStorage
-    localStorageMock.setItem('token', mockToken);
-    
-    // Mock successful token validation
-    authAPI.validateToken.mockResolvedValue({
-      success: true,
-      data: mockUser
-    });
-
-    render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
-    );
-
-    // Initially loading is true
-    expect(screen.getByTestId('loading').textContent).toBe('true');
-
-    // Wait for validation to complete
+    // After initialization should show not authenticated
     await waitFor(() => {
-      expect(authAPI.validateToken).toHaveBeenCalledWith(mockToken);
-      expect(screen.getByTestId('is-authenticated').textContent).toBe('true');
-      expect(screen.getByTestId('loading').textContent).toBe('false');
-      expect(JSON.parse(screen.getByTestId('user').textContent)).toEqual(mockUser);
+      expect(screen.getByTestId('auth-status')).toHaveTextContent('Not authenticated');
+      expect(screen.getByTestId('user-data')).toHaveTextContent('No user');
     });
   });
 
-  test('handles invalid token on mount', async () => {
-    // Set invalid token in localStorage
-    localStorageMock.setItem('token', 'invalid-token');
+  test('loads authenticated user from token in localStorage', async () => {
+    // Setup mock token in localStorage
+    window.localStorage.setItem('token', 'valid-token');
     
-    // Mock failed token validation
-    authAPI.validateToken.mockRejectedValue(new Error('Invalid token'));
-
+    // Mock token validation endpoint
+    server.use(
+      rest.get(`${baseUrl}/auth/validate-token`, (req, res, ctx) => {
+        const authHeader = req.headers.get('authorization');
+        
+        if (authHeader && authHeader.includes('valid-token')) {
+          return res(
+            ctx.status(200),
+            ctx.json({
+              status: 'success',
+              data: {
+                id: 1,
+                username: 'testuser',
+                email: 'test@example.com',
+                role: 'user'
+              }
+            })
+          );
+        }
+        
+        return res(
+          ctx.status(401),
+          ctx.json({
+            status: 'error',
+            message: 'Invalid token'
+          })
+        );
+      })
+    );
+    
     render(
       <AuthProvider>
         <TestComponent />
       </AuthProvider>
     );
-
-    // Wait for validation to complete
+    
+    // Should initially show loading
+    expect(screen.getByTestId('auth-status')).toHaveTextContent('Loading...');
+    
+    // After token validation should show authenticated
     await waitFor(() => {
-      expect(authAPI.validateToken).toHaveBeenCalled();
-      expect(screen.getByTestId('is-authenticated').textContent).toBe('false');
-      expect(screen.getByTestId('loading').textContent).toBe('false');
-      expect(screen.getByTestId('user').textContent).toBe('null');
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
+      expect(screen.getByTestId('auth-status')).toHaveTextContent('Authenticated');
+      expect(screen.getByTestId('user-data')).toHaveTextContent('testuser');
     });
   });
 
-  test('handles login success', async () => {
-    const mockUser = { id: 1, username: 'testuser' };
-    const mockToken = 'new-token';
+  test('removes invalid token from localStorage', async () => {
+    // Setup mock invalid token in localStorage
+    window.localStorage.setItem('token', 'invalid-token');
     
-    // Mock successful login
-    authAPI.login.mockResolvedValue({
-      success: true,
-      data: {
-        user: mockUser,
-        token: mockToken
-      }
-    });
-
+    // Mock token validation endpoint to reject the token
+    server.use(
+      rest.get(`${baseUrl}/auth/validate-token`, (req, res, ctx) => {
+        return res(
+          ctx.status(401),
+          ctx.json({
+            status: 'error',
+            message: 'Invalid token'
+          })
+        );
+      })
+    );
+    
     render(
       <AuthProvider>
         <TestComponent />
       </AuthProvider>
     );
+    
+    // After token validation should show not authenticated
+    await waitFor(() => {
+      expect(screen.getByTestId('auth-status')).toHaveTextContent('Not authenticated');
+      expect(window.localStorage.getItem('token')).toBeNull();
+    });
+  });
 
+  test('handles successful login', async () => {
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    );
+    
     // Wait for initial loading to complete
     await waitFor(() => {
-      expect(screen.getByTestId('loading').textContent).toBe('false');
+      expect(screen.getByTestId('auth-status')).toHaveTextContent('Not authenticated');
     });
-
-    // Trigger login
-    act(() => {
-      screen.getByRole('button', { name: /login/i }).click();
-    });
-
-    // Wait for login to complete
+    
+    // Click login button
+    await user.click(screen.getByRole('button', { name: /login/i }));
+    
+    // Should briefly show loading
+    expect(screen.getByRole('button', { name: /login/i })).toBeDisabled();
+    
+    // After login completes, should show authenticated
     await waitFor(() => {
-      expect(authAPI.login).toHaveBeenCalledWith('testuser', 'password123');
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('token', mockToken);
-      expect(screen.getByTestId('is-authenticated').textContent).toBe('true');
-      expect(JSON.parse(screen.getByTestId('user').textContent)).toEqual(mockUser);
+      expect(screen.getByTestId('auth-status')).toHaveTextContent('Authenticated');
+      expect(screen.getByTestId('user-data')).toHaveTextContent('testuser');
+      expect(window.localStorage.getItem('token')).toBe('fake-jwt-token');
     });
   });
 
   test('handles login failure', async () => {
-    // Mock failed login
-    authAPI.login.mockRejectedValue(new Error('Invalid credentials'));
-
+    // Mock login endpoint to fail
+    server.use(
+      rest.post(`${baseUrl}/auth/login`, (req, res, ctx) => {
+        return res(
+          ctx.status(401),
+          ctx.json({
+            status: 'error',
+            message: 'Invalid credentials'
+          })
+        );
+      })
+    );
+    
     render(
       <AuthProvider>
         <TestComponent />
       </AuthProvider>
     );
-
+    
     // Wait for initial loading to complete
     await waitFor(() => {
-      expect(screen.getByTestId('loading').textContent).toBe('false');
+      expect(screen.getByTestId('auth-status')).toHaveTextContent('Not authenticated');
     });
-
-    // Trigger login
-    act(() => {
-      screen.getByRole('button', { name: /login/i }).click();
-    });
-
-    // Wait for login attempt to complete
+    
+    // Click login button
+    await user.click(screen.getByRole('button', { name: /login/i }));
+    
+    // After failed login, should still be not authenticated
     await waitFor(() => {
-      expect(authAPI.login).toHaveBeenCalledWith('testuser', 'password123');
-      expect(screen.getByTestId('is-authenticated').textContent).toBe('false');
-      expect(screen.getByTestId('user').textContent).toBe('null');
-      expect(localStorageMock.setItem).not.toHaveBeenCalled();
+      expect(screen.getByTestId('auth-status')).toHaveTextContent('Not authenticated');
+      expect(window.localStorage.getItem('token')).toBeNull();
     });
   });
 
-  test('handles logout', async () => {
-    const mockUser = { id: 1, username: 'testuser' };
+  test('handles logout correctly', async () => {
+    // Setup authenticated state
+    window.localStorage.setItem('token', 'valid-token');
     
-    // Set up authenticated state
-    authAPI.validateToken.mockResolvedValue({
-      success: true,
-      data: mockUser
-    });
-    localStorageMock.setItem('token', 'valid-token');
-
+    // Mock token validation endpoint
+    server.use(
+      rest.get(`${baseUrl}/auth/validate-token`, (req, res, ctx) => {
+        return res(
+          ctx.status(200),
+          ctx.json({
+            status: 'success',
+            data: {
+              id: 1,
+              username: 'testuser',
+              email: 'test@example.com',
+              role: 'user'
+            }
+          })
+        );
+      })
+    );
+    
     render(
       <AuthProvider>
         <TestComponent />
       </AuthProvider>
     );
-
-    // Wait for initial authentication to complete
+    
+    // Wait for authentication to complete
     await waitFor(() => {
-      expect(screen.getByTestId('is-authenticated').textContent).toBe('true');
+      expect(screen.getByTestId('auth-status')).toHaveTextContent('Authenticated');
     });
-
-    // Trigger logout
-    act(() => {
-      screen.getByRole('button', { name: /logout/i }).click();
-    });
-
-    // Wait for logout to complete
+    
+    // Click logout button
+    await user.click(screen.getByRole('button', { name: /logout/i }));
+    
+    // After logout, should be not authenticated
     await waitFor(() => {
-      expect(authAPI.logout).toHaveBeenCalled();
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
-      expect(screen.getByTestId('is-authenticated').textContent).toBe('false');
-      expect(screen.getByTestId('user').textContent).toBe('null');
+      expect(screen.getByTestId('auth-status')).toHaveTextContent('Not authenticated');
+      expect(screen.getByTestId('user-data')).toHaveTextContent('No user');
+      expect(window.localStorage.getItem('token')).toBeNull();
     });
   });
 
-  test('updates user information', async () => {
-    const initialUser = { id: 1, username: 'testuser' };
-    const updatedUser = { id: 1, username: 'updated' };
+  test('allows updating the user data', async () => {
+    // Setup authenticated state
+    window.localStorage.setItem('token', 'valid-token');
     
-    // Set up authenticated state
-    authAPI.validateToken.mockResolvedValue({
-      success: true,
-      data: initialUser
-    });
-    localStorageMock.setItem('token', 'valid-token');
-
+    // Mock token validation endpoint
+    server.use(
+      rest.get(`${baseUrl}/auth/validate-token`, (req, res, ctx) => {
+        return res(
+          ctx.status(200),
+          ctx.json({
+            status: 'success',
+            data: {
+              id: 1,
+              username: 'testuser',
+              email: 'test@example.com',
+              role: 'user'
+            }
+          })
+        );
+      })
+    );
+    
     render(
       <AuthProvider>
         <TestComponent />
       </AuthProvider>
     );
-
-    // Wait for initial authentication to complete
+    
+    // Wait for authentication to complete
     await waitFor(() => {
-      expect(JSON.parse(screen.getByTestId('user').textContent)).toEqual(initialUser);
+      expect(screen.getByTestId('auth-status')).toHaveTextContent('Authenticated');
+      expect(screen.getByTestId('user-data')).toHaveTextContent('testuser');
     });
-
-    // Trigger user update
-    act(() => {
-      screen.getByRole('button', { name: /update user/i }).click();
-    });
-
-    // Check if user is updated
+    
+    // Click update user button
+    await user.click(screen.getByRole('button', { name: /update user/i }));
+    
+    // User data should be updated
     await waitFor(() => {
-      expect(JSON.parse(screen.getByTestId('user').textContent)).toEqual(updatedUser);
+      expect(screen.getByTestId('user-data')).toHaveTextContent('updated-username');
     });
   });
 });

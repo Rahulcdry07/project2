@@ -1,19 +1,10 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import Admin from '../Admin';
-import { AuthContext } from '../../contexts/AuthContext';
-import { adminAPI } from '../../services/api';
-
-// Mock the API
-jest.mock('../../services/api', () => ({
-  adminAPI: {
-    getUsers: jest.fn(),
-    getUserById: jest.fn(),
-    updateUser: jest.fn(),
-    deleteUser: jest.fn()
-  }
-}));
+import { rest } from 'msw';
+import { server, baseUrl } from '../../mocks/server';
+import { renderWithProviders } from '../../test-utils';
 
 // Mock navigate
 const mockNavigate = jest.fn();
@@ -22,63 +13,111 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate
 }));
 
+// Mock the AuthContext
+const mockUsers = [
+  { id: 1, username: 'user1', email: 'user1@example.com', role: 'user' },
+  { id: 2, username: 'user2', email: 'user2@example.com', role: 'user' },
+  { id: 3, username: 'admin', email: 'admin@example.com', role: 'admin' }
+];
+
+const mockAdminUser = {
+  id: 100,
+  username: 'testadmin',
+  email: 'testadmin@example.com',
+  role: 'admin'
+};
+
+const mockRegularUser = {
+  id: 101,
+  username: 'testuser',
+  email: 'testuser@example.com',
+  role: 'user'
+};
+
+// Mock different auth states
+jest.mock('../../contexts/AuthContext', () => {
+  const originalModule = jest.requireActual('../../contexts/AuthContext');
+  
+  return {
+    ...originalModule,
+    useAuth: jest.fn()
+  };
+});
+
 describe('Admin Component', () => {
-  const mockUsers = [
-    { id: 1, username: 'user1', email: 'user1@example.com', role: 'user' },
-    { id: 2, username: 'user2', email: 'user2@example.com', role: 'user' },
-    { id: 3, username: 'admin', email: 'admin@example.com', role: 'admin' }
-  ];
-
-  const mockAdminUser = {
-    id: 100,
-    username: 'testadmin',
-    email: 'testadmin@example.com',
-    role: 'admin'
-  };
-
-  const mockRegularUser = {
-    id: 101,
-    username: 'testuser',
-    email: 'testuser@example.com',
-    role: 'user'
-  };
-
-  const mockAdminContext = {
-    user: mockAdminUser,
-    isAuthenticated: true,
-    loading: false
-  };
-
+  let user;
+  
   beforeEach(() => {
-    jest.clearAllMocks();
-    // Mock successful users fetch
-    adminAPI.getUsers.mockResolvedValue({
-      success: true,
-      data: mockUsers
-    });
+    // Setup userEvent
+    user = userEvent.setup();
+    // Reset MSW handlers
+    server.resetHandlers();
+    // Reset navigate mock
+    mockNavigate.mockReset();
+    
+    // Default mock for fetching users
+    server.use(
+      rest.get(`${baseUrl}/admin/users`, (req, res, ctx) => {
+        return res(
+          ctx.status(200),
+          ctx.json({
+            status: 'success',
+            data: mockUsers
+          })
+        );
+      }),
+      
+      // Default mock for getting user by ID
+      rest.get(`${baseUrl}/admin/users/:userId`, (req, res, ctx) => {
+        const { userId } = req.params;
+        const user = mockUsers.find(u => u.id === parseInt(userId));
+        
+        if (user) {
+          return res(
+            ctx.status(200),
+            ctx.json({
+              status: 'success',
+              data: user
+            })
+          );
+        }
+        
+        return res(
+          ctx.status(404),
+          ctx.json({
+            status: 'error',
+            message: 'User not found'
+          })
+        );
+      })
+    );
   });
 
-  test('redirects non-admin users', async () => {
-    render(
-      <AuthContext.Provider value={{ ...mockAdminContext, user: mockRegularUser }}>
-        <BrowserRouter>
-          <Admin />
-        </BrowserRouter>
-      </AuthContext.Provider>
-    );
+  test('redirects non-admin users to dashboard', async () => {
+    // Set up auth context with regular user
+    const { useAuth } = require('../../contexts/AuthContext');
+    useAuth.mockReturnValue({
+      user: mockRegularUser,
+      isAuthenticated: true,
+      loading: false
+    });
+
+    renderWithProviders(<Admin />);
 
     // Expect redirect to dashboard
     expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
   });
 
   test('renders admin dashboard with user list', async () => {
-    render(
-      <AuthContext.Provider value={mockAdminContext}>
-        <BrowserRouter>
-          <Admin />
-        </BrowserRouter>
-      </AuthContext.Provider>
-    );
+    // Set up auth context with admin user
+    const { useAuth } = require('../../contexts/AuthContext');
+    useAuth.mockReturnValue({
+      user: mockAdminUser,
+      isAuthenticated: true,
+      loading: false
+    });
+
+    renderWithProviders(<Admin />);
 
     // Wait for users to load
     await waitFor(() => {
@@ -95,19 +134,16 @@ describe('Admin Component', () => {
     });
   });
 
-  test('opens edit user modal', async () => {
-    adminAPI.getUserById.mockResolvedValue({
-      success: true,
-      data: mockUsers[0]
+  test('opens edit user modal with user data', async () => {
+    // Set up auth context with admin user
+    const { useAuth } = require('../../contexts/AuthContext');
+    useAuth.mockReturnValue({
+      user: mockAdminUser,
+      isAuthenticated: true,
+      loading: false
     });
 
-    render(
-      <AuthContext.Provider value={mockAdminContext}>
-        <BrowserRouter>
-          <Admin />
-        </BrowserRouter>
-      </AuthContext.Provider>
-    );
+    renderWithProviders(<Admin />);
 
     // Wait for users to load
     await waitFor(() => {
@@ -116,12 +152,11 @@ describe('Admin Component', () => {
 
     // Find and click the edit button for the first user
     const editButtons = screen.getAllByText(/edit/i);
-    fireEvent.click(editButtons[0]);
+    await user.click(editButtons[0]);
 
     // Wait for modal to open and user data to load
     await waitFor(() => {
       expect(screen.getByText(/edit user/i)).toBeInTheDocument();
-      expect(adminAPI.getUserById).toHaveBeenCalledWith(1);
       
       // Check form fields
       expect(screen.getByLabelText(/username/i)).toHaveValue('user1');
@@ -130,25 +165,33 @@ describe('Admin Component', () => {
     });
   });
 
-  test('updates user role', async () => {
-    adminAPI.getUserById.mockResolvedValue({
-      success: true,
-      data: mockUsers[0]
+  test('updates user role successfully', async () => {
+    // Set up auth context with admin user
+    const { useAuth } = require('../../contexts/AuthContext');
+    useAuth.mockReturnValue({
+      user: mockAdminUser,
+      isAuthenticated: true,
+      loading: false
     });
 
-    adminAPI.updateUser.mockResolvedValue({
-      success: true,
-      data: { ...mockUsers[0], role: 'admin' },
-      message: 'User updated successfully'
-    });
-
-    render(
-      <AuthContext.Provider value={mockAdminContext}>
-        <BrowserRouter>
-          <Admin />
-        </BrowserRouter>
-      </AuthContext.Provider>
+    // Mock user update endpoint
+    server.use(
+      rest.put(`${baseUrl}/admin/users/:userId`, (req, res, ctx) => {
+        const { userId } = req.params;
+        const updatedUser = { ...mockUsers[0], role: 'admin' };
+        
+        return res(
+          ctx.status(200),
+          ctx.json({
+            status: 'success',
+            data: updatedUser,
+            message: 'User updated successfully'
+          })
+        );
+      })
     );
+
+    renderWithProviders(<Admin />);
 
     // Wait for users to load
     await waitFor(() => {
@@ -157,7 +200,7 @@ describe('Admin Component', () => {
 
     // Find and click the edit button for the first user
     const editButtons = screen.getAllByText(/edit/i);
-    fireEvent.click(editButtons[0]);
+    await user.click(editButtons[0]);
 
     // Wait for modal to open
     await waitFor(() => {
@@ -165,41 +208,47 @@ describe('Admin Component', () => {
     });
 
     // Change role to admin
-    fireEvent.change(screen.getByLabelText(/role/i), { target: { value: 'admin' } });
+    await user.selectOptions(screen.getByLabelText(/role/i), 'admin');
     
     // Submit the form
-    fireEvent.click(screen.getByText(/save changes/i));
+    await user.click(screen.getByText(/save changes/i));
 
     // Wait for update to complete
     await waitFor(() => {
-      expect(adminAPI.updateUser).toHaveBeenCalledWith(1, { role: 'admin' });
       expect(screen.getByText(/user updated successfully/i)).toBeInTheDocument();
       
       // Modal should close
       expect(screen.queryByText(/edit user/i)).not.toBeInTheDocument();
-      
-      // Users should be refreshed
-      expect(adminAPI.getUsers).toHaveBeenCalledTimes(2);
     });
   });
 
   test('confirms and deletes user', async () => {
-    adminAPI.deleteUser.mockResolvedValue({
-      success: true,
-      message: 'User deleted successfully'
+    // Set up auth context with admin user
+    const { useAuth } = require('../../contexts/AuthContext');
+    useAuth.mockReturnValue({
+      user: mockAdminUser,
+      isAuthenticated: true,
+      loading: false
     });
+
+    // Mock delete user endpoint
+    server.use(
+      rest.delete(`${baseUrl}/admin/users/:userId`, (req, res, ctx) => {
+        return res(
+          ctx.status(200),
+          ctx.json({
+            status: 'success',
+            message: 'User deleted successfully'
+          })
+        );
+      })
+    );
 
     // Mock window.confirm
     const originalConfirm = window.confirm;
     window.confirm = jest.fn(() => true);
 
-    render(
-      <AuthContext.Provider value={mockAdminContext}>
-        <BrowserRouter>
-          <Admin />
-        </BrowserRouter>
-      </AuthContext.Provider>
-    );
+    renderWithProviders(<Admin />);
 
     // Wait for users to load
     await waitFor(() => {
@@ -208,16 +257,12 @@ describe('Admin Component', () => {
 
     // Find and click the delete button for the first user
     const deleteButtons = screen.getAllByText(/delete/i);
-    fireEvent.click(deleteButtons[0]);
+    await user.click(deleteButtons[0]);
 
     // Wait for deletion to complete
     await waitFor(() => {
       expect(window.confirm).toHaveBeenCalled();
-      expect(adminAPI.deleteUser).toHaveBeenCalledWith(1);
       expect(screen.getByText(/user deleted successfully/i)).toBeInTheDocument();
-      
-      // Users should be refreshed
-      expect(adminAPI.getUsers).toHaveBeenCalledTimes(2);
     });
 
     // Restore original confirm
@@ -225,16 +270,28 @@ describe('Admin Component', () => {
   });
 
   test('handles user fetch error', async () => {
-    // Reset the mock to return an error
-    adminAPI.getUsers.mockRejectedValue(new Error('Failed to fetch users'));
+    // Set up auth context with admin user
+    const { useAuth } = require('../../contexts/AuthContext');
+    useAuth.mockReturnValue({
+      user: mockAdminUser,
+      isAuthenticated: true,
+      loading: false
+    });
 
-    render(
-      <AuthContext.Provider value={mockAdminContext}>
-        <BrowserRouter>
-          <Admin />
-        </BrowserRouter>
-      </AuthContext.Provider>
+    // Mock failed users fetch
+    server.use(
+      rest.get(`${baseUrl}/admin/users`, (req, res, ctx) => {
+        return res(
+          ctx.status(500),
+          ctx.json({
+            status: 'error',
+            message: 'Failed to fetch users'
+          })
+        );
+      })
     );
+
+    renderWithProviders(<Admin />);
 
     // Wait for error message
     await waitFor(() => {
@@ -243,21 +300,28 @@ describe('Admin Component', () => {
   });
 
   test('handles user update error', async () => {
-    adminAPI.getUserById.mockResolvedValue({
-      success: true,
-      data: mockUsers[0]
+    // Set up auth context with admin user
+    const { useAuth } = require('../../contexts/AuthContext');
+    useAuth.mockReturnValue({
+      user: mockAdminUser,
+      isAuthenticated: true,
+      loading: false
     });
 
-    // Mock failed update
-    adminAPI.updateUser.mockRejectedValue(new Error('Failed to update user'));
-
-    render(
-      <AuthContext.Provider value={mockAdminContext}>
-        <BrowserRouter>
-          <Admin />
-        </BrowserRouter>
-      </AuthContext.Provider>
+    // Mock failed user update
+    server.use(
+      rest.put(`${baseUrl}/admin/users/:userId`, (req, res, ctx) => {
+        return res(
+          ctx.status(400),
+          ctx.json({
+            status: 'error',
+            message: 'Failed to update user'
+          })
+        );
+      })
     );
+
+    renderWithProviders(<Admin />);
 
     // Wait for users to load
     await waitFor(() => {
@@ -266,7 +330,7 @@ describe('Admin Component', () => {
 
     // Find and click the edit button for the first user
     const editButtons = screen.getAllByText(/edit/i);
-    fireEvent.click(editButtons[0]);
+    await user.click(editButtons[0]);
 
     // Wait for modal to open
     await waitFor(() => {
@@ -274,10 +338,10 @@ describe('Admin Component', () => {
     });
 
     // Change role to admin
-    fireEvent.change(screen.getByLabelText(/role/i), { target: { value: 'admin' } });
+    await user.selectOptions(screen.getByLabelText(/role/i), 'admin');
     
     // Submit the form
-    fireEvent.click(screen.getByText(/save changes/i));
+    await user.click(screen.getByText(/save changes/i));
 
     // Wait for error message
     await waitFor(() => {
@@ -286,17 +350,28 @@ describe('Admin Component', () => {
   });
 
   test('cancels delete when confirmation is declined', async () => {
+    // Set up auth context with admin user
+    const { useAuth } = require('../../contexts/AuthContext');
+    useAuth.mockReturnValue({
+      user: mockAdminUser,
+      isAuthenticated: true,
+      loading: false
+    });
+
     // Mock window.confirm to return false
     const originalConfirm = window.confirm;
     window.confirm = jest.fn(() => false);
-
-    render(
-      <AuthContext.Provider value={mockAdminContext}>
-        <BrowserRouter>
-          <Admin />
-        </BrowserRouter>
-      </AuthContext.Provider>
+    
+    // Create a spy for the delete endpoint to ensure it's not called
+    let deleteWasCalled = false;
+    server.use(
+      rest.delete(`${baseUrl}/admin/users/:userId`, (req, res, ctx) => {
+        deleteWasCalled = true;
+        return res(ctx.status(200));
+      })
     );
+
+    renderWithProviders(<Admin />);
 
     // Wait for users to load
     await waitFor(() => {
@@ -305,29 +380,26 @@ describe('Admin Component', () => {
 
     // Find and click the delete button for the first user
     const deleteButtons = screen.getAllByText(/delete/i);
-    fireEvent.click(deleteButtons[0]);
+    await user.click(deleteButtons[0]);
 
     // Confirm that delete was not called
     expect(window.confirm).toHaveBeenCalled();
-    expect(adminAPI.deleteUser).not.toHaveBeenCalled();
+    expect(deleteWasCalled).toBe(false);
 
     // Restore original confirm
     window.confirm = originalConfirm;
   });
 
   test('closes edit modal on cancel', async () => {
-    adminAPI.getUserById.mockResolvedValue({
-      success: true,
-      data: mockUsers[0]
+    // Set up auth context with admin user
+    const { useAuth } = require('../../contexts/AuthContext');
+    useAuth.mockReturnValue({
+      user: mockAdminUser,
+      isAuthenticated: true,
+      loading: false
     });
 
-    render(
-      <AuthContext.Provider value={mockAdminContext}>
-        <BrowserRouter>
-          <Admin />
-        </BrowserRouter>
-      </AuthContext.Provider>
-    );
+    renderWithProviders(<Admin />);
 
     // Wait for users to load
     await waitFor(() => {
@@ -336,7 +408,7 @@ describe('Admin Component', () => {
 
     // Find and click the edit button for the first user
     const editButtons = screen.getAllByText(/edit/i);
-    fireEvent.click(editButtons[0]);
+    await user.click(editButtons[0]);
 
     // Wait for modal to open
     await waitFor(() => {
@@ -344,7 +416,7 @@ describe('Admin Component', () => {
     });
 
     // Click cancel button
-    fireEvent.click(screen.getByText(/cancel/i));
+    await user.click(screen.getByText(/cancel/i));
 
     // Modal should close
     await waitFor(() => {

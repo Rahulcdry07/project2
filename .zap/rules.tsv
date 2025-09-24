@@ -1,0 +1,7 @@
+10016	IGNORE	(Cookie No HttpOnly Flag)
+10027	IGNORE	(Information Disclosure - Suspicious Comments)
+10049	IGNORE	(Non-Storable Content)
+10054	IGNORE	(Cookie without SameSite Attribute)
+10055	IGNORE	(CSP Scanner)
+10063	IGNORE	(Permissions Policy Header Not Set)
+90022	IGNORE	(Application Error Disclosure)

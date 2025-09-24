@@ -1,15 +1,10 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter, useParams } from 'react-router-dom';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import ResetPassword from '../ResetPassword';
-import { authAPI } from '../../services/api';
-
-// Mock the API
-jest.mock('../../services/api', () => ({
-  authAPI: {
-    resetPassword: jest.fn()
-  }
-}));
+import { rest } from 'msw';
+import { server, baseUrl } from '../../mocks/server';
+import { renderWithProviders } from '../../test-utils';
 
 // Mock react-router-dom
 jest.mock('react-router-dom', () => ({
@@ -18,40 +13,36 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => jest.fn()
 }));
 
+const { useParams } = require('react-router-dom');
+
 describe('ResetPassword Component', () => {
   const mockToken = 'valid-reset-token';
-
+  let user;
+  
   beforeEach(() => {
-    // Reset mocks
-    jest.clearAllMocks();
-    
+    // Setup userEvent
+    user = userEvent.setup();
+    // Reset MSW handlers
+    server.resetHandlers();
     // Set up the mock token param
     useParams.mockReturnValue({ token: mockToken });
   });
 
   test('renders reset password form correctly', () => {
-    render(
-      <BrowserRouter>
-        <ResetPassword />
-      </BrowserRouter>
-    );
+    renderWithProviders(<ResetPassword />);
 
     // Check if the important elements are in the document
     expect(screen.getByLabelText(/new password/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /reset password/i })).toBeInTheDocument();
-    expect(screen.getByText(/back to login/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /back to login/i })).toBeInTheDocument();
   });
 
   test('validates password fields', async () => {
-    render(
-      <BrowserRouter>
-        <ResetPassword />
-      </BrowserRouter>
-    );
+    renderWithProviders(<ResetPassword />);
 
     // Submit the form without filling any fields
-    fireEvent.click(screen.getByRole('button', { name: /reset password/i }));
+    await user.click(screen.getByRole('button', { name: /reset password/i }));
 
     // Wait for validation errors to appear
     await waitFor(() => {
@@ -60,27 +51,29 @@ describe('ResetPassword Component', () => {
     });
 
     // Enter a password that's too short
-    fireEvent.change(screen.getByLabelText(/new password/i), { target: { value: '12345' } });
-    fireEvent.blur(screen.getByLabelText(/new password/i)); // Trigger blur validation
+    await user.type(screen.getByLabelText(/new password/i), '12345');
+    await user.tab(); // Move focus away to trigger blur validation
 
     // Wait for validation error
     await waitFor(() => {
       expect(screen.getByText(/password must be at least 6 characters/i)).toBeInTheDocument();
     });
 
-    // Enter a valid password but different confirm password
-    fireEvent.change(screen.getByLabelText(/new password/i), { target: { value: 'password123' } });
-    fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: 'different123' } });
-    fireEvent.blur(screen.getByLabelText(/confirm password/i)); // Trigger blur validation
+    // Clear and enter a valid password but different confirm password
+    await user.clear(screen.getByLabelText(/new password/i));
+    await user.type(screen.getByLabelText(/new password/i), 'password123');
+    await user.type(screen.getByLabelText(/confirm password/i), 'different123');
+    await user.tab(); // Move focus away to trigger blur validation
 
     // Wait for validation error
     await waitFor(() => {
       expect(screen.getByText(/passwords do not match/i)).toBeInTheDocument();
     });
 
-    // Enter matching passwords
-    fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: 'password123' } });
-    fireEvent.blur(screen.getByLabelText(/confirm password/i)); // Trigger blur validation
+    // Clear and enter matching passwords
+    await user.clear(screen.getByLabelText(/confirm password/i));
+    await user.type(screen.getByLabelText(/confirm password/i), 'password123');
+    await user.tab(); // Move focus away to trigger blur validation
 
     // Wait for validation error to disappear
     await waitFor(() => {
@@ -88,29 +81,31 @@ describe('ResetPassword Component', () => {
     });
   });
 
-  test('submits the form with valid passwords', async () => {
+  test('submits the form with valid passwords and shows success message', async () => {
     // Mock successful password reset
-    authAPI.resetPassword.mockResolvedValue({
-      success: true,
-      message: 'Password reset successfully'
-    });
-
-    render(
-      <BrowserRouter>
-        <ResetPassword />
-      </BrowserRouter>
+    server.use(
+      rest.post(`${baseUrl}/auth/reset-password/${mockToken}`, (req, res, ctx) => {
+        return res(
+          ctx.status(200),
+          ctx.json({
+            status: 'success',
+            message: 'Password reset successfully'
+          })
+        );
+      })
     );
 
+    renderWithProviders(<ResetPassword />);
+
     // Fill in the form with matching passwords
-    fireEvent.change(screen.getByLabelText(/new password/i), { target: { value: 'password123' } });
-    fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: 'password123' } });
+    await user.type(screen.getByLabelText(/new password/i), 'password123');
+    await user.type(screen.getByLabelText(/confirm password/i), 'password123');
 
     // Submit the form
-    fireEvent.click(screen.getByRole('button', { name: /reset password/i }));
+    await user.click(screen.getByRole('button', { name: /reset password/i }));
 
-    // Wait for the API call to be made
+    // Wait for success message
     await waitFor(() => {
-      expect(authAPI.resetPassword).toHaveBeenCalledWith(mockToken, 'password123');
       expect(screen.getByText(/password reset successfully/i)).toBeInTheDocument();
     });
   });
@@ -118,20 +113,26 @@ describe('ResetPassword Component', () => {
   test('handles reset password error', async () => {
     // Mock error response
     const errorMessage = 'Invalid or expired token';
-    authAPI.resetPassword.mockRejectedValue(new Error(errorMessage));
-
-    render(
-      <BrowserRouter>
-        <ResetPassword />
-      </BrowserRouter>
+    server.use(
+      rest.post(`${baseUrl}/auth/reset-password/${mockToken}`, (req, res, ctx) => {
+        return res(
+          ctx.status(400),
+          ctx.json({
+            status: 'error',
+            message: errorMessage
+          })
+        );
+      })
     );
 
+    renderWithProviders(<ResetPassword />);
+
     // Fill in the form with matching passwords
-    fireEvent.change(screen.getByLabelText(/new password/i), { target: { value: 'password123' } });
-    fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: 'password123' } });
+    await user.type(screen.getByLabelText(/new password/i), 'password123');
+    await user.type(screen.getByLabelText(/confirm password/i), 'password123');
 
     // Submit the form
-    fireEvent.click(screen.getByRole('button', { name: /reset password/i }));
+    await user.click(screen.getByRole('button', { name: /reset password/i }));
 
     // Wait for the error message to appear
     await waitFor(() => {
@@ -143,11 +144,7 @@ describe('ResetPassword Component', () => {
     // Mock missing token
     useParams.mockReturnValue({ token: null });
 
-    render(
-      <BrowserRouter>
-        <ResetPassword />
-      </BrowserRouter>
-    );
+    renderWithProviders(<ResetPassword />);
 
     // Should show error message about invalid token
     expect(screen.getByText(/invalid password reset link/i)).toBeInTheDocument();
@@ -158,27 +155,28 @@ describe('ResetPassword Component', () => {
 
   test('disables the button during submission', async () => {
     // Mock reset password with a delay to test the loading state
-    authAPI.resetPassword.mockImplementation(() => new Promise(resolve => {
-      setTimeout(() => {
-        resolve({
-          success: true,
-          message: 'Password reset successfully'
-        });
-      }, 100);
-    }));
-
-    render(
-      <BrowserRouter>
-        <ResetPassword />
-      </BrowserRouter>
+    server.use(
+      rest.post(`${baseUrl}/auth/reset-password/${mockToken}`, async (req, res, ctx) => {
+        // Add a delay to simulate network latency
+        await new Promise(resolve => setTimeout(resolve, 100));
+        return res(
+          ctx.status(200),
+          ctx.json({
+            status: 'success',
+            message: 'Password reset successfully'
+          })
+        );
+      })
     );
 
+    renderWithProviders(<ResetPassword />);
+
     // Fill in the form with matching passwords
-    fireEvent.change(screen.getByLabelText(/new password/i), { target: { value: 'password123' } });
-    fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: 'password123' } });
+    await user.type(screen.getByLabelText(/new password/i), 'password123');
+    await user.type(screen.getByLabelText(/confirm password/i), 'password123');
 
     // Submit the form
-    fireEvent.click(screen.getByRole('button', { name: /reset password/i }));
+    await user.click(screen.getByRole('button', { name: /reset password/i }));
 
     // Check if the button is disabled and shows loading state
     expect(screen.getByRole('button', { name: /resetting/i })).toBeDisabled();
@@ -187,5 +185,12 @@ describe('ResetPassword Component', () => {
     await waitFor(() => {
       expect(screen.getByText(/password reset successfully/i)).toBeInTheDocument();
     });
+  });
+  
+  test('navigates to login page when clicking back to login', async () => {
+    renderWithProviders(<ResetPassword />);
+    
+    // Check that the link points to the login page
+    expect(screen.getByRole('link', { name: /back to login/i })).toHaveAttribute('href', '/login');
   });
 });

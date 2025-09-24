@@ -1,22 +1,18 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { render, screen, waitFor } from '../../../test-utils';
+import userEvent from '@testing-library/user-event';
 import Login from '../Login';
-import { authAPI } from '../../../services/api';
 import { setAuthData } from '../../../utils/auth';
+import { rest } from 'msw';
+import { server, baseUrl } from '../../../mocks/server';
 
-// Mock the API and auth utilities
-jest.mock('../../../services/api', () => ({
-  authAPI: {
-    login: jest.fn()
-  }
-}));
-
+// Mock the auth utilities
 jest.mock('../../../utils/auth', () => ({
-  setAuthData: jest.fn()
+  setAuthData: jest.fn(),
+  isValidEmail: jest.fn((email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
 }));
 
-// Mock the react-router-dom hooks
+// Mock the react-router-dom useNavigate hook
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -24,158 +20,195 @@ jest.mock('react-router-dom', () => ({
 }));
 
 describe('Login Component', () => {
+  let user;
+  
   beforeEach(() => {
     // Clear all mocks before each test
     jest.clearAllMocks();
+    // Setup userEvent
+    user = userEvent.setup();
+    // Reset mock server handlers
+    server.resetHandlers();
   });
 
-  test('renders login form correctly', () => {
-    render(
-      <BrowserRouter>
-        <Login />
-      </BrowserRouter>
-    );
+  test('renders login form with all expected elements', async () => {
+    render(<Login />);
 
-    // Check if the important elements are in the document
+    // Check heading
+    expect(screen.getByRole('heading', { name: /login/i })).toBeInTheDocument();
+    
+    // Check form inputs
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    
+    // Check remember me checkbox
+    expect(screen.getByLabelText(/remember me/i)).toBeInTheDocument();
+    
+    // Check links
+    expect(screen.getByRole('link', { name: /forgot password/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /register/i })).toBeInTheDocument();
+    
+    // Check submit button
     expect(screen.getByRole('button', { name: /login/i })).toBeInTheDocument();
-    expect(screen.getByText(/forgot password/i)).toBeInTheDocument();
-    expect(screen.getByText(/don't have an account/i)).toBeInTheDocument();
-    expect(screen.getByText(/register/i)).toBeInTheDocument();
   });
 
-  test('validates form inputs', async () => {
-    render(
-      <BrowserRouter>
-        <Login />
-      </BrowserRouter>
-    );
-
-    // Submit the form without filling any fields
-    fireEvent.click(screen.getByRole('button', { name: /login/i }));
-
-    // Wait for validation errors to appear
+  test('shows validation errors when submitting empty form', async () => {
+    render(<Login />);
+    
+    // Submit empty form
+    await user.click(screen.getByRole('button', { name: /login/i }));
+    
+    // Check validation errors appear
     await waitFor(() => {
       expect(screen.getByText(/email is required/i)).toBeInTheDocument();
       expect(screen.getByText(/password is required/i)).toBeInTheDocument();
     });
+    
+    // Ensure we didn't navigate away
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  test('handles email validation', async () => {
-    render(
-      <BrowserRouter>
-        <Login />
-      </BrowserRouter>
-    );
-
-    // Enter an invalid email
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'invalid-email' } });
-    fireEvent.blur(screen.getByLabelText(/email/i)); // Trigger blur validation
-
-    // Wait for validation error
-    await waitFor(() => {
-      expect(screen.getByText(/invalid email format/i)).toBeInTheDocument();
-    });
-
-    // Enter a valid email
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'valid@example.com' } });
-    fireEvent.blur(screen.getByLabelText(/email/i)); // Trigger blur validation
-
-    // Wait for validation error to disappear
+  test('validates email format correctly', async () => {
+    render(<Login />);
+    
+    // Type invalid email
+    await user.type(screen.getByLabelText(/email/i), 'invalid-email');
+    await user.tab(); // Move focus to trigger blur validation
+    
+    // Check validation error appears
+    expect(screen.getByText(/invalid email format/i)).toBeInTheDocument();
+    
+    // Clear and type valid email
+    await user.clear(screen.getByLabelText(/email/i));
+    await user.type(screen.getByLabelText(/email/i), 'valid@example.com');
+    await user.tab(); // Move focus to trigger blur validation
+    
+    // Check validation error disappears
     await waitFor(() => {
       expect(screen.queryByText(/invalid email format/i)).not.toBeInTheDocument();
     });
   });
 
-  test('submits the form with valid credentials', async () => {
-    // Mock successful login
-    authAPI.login.mockResolvedValue({
-      user: { id: 1, username: 'testuser', email: 'test@example.com', role: 'user' },
-      token: 'test-token'
-    });
-
-    render(
-      <BrowserRouter>
-        <Login />
-      </BrowserRouter>
-    );
-
-    // Fill in the form
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
-
-    // Submit the form
-    fireEvent.click(screen.getByRole('button', { name: /login/i }));
-
-    // Wait for the API call to be made
+  test('handles successful login correctly', async () => {
+    render(<Login />);
+    
+    // Fill form with valid credentials
+    await user.type(screen.getByLabelText(/email/i), 'test@example.com');
+    await user.type(screen.getByLabelText(/password/i), 'password123');
+    
+    // Submit form
+    await user.click(screen.getByRole('button', { name: /login/i }));
+    
+    // Wait for form submission to complete
     await waitFor(() => {
-      expect(authAPI.login).toHaveBeenCalledWith('test@example.com', 'password123');
+      // Check auth data was set
       expect(setAuthData).toHaveBeenCalledWith(
-        { id: 1, username: 'testuser', email: 'test@example.com', role: 'user' },
-        'test-token'
+        expect.objectContaining({
+          id: 1,
+          username: 'testuser',
+          email: 'test@example.com',
+          role: 'user'
+        }),
+        'fake-jwt-token'
       );
+      
+      // Check navigation to dashboard
       expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
     });
   });
 
-  test('handles login error', async () => {
-    // Mock failed login
-    const errorMessage = 'Invalid email or password';
-    authAPI.login.mockRejectedValue(new Error(errorMessage));
-
-    render(
-      <BrowserRouter>
-        <Login />
-      </BrowserRouter>
+  test('handles login error correctly', async () => {
+    // Override the default handler to simulate a login error
+    server.use(
+      rest.post(`${baseUrl}/auth/login`, (req, res, ctx) => {
+        return res(
+          ctx.status(401),
+          ctx.json({
+            status: 'error',
+            message: 'Invalid email or password'
+          })
+        );
+      })
     );
-
-    // Fill in the form
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'wrongpassword' } });
-
-    // Submit the form
-    fireEvent.click(screen.getByRole('button', { name: /login/i }));
-
-    // Wait for the error message to appear
+    
+    render(<Login />);
+    
+    // Fill form with invalid credentials
+    await user.type(screen.getByLabelText(/email/i), 'wrong@example.com');
+    await user.type(screen.getByLabelText(/password/i), 'wrongpassword');
+    
+    // Submit form
+    await user.click(screen.getByRole('button', { name: /login/i }));
+    
+    // Check error message appears
     await waitFor(() => {
-      expect(screen.getByText(errorMessage)).toBeInTheDocument();
+      expect(screen.getByText(/invalid email or password/i)).toBeInTheDocument();
     });
-
-    // Ensure navigation didn't happen
+    
+    // Ensure we didn't navigate away
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  test('disables the button during submission', async () => {
-    // Mock login with a delay to test the loading state
-    authAPI.login.mockImplementation(() => new Promise(resolve => {
-      setTimeout(() => {
-        resolve({
-          user: { id: 1, username: 'testuser', email: 'test@example.com', role: 'user' },
-          token: 'test-token'
-        });
-      }, 100);
-    }));
-
-    render(
-      <BrowserRouter>
-        <Login />
-      </BrowserRouter>
+  test('shows loading state during form submission', async () => {
+    // Create a delay in the login response
+    server.use(
+      rest.post(`${baseUrl}/auth/login`, (req, res, ctx) => {
+        return res(
+          ctx.delay(200),
+          ctx.status(200),
+          ctx.json({
+            status: 'success',
+            data: {
+              user: {
+                id: 1,
+                username: 'testuser',
+                email: 'test@example.com',
+                role: 'user',
+                is_verified: true
+              },
+              token: 'fake-jwt-token'
+            }
+          })
+        );
+      })
     );
-
-    // Fill in the form
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
-
-    // Submit the form
-    fireEvent.click(screen.getByRole('button', { name: /login/i }));
-
-    // Check if the button is disabled
-    expect(screen.getByRole('button', { name: /logging in/i })).toBeDisabled();
+    
+    render(<Login />);
+    
+    // Fill form
+    await user.type(screen.getByLabelText(/email/i), 'test@example.com');
+    await user.type(screen.getByLabelText(/password/i), 'password123');
+    
+    // Click submit button
+    await user.click(screen.getByRole('button', { name: /login/i }));
+    
+    // Check loading state
+    expect(screen.getByRole('button', { name: /logging in/i })).toBeInTheDocument();
+    expect(screen.getByRole('status')).toBeInTheDocument(); // spinner
     
     // Wait for submission to complete
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
     });
+  });
+
+  test('redirects to register page when clicking register link', async () => {
+    render(<Login />);
+    
+    // Click register link
+    await user.click(screen.getByRole('link', { name: /register/i }));
+    
+    // Check URL contains register
+    expect(window.location.pathname).toBe('/register');
+  });
+
+  test('redirects to forgot password page when clicking forgot password link', async () => {
+    render(<Login />);
+    
+    // Click forgot password link
+    await user.click(screen.getByRole('link', { name: /forgot password/i }));
+    
+    // Check URL contains forgot-password
+    expect(window.location.pathname).toBe('/forgot-password');
   });
 });

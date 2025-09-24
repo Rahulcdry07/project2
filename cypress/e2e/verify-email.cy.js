@@ -1,6 +1,6 @@
 describe('Email Verification', () => {
   it('should show a success message when the token is valid', () => {
-    cy.intercept('POST', 'http://localhost:3000/api/verify-email', (req) => {
+    cy.intercept('POST', 'http://0.0.0.0:3000/api/verify-email', (req) => {
       req.reply({
         statusCode: 200,
         body: { message: 'Email verified successfully. You can now log in.' },
@@ -18,7 +18,7 @@ describe('Email Verification', () => {
   });
 
   it('should show an error message when the token is invalid', () => {
-    cy.intercept('POST', 'http://localhost:3000/api/verify-email', (req) => {
+    cy.intercept('POST', 'http://0.0.0.0:3000/api/verify-email', (req) => {
       req.reply({
         statusCode: 400,
         body: { error: 'Invalid verification token.' },

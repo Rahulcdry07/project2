@@ -1,67 +1,37 @@
-## Test Status and Troubleshooting
+# Test Status Report
 
-### Current Status
-The tests have been implemented for both backend and frontend components. However, there are some hanging issues with the frontend tests due to the complex component structure and dependencies.
+## API Tests
+- ✅ Health Endpoint: Working correctly
+- ✅ Authentication: Login successful, token retrieved
+- ✅ Profile Endpoint: Returns user profile data
+- ✅ Admin Users Endpoint: Returns list of users
+- ✅ Metrics Endpoint: Prometheus metrics being collected
 
-### Backend Tests
-The backend tests are running with some timeouts and email sending errors (which is expected in the test environment), but 16 tests are passing. These tests cover:
-- Authentication endpoints (register, login, validate token)
-- Profile management
-- Admin functionality
-- Password reset and email verification
+## Cypress End-to-End Tests
+- ✅ Login Tests: Successful login and error validation
+- ✅ Profile Tests: Profile page loads and updates
+- ✅ Basic Page Loading: Some pages load correctly
+- ❌ Admin Tests: Authentication issues
+- ❌ Dashboard Tests: UI elements not found
+- ❌ Forgot Password: Reset requests not working properly
+- ❌ Registration: Some completion issues
+- ❌ Routing: Mixed results on page navigation
+- ❌ Smoke Test: Issues with basic app loading
 
-### Frontend Tests
-The frontend React component tests are experiencing hanging issues due to:
+## Issues and Solutions
 
-1. Complex component interdependencies
-2. Difficulties mocking the AuthContext and React Router properly
-3. Async operations that may not be resolving as expected
+### Fixed Issues:
+1. API response parsing in test_api.sh - Token extraction corrected
+2. Rate limiting for tests - Increased limits for test environments
 
-### Recommendations for Running Tests
+### Pending Issues:
+1. Port conflicts between server instances
+2. Authentication token handling in Cypress tests
+3. UI element selectors may need updating
+4. API route interception in Cypress tests not working correctly
 
-1. **For Backend Tests**:
-   ```bash
-   cd /workspaces/project2
-   npx mocha test/backend.test.js --timeout 10000
-   ```
-
-2. **For Frontend Tests**:
-   - Run tests for individual, simpler components first:
-   ```bash
-   cd /workspaces/project2/public/dashboard-app
-   npm run test:debug -- --testPathPattern=Login.test.js
-   ```
-   
-   - For complex components like Dashboard, Admin, etc., consider:
-     - Breaking down the components into smaller, more testable units
-     - Testing each piece separately
-     - Using more robust mocking strategies
-
-### Common Test Issues and Solutions
-
-1. **React Router Navigation Issues**:
-   - Ensure useNavigate is properly mocked
-   - Use jest.fn() for the mock implementation
-   - Test navigation effects separately from rendering
-
-2. **AuthContext Issues**:
-   - Create simplified mock implementations
-   - Test authentication logic separately from UI components
-   - Use dependency injection where possible
-
-3. **Async Operation Timeouts**:
-   - Increase test timeouts
-   - Ensure all promises are resolved
-   - Use waitFor with reasonable timeouts
-
-4. **API Call Mocking**:
-   - Use explicit mock implementations
-   - Return consistent test data
-   - Test error handling separately
-
-### Next Steps for Improving Tests
-
-1. Refactor components to be more testable
-2. Separate business logic from UI for easier testing
-3. Use more granular test files for specific behaviors
-4. Consider using testing-library's userEvent instead of fireEvent for more realistic testing
+## Next Steps
+1. Fix port conflict issues for testing
+2. Review and update UI element selectors
+3. Improve API route interception in tests
+4. Update authentication handling in test setup

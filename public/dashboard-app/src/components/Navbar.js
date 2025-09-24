@@ -1,99 +1,108 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import PropTypes from 'prop-types';
+import { useAuth } from '../contexts/AuthContext';
+import { isAdmin } from '../utils/auth';
 
+/**
+ * Navigation bar component
+ */
 const Navbar = () => {
-    const [userRole, setUserRole] = useState(null);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const { currentUser, logout, loading } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-
-    useEffect(() => {
-        console.log('Current pathname:', location.pathname);
-        const token = localStorage.getItem('token');
-        if (token) {
-            setIsLoggedIn(true);
-            const fetchUserRole = async () => {
-                try {
-                    const response = await fetch('/api/profile', {
-                        headers: { 'Authorization': 'Bearer ' + token }
-                    });
-                    const user = await response.json();
-                    if (response.ok) {
-                        setUserRole(user.role);
-                    } else {
-                        console.error('Failed to fetch user role:', user.error);
-                        localStorage.removeItem('token');
-                        setUserRole(null);
-                        setIsLoggedIn(false);
-                    }
-                } catch (error) {
-                    console.error('Network error fetching user role:', error);
-                    localStorage.removeItem('token');
-                    setUserRole(null);
-                    setIsLoggedIn(false);
-                }
-            };
-            fetchUserRole();
-        } else {
-            setIsLoggedIn(false);
-            setUserRole(null);
-        }
-    }, [location.pathname]); // Re-fetch role if path changes
-
+    
     const handleLogout = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch('/api/logout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') },
-            });
-            const result = await response.json();
-            if (result.message === 'Logout successful.') {
-                localStorage.removeItem('token');
-                setUserRole(null); // Clear role on logout
-                navigate('/login');
-            } else {
-                alert('Logout failed: ' + (result.message || 'Unknown error'));
-            }
+            await logout();
+            navigate('/login');
         } catch (error) {
-            alert('Network error during logout.');
+            console.error('Logout failed:', error);
         }
     };
 
     return (
         <nav className="navbar navbar-expand-lg navbar-light bg-light">
             <div className="container-fluid">
-                <Link className="navbar-brand" to="/dashboard">SecureReg</Link>
-                <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <Link className="navbar-brand" to="/dashboard">
+                    <i className="bi bi-shield-lock me-2"></i>
+                    SecureReg
+                </Link>
+                <button 
+                    className="navbar-toggler" 
+                    type="button" 
+                    data-bs-toggle="collapse" 
+                    data-bs-target="#navbarNav" 
+                    aria-controls="navbarNav" 
+                    aria-expanded="false" 
+                    aria-label="Toggle navigation"
+                >
                     <span className="navbar-toggler-icon"></span>
                 </button>
+                
                 <div className="collapse navbar-collapse" id="navbarNav">
                     <ul className="navbar-nav ms-auto">
-                        {isLoggedIn ? (
+                        {!loading && currentUser ? (
                             <>
-                                {console.log('Condition for Dashboard link:', location.pathname !== '/dashboard')}
                                 <li className="nav-item">
-                                    <Link className="nav-link" to="/dashboard">Dashboard</Link>
+                                    <Link 
+                                        className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`} 
+                                        to="/dashboard"
+                                    >
+                                        <i className="bi bi-speedometer2 me-1"></i>
+                                        Dashboard
+                                    </Link>
                                 </li>
                                 <li className="nav-item">
-                                    <Link className="nav-link" to="/profile">Profile</Link>
+                                    <Link 
+                                        className={`nav-link ${location.pathname === '/profile' ? 'active' : ''}`} 
+                                        to="/profile"
+                                    >
+                                        <i className="bi bi-person me-1"></i>
+                                        Profile
+                                    </Link>
                                 </li>
-                                {userRole === 'admin' && (
+                                {isAdmin() && (
                                     <li className="nav-item">
-                                        <Link className="nav-link" to="/admin">Admin</Link>
+                                        <Link 
+                                            className={`nav-link ${location.pathname === '/admin' ? 'active' : ''}`} 
+                                            to="/admin"
+                                        >
+                                            <i className="bi bi-gear me-1"></i>
+                                            Admin
+                                        </Link>
                                     </li>
                                 )}
                                 <li className="nav-item">
-                                    <button className="nav-link btn btn-link" onClick={handleLogout} style={{ textDecoration: 'none', color: 'inherit' }}>Logout</button>
+                                    <button 
+                                        className="nav-link btn btn-link" 
+                                        onClick={handleLogout}
+                                    >
+                                        <i className="bi bi-box-arrow-right me-1"></i>
+                                        Logout
+                                    </button>
                                 </li>
                             </>
                         ) : (
                             <>
                                 <li className="nav-item">
-                                    <Link className="nav-link" to="/login">Login</Link>
+                                    <Link 
+                                        className={`nav-link ${location.pathname === '/login' ? 'active' : ''}`} 
+                                        to="/login"
+                                    >
+                                        <i className="bi bi-box-arrow-in-right me-1"></i>
+                                        Login
+                                    </Link>
                                 </li>
                                 <li className="nav-item">
-                                    <Link className="nav-link" to="/register">Register</Link>
+                                    <Link 
+                                        className={`nav-link ${location.pathname === '/register' ? 'active' : ''}`} 
+                                        to="/register"
+                                    >
+                                        <i className="bi bi-person-plus me-1"></i>
+                                        Register
+                                    </Link>
                                 </li>
                             </>
                         )}

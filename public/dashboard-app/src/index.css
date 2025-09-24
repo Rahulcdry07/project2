@@ -5,9 +5,103 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #f8f9fa;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* Custom styles */
+.btn-link {
+  text-decoration: none;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
+}
+
+.nav-link.active {
+  font-weight: 500;
+}
+
+.card {
+  border-radius: 0.5rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+}
+
+/* Form styles */
+.form-control:focus {
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Custom alert styling */
+.alert {
+  border-radius: 0.25rem;
+}
+
+/* Custom spinner styling */
+.spinner-border {
+  vertical-align: middle;
+}
+
+/* Table styling */
+.table-responsive {
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+
+.table {
+  margin-bottom: 0;
+}
+
+/* Auth pages */
+.auth-container {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-card {
+  min-width: 320px;
+  max-width: 450px;
+}
+
+/* Dashboard styles */
+.dashboard-card {
+  height: 100%;
+}
+
+.dashboard-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+/* Admin panel styles */
+.admin-controls {
+  margin-bottom: 1.5rem;
+}
+
+/* User profile styles */
+.profile-header {
+  padding: 1.5rem 0;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.profile-picture {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #fff;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }

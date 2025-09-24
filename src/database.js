@@ -1,13 +1,25 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const path = require('path');
 const bcrypt = require('bcrypt');
+require('dotenv').config();
 
 // Initialize Sequelize with SQLite
 const sequelize = new Sequelize({
   dialect: 'sqlite',
-  storage: path.join(__dirname, 'database.sqlite'),
-  logging: false,
+  storage: process.env.DB_STORAGE || path.join(__dirname, 'database.sqlite'),
+  logging: process.env.DB_LOGGING === 'true',
 });
+
+// Test the database connection
+(async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('Database connection has been established successfully.');
+  } catch (error) {
+    console.error('Unable to connect to the database:', error);
+    process.exit(1); // Exit with error code
+  }
+})();
 
 // Define the User model
 const User = sequelize.define('User', {
@@ -15,22 +27,51 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
+    validate: {
+      notEmpty: {
+        msg: 'Username cannot be empty'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'Username must be between 3 and 50 characters'
+      }
+    }
   },
   email: {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
     validate: {
-      isEmail: true,
-    },
+      isEmail: {
+        msg: 'Please enter a valid email address'
+      },
+      notEmpty: {
+        msg: 'Email cannot be empty'
+      }
+    }
   },
   password: {
     type: DataTypes.STRING,
     allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'Password cannot be empty'
+      },
+      len: {
+        args: [6, 100],
+        msg: 'Password must be at least 6 characters long'
+      }
+    }
   },
   role: {
     type: DataTypes.STRING,
-    defaultValue: 'user', // 'user' or 'admin'
+    defaultValue: 'user',
+    validate: {
+      isIn: {
+        args: [['user', 'admin']],
+        msg: 'Role must be either "user" or "admin"'
+      }
+    }
   },
   is_verified: {
     type: DataTypes.BOOLEAN,
@@ -54,6 +95,29 @@ const User = sequelize.define('User', {
 User.prototype.comparePassword = async function (password) {
   return bcrypt.compare(password, this.password);
 };
+
+// Error handling hooks
+User.addHook('beforeCreate', async (user, options) => {
+  try {
+    // Add any additional validations or data transformations here
+    if (user.email) {
+      user.email = user.email.toLowerCase(); // Normalize email
+    }
+  } catch (error) {
+    throw new Error(`Error in beforeCreate hook: ${error.message}`);
+  }
+});
+
+User.addHook('beforeUpdate', async (user, options) => {
+  try {
+    // Add any additional validations or data transformations here
+    if (user.changed('email')) {
+      user.email = user.email.toLowerCase(); // Normalize email
+    }
+  } catch (error) {
+    throw new Error(`Error in beforeUpdate hook: ${error.message}`);
+  }
+});
 
 module.exports = {
   sequelize,

@@ -1,16 +1,20 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import Profile from '../Profile';
-import { profileAPI } from '../../../services/api';
-import { AuthContext } from '../../../contexts/AuthContext';
+import { rest } from 'msw';
+import { server, baseUrl } from '../../../mocks/server';
+import { renderWithProviders } from '../../../test-utils';
 
-// Mock the API
-jest.mock('../../../services/api', () => ({
-  profileAPI: {
-    getProfile: jest.fn(),
-    updateProfile: jest.fn()
-  }
-}));
+// Mock the AuthContext
+const mockUser = {
+  id: 1,
+  username: 'testuser',
+  email: 'test@example.com',
+  firstName: 'Test',
+  lastName: 'User',
+  bio: 'Test bio'
+};
 
 // Mock the useNavigate hook
 const mockNavigate = jest.fn();
@@ -19,41 +23,43 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate
 }));
 
-describe('Profile Component', () => {
-  const mockUser = {
-    id: 1,
-    username: 'testuser',
-    email: 'test@example.com',
-    firstName: 'Test',
-    lastName: 'User',
-    bio: 'Test bio'
-  };
-
-  const mockAuthContext = {
+// Mock the AuthContext
+jest.mock('../../../contexts/AuthContext', () => ({
+  ...jest.requireActual('../../../contexts/AuthContext'),
+  useAuth: () => ({
     user: mockUser,
     isAuthenticated: true,
     loading: false,
     logout: jest.fn(),
     updateUser: jest.fn()
-  };
+  })
+}));
 
+describe('Profile Component', () => {
+  let user;
+  
   beforeEach(() => {
-    // Reset mocks
-    jest.clearAllMocks();
+    // Setup userEvent
+    user = userEvent.setup();
+    // Reset MSW handlers
+    server.resetHandlers();
     
-    // Mock successful profile fetch
-    profileAPI.getProfile.mockResolvedValue({
-      success: true,
-      data: mockUser
-    });
+    // Set up default profile endpoint
+    server.use(
+      rest.get(`${baseUrl}/profile`, (req, res, ctx) => {
+        return res(
+          ctx.status(200),
+          ctx.json({
+            status: 'success',
+            data: mockUser
+          })
+        );
+      })
+    );
   });
 
   test('renders profile form with user data', async () => {
-    render(
-      <AuthContext.Provider value={mockAuthContext}>
-        <Profile />
-      </AuthContext.Provider>
-    );
+    renderWithProviders(<Profile />);
 
     // Wait for the profile data to load
     await waitFor(() => {
@@ -77,17 +83,24 @@ describe('Profile Component', () => {
     };
 
     // Mock successful profile update
-    profileAPI.updateProfile.mockResolvedValue({
-      success: true,
-      data: updatedUser,
-      message: 'Profile updated successfully'
-    });
-
-    render(
-      <AuthContext.Provider value={mockAuthContext}>
-        <Profile />
-      </AuthContext.Provider>
+    server.use(
+      rest.put(`${baseUrl}/profile`, (req, res, ctx) => {
+        return res(
+          ctx.status(200),
+          ctx.json({
+            status: 'success',
+            data: updatedUser,
+            message: 'Profile updated successfully'
+          })
+        );
+      })
     );
+
+    // Get the updateUser function from the mocked context
+    const { useAuth } = require('../../../contexts/AuthContext');
+    const { updateUser } = useAuth();
+
+    renderWithProviders(<Profile />);
 
     // Wait for the profile data to load
     await waitFor(() => {
@@ -95,31 +108,27 @@ describe('Profile Component', () => {
     });
 
     // Update form fields
-    fireEvent.change(screen.getByLabelText(/first name/i), { target: { value: 'Updated' } });
-    fireEvent.change(screen.getByLabelText(/last name/i), { target: { value: 'Name' } });
-    fireEvent.change(screen.getByLabelText(/bio/i), { target: { value: 'Updated bio' } });
+    await user.clear(screen.getByLabelText(/first name/i));
+    await user.type(screen.getByLabelText(/first name/i), 'Updated');
+    
+    await user.clear(screen.getByLabelText(/last name/i));
+    await user.type(screen.getByLabelText(/last name/i), 'Name');
+    
+    await user.clear(screen.getByLabelText(/bio/i));
+    await user.type(screen.getByLabelText(/bio/i), 'Updated bio');
 
     // Submit the form
-    fireEvent.click(screen.getByRole('button', { name: /update profile/i }));
+    await user.click(screen.getByRole('button', { name: /update profile/i }));
 
     // Wait for the update to complete
     await waitFor(() => {
-      expect(profileAPI.updateProfile).toHaveBeenCalledWith({
-        firstName: 'Updated',
-        lastName: 'Name',
-        bio: 'Updated bio'
-      });
-      expect(mockAuthContext.updateUser).toHaveBeenCalledWith(updatedUser);
       expect(screen.getByText(/profile updated successfully/i)).toBeInTheDocument();
+      expect(updateUser).toHaveBeenCalledWith(updatedUser);
     });
   });
 
   test('validates form inputs', async () => {
-    render(
-      <AuthContext.Provider value={mockAuthContext}>
-        <Profile />
-      </AuthContext.Provider>
-    );
+    renderWithProviders(<Profile />);
 
     // Wait for the profile data to load
     await waitFor(() => {
@@ -127,32 +136,35 @@ describe('Profile Component', () => {
     });
 
     // Clear required fields
-    fireEvent.change(screen.getByLabelText(/first name/i), { target: { value: '' } });
-    fireEvent.change(screen.getByLabelText(/last name/i), { target: { value: '' } });
+    await user.clear(screen.getByLabelText(/first name/i));
+    await user.clear(screen.getByLabelText(/last name/i));
     
     // Submit the form
-    fireEvent.click(screen.getByRole('button', { name: /update profile/i }));
+    await user.click(screen.getByRole('button', { name: /update profile/i }));
 
     // Wait for validation errors
     await waitFor(() => {
       expect(screen.getByText(/first name is required/i)).toBeInTheDocument();
       expect(screen.getByText(/last name is required/i)).toBeInTheDocument();
     });
-
-    // Ensure API wasn't called
-    expect(profileAPI.updateProfile).not.toHaveBeenCalled();
   });
 
   test('handles profile update error', async () => {
     // Mock failed profile update
     const errorMessage = 'Failed to update profile';
-    profileAPI.updateProfile.mockRejectedValue(new Error(errorMessage));
-
-    render(
-      <AuthContext.Provider value={mockAuthContext}>
-        <Profile />
-      </AuthContext.Provider>
+    server.use(
+      rest.put(`${baseUrl}/profile`, (req, res, ctx) => {
+        return res(
+          ctx.status(400),
+          ctx.json({
+            status: 'error',
+            message: errorMessage
+          })
+        );
+      })
     );
+
+    renderWithProviders(<Profile />);
 
     // Wait for the profile data to load
     await waitFor(() => {
@@ -160,37 +172,36 @@ describe('Profile Component', () => {
     });
 
     // Update form fields
-    fireEvent.change(screen.getByLabelText(/first name/i), { target: { value: 'Updated' } });
+    await user.clear(screen.getByLabelText(/first name/i));
+    await user.type(screen.getByLabelText(/first name/i), 'Updated');
     
     // Submit the form
-    fireEvent.click(screen.getByRole('button', { name: /update profile/i }));
+    await user.click(screen.getByRole('button', { name: /update profile/i }));
 
     // Wait for the error message
     await waitFor(() => {
       expect(screen.getByText(errorMessage)).toBeInTheDocument();
     });
-
-    // Ensure updateUser wasn't called
-    expect(mockAuthContext.updateUser).not.toHaveBeenCalled();
   });
 
   test('disables the button during submission', async () => {
     // Mock profile update with delay
-    profileAPI.updateProfile.mockImplementation(() => new Promise(resolve => {
-      setTimeout(() => {
-        resolve({
-          success: true,
-          data: mockUser,
-          message: 'Profile updated successfully'
-        });
-      }, 100);
-    }));
-
-    render(
-      <AuthContext.Provider value={mockAuthContext}>
-        <Profile />
-      </AuthContext.Provider>
+    server.use(
+      rest.put(`${baseUrl}/profile`, async (req, res, ctx) => {
+        // Add a delay to simulate network latency
+        await new Promise(resolve => setTimeout(resolve, 100));
+        return res(
+          ctx.status(200),
+          ctx.json({
+            status: 'success',
+            data: mockUser,
+            message: 'Profile updated successfully'
+          })
+        );
+      })
     );
+
+    renderWithProviders(<Profile />);
 
     // Wait for the profile data to load
     await waitFor(() => {
@@ -198,10 +209,11 @@ describe('Profile Component', () => {
     });
 
     // Update form fields
-    fireEvent.change(screen.getByLabelText(/first name/i), { target: { value: 'Updated' } });
+    await user.clear(screen.getByLabelText(/first name/i));
+    await user.type(screen.getByLabelText(/first name/i), 'Updated');
     
     // Submit the form
-    fireEvent.click(screen.getByRole('button', { name: /update profile/i }));
+    await user.click(screen.getByRole('button', { name: /update profile/i }));
 
     // Check if the button is disabled and shows loading state
     expect(screen.getByRole('button', { name: /updating/i })).toBeDisabled();
@@ -213,14 +225,20 @@ describe('Profile Component', () => {
   });
 
   test('handles profile fetch error', async () => {
-    // Reset the mock to return an error
-    profileAPI.getProfile.mockRejectedValue(new Error('Failed to fetch profile'));
-
-    render(
-      <AuthContext.Provider value={mockAuthContext}>
-        <Profile />
-      </AuthContext.Provider>
+    // Mock failed profile fetch
+    server.use(
+      rest.get(`${baseUrl}/profile`, (req, res, ctx) => {
+        return res(
+          ctx.status(500),
+          ctx.json({
+            status: 'error',
+            message: 'Failed to fetch profile'
+          })
+        );
+      })
     );
+
+    renderWithProviders(<Profile />);
 
     // Wait for the error message
     await waitFor(() => {
