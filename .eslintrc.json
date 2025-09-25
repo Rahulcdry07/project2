@@ -12,6 +12,13 @@
     "ecmaVersion": 2020,
     "sourceType": "module"
   },
+  "ignorePatterns": [
+    "public/dashboard-app/**/*",
+    "node_modules/**/*",
+    "build/**/*",
+    "dist/**/*",
+    "*.min.js"
+  ],
   "rules": {
     "no-console": "warn",
     "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
@@ -25,7 +32,8 @@
     {
       "files": ["**/*.test.js"],
       "env": {
-        "jest": true
+        "jest": true,
+        "mocha": true
       }
     }
   ]
