@@ -97,7 +97,7 @@ User.prototype.comparePassword = async function (password) {
 };
 
 // Error handling hooks
-User.addHook('beforeCreate', async (user, options) => {
+User.addHook('beforeCreate', async (user, _options) => {
   try {
     // Add any additional validations or data transformations here
     if (user.email) {
@@ -108,7 +108,7 @@ User.addHook('beforeCreate', async (user, options) => {
   }
 });
 
-User.addHook('beforeUpdate', async (user, options) => {
+User.addHook('beforeUpdate', async (user, _options) => {
   try {
     // Add any additional validations or data transformations here
     if (user.changed('email')) {

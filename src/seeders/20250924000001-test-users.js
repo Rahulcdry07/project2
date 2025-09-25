@@ -4,7 +4,7 @@
  * Seeder: Create Test Users
  */
 module.exports = {
-  up: async (queryInterface, Sequelize) => {
+  up: async (queryInterface, _Sequelize) => {
     const bcrypt = require('bcrypt');
     const salt = await bcrypt.genSalt(10);
     
