@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Navbar from '../Navbar';
-import { AuthProvider } from '../../contexts/AuthContext';
+import { AuthProvider, AuthContext } from '../../contexts/AuthContext';
 
 // Mock the useNavigate hook
 const mockNavigate = jest.fn();

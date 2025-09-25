@@ -5,15 +5,32 @@ import { authAPI, profileAPI, dashboardAPI, adminAPI } from '../api';
 jest.mock('axios');
 
 describe('API Services', () => {
+  let originalLocalStorage;
+
+  beforeAll(() => {
+    // Save original localStorage
+    originalLocalStorage = global.localStorage;
+  });
+
   beforeEach(() => {
     // Clear all axios mocks
     jest.clearAllMocks();
     // Mock localStorage
-    global.localStorage = {
+    const mockLocalStorage = {
       getItem: jest.fn(() => 'mock-token'),
       setItem: jest.fn(),
       removeItem: jest.fn()
     };
+    Object.defineProperty(global, 'localStorage', {
+      value: mockLocalStorage,
+      writable: true,
+      configurable: true
+    });
+  });
+
+  afterAll(() => {
+    // Restore original localStorage
+    global.localStorage = originalLocalStorage;
   });
 
   describe('authAPI', () => {

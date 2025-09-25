@@ -19,6 +19,14 @@ export const useForm = (initialValues, validateForm) => {
         setTouched({});
         setIsSubmitting(false);
     };
+
+    // Set a specific field value
+    const setFieldValue = (name, value) => {
+        setValues(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
     
     // Handle input change
     const handleChange = (e) => {
@@ -86,7 +94,8 @@ export const useForm = (initialValues, validateForm) => {
         handleBlur,
         handleSubmit,
         resetForm,
-        setValues
+        setValues,
+        setFieldValue
     };
 };
 

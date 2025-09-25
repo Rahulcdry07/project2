@@ -17,10 +17,18 @@ jest.mock('../../contexts/AuthContext', () => ({
   useAuth: () => mockUseAuth()
 }));
 
+// Mock auth utils
+jest.mock('../../utils/auth', () => ({
+  isAdmin: jest.fn(() => false)
+}));
+
+const mockAuthUtils = require('../../utils/auth');
+
 describe('Navbar Component', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
     mockUseAuth.mockClear();
+    mockAuthUtils.isAdmin.mockReturnValue(false);
   });
 
   test('renders unauthenticated navbar correctly', () => {
@@ -67,6 +75,9 @@ describe('Navbar Component', () => {
       error: null,
       logout: jest.fn()
     });
+
+    // Mock isAdmin to return true
+    mockAuthUtils.isAdmin.mockReturnValue(true);
 
     renderWithProviders(<Navbar />);
 

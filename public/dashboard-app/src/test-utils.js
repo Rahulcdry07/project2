@@ -26,7 +26,7 @@ const customRender = (ui, options = {}) => {
  * Alternative render function for tests that need control over routing
  */
 export const renderWithProviders = (ui, options = {}) => {
-  const { initialEntries = ['/'], mockFetchResponses, ...renderOptions } = options;
+  const { initialEntries = ['/'], mockFetchResponses, routerType = 'memory', ...renderOptions } = options;
   
   // Setup custom mock fetch if provided
   if (mockFetchResponses) {
@@ -34,18 +34,21 @@ export const renderWithProviders = (ui, options = {}) => {
   }
   
   const AllProviders = ({ children }) => {
+    const RouterComponent = routerType === 'memory' ? MemoryRouter : BrowserRouter;
+    const routerProps = routerType === 'memory' ? {
+      initialEntries,
+      future: {
+        v7_startTransition: true,
+        v7_relativeSplatPath: true
+      }
+    } : {};
+
     return (
-      <MemoryRouter 
-        initialEntries={initialEntries}
-        future={{
-          v7_startTransition: true,
-          v7_relativeSplatPath: true
-        }}
-      >
+      <RouterComponent {...routerProps}>
         <AuthProvider>
           {children}
         </AuthProvider>
-      </MemoryRouter>
+      </RouterComponent>
     );
   };
 
