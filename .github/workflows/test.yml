@@ -57,7 +57,7 @@ jobs:
         npm test -- --coverage --watchAll=false
     
     - name: Upload coverage reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: coverage-report
         path: public/dashboard-app/coverage/
@@ -88,7 +88,7 @@ jobs:
     
     - name: Archive test screenshots and videos
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: cypress-artifacts
         path: |

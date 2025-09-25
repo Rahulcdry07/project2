@@ -1,0 +1,45 @@
+# ZAP Automation Framework Configuration
+# This file configures OWASP ZAP for automated security testing
+
+env:
+  contexts:
+    - name: "Default Context"
+      urls:
+        - "http://localhost:3000"
+      includePaths:
+        - "http://localhost:3000/.*"
+      excludePaths:
+        - "http://localhost:3000/static/.*"
+        - "http://localhost:3000/.*\\.js"
+        - "http://localhost:3000/.*\\.css"
+        - "http://localhost:3000/.*\\.png"
+        - "http://localhost:3000/.*\\.jpg"
+        - "http://localhost:3000/.*\\.ico"
+  parameters:
+    failOnError: false
+    failOnWarning: false
+  vars:
+    target: "http://localhost:3000"
+
+jobs:
+  - type: passiveScan-config
+    parameters:
+      maxAlertsPerRule: 10
+
+  - type: spider
+    parameters:
+      context: "Default Context"
+      url: "http://localhost:3000"
+      maxDuration: 2
+      maxDepth: 5
+      maxChildren: 10
+
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 5
+
+  - type: report
+    parameters:
+      template: traditional-html
+      reportDir: /zap/wrk
+      reportFile: zap-report
