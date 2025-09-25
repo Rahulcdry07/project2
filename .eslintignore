@@ -1,0 +1,9 @@
+node_modules/
+public/dashboard-app/build/
+public/dashboard-app/node_modules/
+cypress/
+coverage/
+*.min.js
+dist/
+.env*
+*.log

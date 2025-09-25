@@ -53,7 +53,7 @@ describe('Admin Panel', () => {
     cy.log('Found both users in the page');
   });
 
-  it("should show user management functionality", () => {
+  it('should show user management functionality', () => {
     // Add intercept
     cy.intercept('GET', '**/api/admin/users').as('getUsers');
 
