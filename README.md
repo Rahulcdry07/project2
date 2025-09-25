@@ -138,11 +138,35 @@ cd public/dashboard-app
 npm test
 ```
 
+### Running API Tests
+
+The project uses a dedicated API testing strategy that works independently of the UI:
+
+```
+./run_api_tests.sh
+```
+
+This script:
+1. Sets up a clean test environment
+2. Runs migrations and seeders
+3. Executes all API-focused Cypress tests:
+   - Core API functionality tests
+   - API health checks
+   - Smoke tests for critical functions
+
 ### Running E2E Tests
 
 ```
 npm run cy:open  # for interactive mode
 npm run cy:run   # for headless mode
+```
+
+### Running Specific Cypress Tests
+
+To run a specific test file:
+
+```
+npx cypress run --spec "cypress/e2e/smoke_test.cy.js"
 ```
 
 ### Performance Testing
@@ -165,6 +189,12 @@ npm run lint        # Check for code issues
 npm run lint:fix    # Fix automatically fixable issues
 npm run format      # Format code with Prettier
 ```
+
+### Test Status and Results
+
+For detailed information on test status and results, see:
+- [TEST_STATUS.md](TEST_STATUS.md) - Current test status
+- [TEST_RESULTS.md](TEST_RESULTS.md) - Detailed test results and fixes
 
 ## API Documentation
 

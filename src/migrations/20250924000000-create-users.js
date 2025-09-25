@@ -46,6 +46,10 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: true
       },
+      remember_token: {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
