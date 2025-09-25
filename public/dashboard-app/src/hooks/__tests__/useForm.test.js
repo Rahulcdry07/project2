@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import useForm from '../useForm';
+import { useForm } from '../useForm';
 
 describe('useForm Hook', () => {
   // Basic initialization and functionality
@@ -253,7 +253,7 @@ describe('useForm Hook', () => {
     }));
     
     const { result } = renderHook(() => 
-      useForm(initialValues, {}, onSubmit)
+      useForm(initialValues, null, onSubmit)
     );
 
     // Start submission
@@ -331,7 +331,7 @@ describe('useForm Hook', () => {
     };
 
     const { result } = renderHook(() => 
-      useForm(initialValues, {}, null, customValidators)
+      useForm(initialValues, null, null, customValidators)
     );
 
     // Set password and confirmPassword to different values
@@ -378,7 +378,7 @@ describe('useForm Hook', () => {
     
     const onSubmit = jest.fn();
     const { result } = renderHook(() => 
-      useForm(initialValues, {}, onSubmit, customValidators)
+      useForm(initialValues, null, onSubmit, customValidators)
     );
     
     // Submit form with mismatched passwords

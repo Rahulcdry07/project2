@@ -132,7 +132,7 @@ const Login = () => {
                         
                         <div className="mt-3 text-center">
                             <p>
-                                Don't have an account? <Link to="/register" className="text-decoration-none">Register</Link>
+                                Don&apos;t have an account?{' '} <Link to="/register" className="text-decoration-none">Register</Link>
                             </p>
                         </div>
                     </Card>

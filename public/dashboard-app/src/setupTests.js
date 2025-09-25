@@ -1,28 +1,47 @@
 import '@testing-library/jest-dom';
-import { server } from './mocks/server';
+import { setupMockFetch, cleanupMockFetch } from './test-utils/mockAPI';
 
-// Enable API mocking before tests
-beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
+// Setup API mocking before tests
+beforeAll(() => {
+  // Setup basic mock fetch - individual tests can override as needed
+  setupMockFetch();
+});
 
-// Reset any request handlers between tests
-afterEach(() => server.resetHandlers());
+// Cleanup between tests to ensure clean state
+afterEach(() => {
+  // Clear any custom mocks that tests might have set up
+  if (global.fetch && global.fetch.mockClear) {
+    global.fetch.mockClear();
+  }
+});
 
-// Disable API mocking after the tests
-afterAll(() => server.close());
+// Cleanup after all tests
+afterAll(() => {
+  cleanupMockFetch();
+});
 
 // Mock window.location
 delete window.location;
 Object.defineProperty(window, 'location', {
   value: {
-    href: '',
-    assign: jest.fn(),
-    reload: jest.fn(),
+    href: 'http://localhost:3000',
+    origin: 'http://localhost:3000',
+    protocol: 'http:',
+    host: 'localhost:3000',
+    hostname: 'localhost',
+    port: '3000',
     pathname: '/',
     search: '',
     hash: '',
+    assign: jest.fn(),
+    reload: jest.fn(),
+    replace: jest.fn(),
   },
   writable: true,
 });
+
+// Set the base URL for fetch requests
+global.REACT_APP_API_BASE_URL = 'http://localhost:3000/api';
 
 // Mock window dialogs
 window.confirm = jest.fn(() => true);

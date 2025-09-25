@@ -1,17 +1,28 @@
 import React from 'react';
-import { render, screen, act } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { renderWithProviders } from './test-utils';
 import App from './App';
 
-global.fetch = jest.fn(() =>
-  Promise.resolve({
-    json: () => Promise.resolve({ success: true, stats: { total_users: 10, new_registrations_today: 2, online_users: 5 }, activities: [] }),
-  })
-);
+// Mock the auth utils to simulate unauthenticated state
+jest.mock('./utils/auth', () => ({
+  isAuthenticated: jest.fn(() => false),
+  isAdmin: jest.fn(() => false)
+}));
 
-test('renders Welcome Back message', async () => {
-  await act(async () => {
-    render(<App />);
+describe('App', () => {
+  test('redirects to login when unauthenticated', () => {
+    renderWithProviders(<App />, { initialEntries: ['/'] });
+    
+    // Since user is not authenticated, should redirect to login
+    // We can check for login form elements
+    expect(screen.getByText(/login/i)).toBeInTheDocument();
   });
-  const linkElement = screen.getByText(/Welcome Back/i);
-  expect(linkElement).toBeInTheDocument();
+
+  test('renders app structure', () => {
+    renderWithProviders(<App />, { initialEntries: ['/login'] });
+    
+    // Should have the basic app structure
+    const loginElement = screen.getByText(/login/i);
+    expect(loginElement).toBeInTheDocument();
+  });
 });

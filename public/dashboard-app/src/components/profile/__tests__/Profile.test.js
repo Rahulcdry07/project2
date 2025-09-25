@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import Profile from '../Profile';
+import Profile from '../../Profile';
 import { rest } from 'msw';
 import { server, baseUrl } from '../../../mocks/server';
 import { renderWithProviders } from '../../../test-utils';

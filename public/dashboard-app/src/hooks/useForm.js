@@ -66,10 +66,10 @@ export const useForm = (initialValues, validateForm) => {
             try {
                 await onSubmit(values);
             } catch (error) {
-                console.error("Form submission error:", error);
+                console.error('Form submission error:', error);
                 setErrors({
                     ...validationErrors,
-                    form: error.message || "An error occurred"
+                    form: error.message || 'An error occurred'
                 });
             } finally {
                 setIsSubmitting(false);

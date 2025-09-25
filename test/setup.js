@@ -1,8 +1,7 @@
 const { sequelize } = require('../src/models');
 
-// Test setup
-before(async function() {
-  this.timeout(10000);
+// Test setup and teardown
+const setupTestDatabase = async function() {
   console.log('Setting up test database...');
   
   // Force sync all models
@@ -13,11 +12,9 @@ before(async function() {
     console.error('Error syncing database:', error);
     throw error;
   }
-});
+};
 
-// Clean up after tests
-after(async function() {
-  this.timeout(5000);
+const teardownTestDatabase = async function() {
   console.log('Cleaning up test database...');
   
   try {
@@ -27,4 +24,9 @@ after(async function() {
   } catch (error) {
     console.error('Error closing database connection:', error);
   }
-});
+};
+
+module.exports = {
+  setupTestDatabase,
+  teardownTestDatabase
+};

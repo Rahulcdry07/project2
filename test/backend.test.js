@@ -4,9 +4,22 @@ const app = require('../src/server');
 const { User } = require('../src/models');
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../src/config/env');
+const { setupTestDatabase, teardownTestDatabase } = require('./setup');
 
 // Increase test timeout to avoid timeouts on CI/CD environments
 const TEST_TIMEOUT = 5000;
+
+// Setup test database before all tests
+before(async function() {
+  this.timeout(10000);
+  await setupTestDatabase();
+});
+
+// Cleanup after all tests  
+after(async function() {
+  this.timeout(5000);
+  await teardownTestDatabase();
+});
 
 describe('Auth API', () => {
   beforeEach(async () => {

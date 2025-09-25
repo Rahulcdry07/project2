@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useForm } from '../../hooks/useForm';
 import { authAPI } from '../../services/api';
 import FormInput, { Alert, Card } from '../common/FormComponents';
@@ -9,7 +9,7 @@ import { isValidEmail, validatePassword } from '../../utils/helpers';
  * Register component
  */
 const Register = () => {
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
     const [generalError, setGeneralError] = useState(null);
     const [registrationSuccess, setRegistrationSuccess] = useState(false);
     
@@ -175,7 +175,7 @@ const Register = () => {
                                     required 
                                 />
                                 <label className="form-check-label" htmlFor="termsCheck">
-                                    I agree to the <a href="#" className="text-decoration-none">Terms and Conditions</a>
+                                    I agree to the <button type="button" className="btn btn-link text-decoration-none p-0">Terms and Conditions</button>
                                 </label>
                             </div>
                             
