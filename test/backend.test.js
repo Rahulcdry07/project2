@@ -1,6 +1,6 @@
 const expect = require('chai').expect;
 const request = require('supertest');
-const app = require('../src/server');
+const app = require('../src/app'); // Use app instead of server
 const { User } = require('../src/models');
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../src/config/env');
@@ -679,4 +679,13 @@ describe('Authentication Middleware', () => {
     
     expect(res.statusCode).to.equal(401);
   });
+});
+
+// Global cleanup after all tests
+after(async function() {
+  await teardownTestDatabase();
+  // Force exit if needed
+  setTimeout(() => {
+    process.exit(0);
+  }, 1000);
 });
