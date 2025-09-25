@@ -7,35 +7,12 @@ Cypress.config('retries', {
 // Add increased timeout for slow operations
 Cypress.config('defaultCommandTimeout', 10000);
 
-// Hook to check if the server is running before each test
 beforeEach(() => {
-  // First check if the server is accessible
-  cy.request({
-    url: 'http://0.0.0.0:3000/api',
-    failOnStatusCode: false,
-  }).then(response => {
-    if (response.status !== 200) {
-      cy.log('Server may not be running correctly. Status:', response.status);
-    }
-  });
-
   cy.log('Clearing database before test...');
-  cy.request({
-    method: 'POST',
-    url: 'http://0.0.0.0:3000/api/test/clear-database',
-    failOnStatusCode: false
-  }).then(response => {
-    if (response.status !== 200) {
-      cy.log(`Failed to clear database: ${response.status}`);
-      cy.log(JSON.stringify(response.body));
-    } else {
-      cy.log('Database cleared successfully');
-    }
-  });
+  cy.request('POST', 'http://0.0.0.0:3000/api/test/clear-database');
   cy.wait(500); // Add a small wait to ensure database is cleared
 });
 
-// Improved login as admin command that works more reliably
 Cypress.Commands.add('loginAsAdmin', () => {
   cy.log('Starting loginAsAdmin process');
   
@@ -67,7 +44,7 @@ Cypress.Commands.add('loginAsAdmin', () => {
       cy.log(`Admin role set response: ${response.status}`);
     });
 
-  // Login to get JWT token
+  // Login and store token with retry logic
   cy.request({
     method: 'POST', 
     url: 'http://0.0.0.0:3000/api/auth/login', 
@@ -77,27 +54,31 @@ Cypress.Commands.add('loginAsAdmin', () => {
     expect(token).to.exist;
     cy.log('Admin login successful, token received');
     
-    // Visit the app first to ensure localStorage is available
-    cy.visit('/');
-    
-    // Wait for React to load
-    cy.get('#root', { timeout: 10000 }).should('exist');
-    
-    // Store token and user in localStorage
+    // Store token in localStorage
     cy.window().then((win) => {
-      const user = { 
-        username: adminUser.username, 
-        email: adminUser.email, 
-        role: 'admin' 
-      };
-      
       win.localStorage.setItem('token', token);
-      win.localStorage.setItem('user', JSON.stringify(user));
-      cy.log('Admin authentication data stored in localStorage');
+      cy.log('Token stored in localStorage');
+      
+      // Verify token was stored correctly
+      const storedToken = win.localStorage.getItem('token');
+      expect(storedToken).to.eq(token);
+      cy.log('Token verification successful');
     });
-    
-    // Wait a moment for localStorage to be set
-    cy.wait(500);
+  });
+  
+  // Verify authentication is working
+  cy.request({
+    method: 'GET',
+    url: 'http://0.0.0.0:3000/api/profile',
+    headers: {
+      Authorization: `Bearer ${window.localStorage.getItem('token')}`
+    }
+  }).then(response => {
+    cy.log(`Profile API verification response: ${response.status}`);
+    expect(response.status).to.eq(200);
+    expect(response.body).to.have.property('username', 'adminuser');
+    expect(response.body).to.have.property('role', 'admin');
+    cy.log('Admin authentication verified successfully');
   });
 });
 
@@ -134,10 +115,5 @@ Cypress.Commands.add('debugPage', () => {
   // Log HTML content of the page (first 200 chars)
   cy.document().then(doc => {
     cy.log(`Page content: ${doc.body.innerHTML.substring(0, 200)}...`);
-  });
-  
-  // Log any errors in the console
-  cy.window().then(win => {
-    cy.spy(win.console, 'error').as('consoleError');
   });
 });
