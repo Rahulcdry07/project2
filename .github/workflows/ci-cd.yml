@@ -98,7 +98,7 @@ jobs:
           headless: true
 
       - name: Archive Cypress screenshots
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: cypress-screenshots
@@ -128,7 +128,7 @@ jobs:
         run: cd public/dashboard-app && npm run build
 
       - name: Archive build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: |
