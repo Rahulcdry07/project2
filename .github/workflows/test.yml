@@ -46,15 +46,10 @@ jobs:
         cd public/dashboard-app
         npm ci
     
-    - name: Run frontend tests
+    - name: Run frontend tests with coverage
       run: |
         cd public/dashboard-app
-        npm run test:once
-    
-    - name: Generate coverage report
-      run: |
-        cd public/dashboard-app
-        npm test -- --coverage --watchAll=false
+        npm run test:ci
     
     - name: Upload coverage reports
       uses: actions/upload-artifact@v4
