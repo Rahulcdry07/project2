@@ -34,13 +34,14 @@ const createHeaders = (includeAuth = true) => {
 const fetchWithErrorHandling = async (url, options) => {
     try {
         const response = await fetch(url, options);
-        const data = await response.json();
+        const result = await response.json();
         
         if (!response.ok) {
-            throw new Error(data.message || 'An error occurred');
+            throw new Error(result.error || result.message || 'An error occurred');
         }
         
-        return data;
+        // Return the data property if it exists, otherwise return the whole result
+        return result.data || result;
     } catch (error) {
         console.error('API request failed:', error);
         throw error;
@@ -51,19 +52,19 @@ const fetchWithErrorHandling = async (url, options) => {
  * Authentication API methods
  */
 export const authAPI = {
-    login: (email, password) => {
+    login: (credentials) => {
         return fetchWithErrorHandling(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: createHeaders(false),
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify(credentials)
         });
     },
     
-    register: (username, email, password) => {
+    register: (userData) => {
         return fetchWithErrorHandling(`${API_URL}/auth/register`, {
             method: 'POST',
             headers: createHeaders(false),
-            body: JSON.stringify({ username, email, password })
+            body: JSON.stringify(userData)
         });
     },
     
@@ -93,9 +94,9 @@ export const authAPI = {
 };
 
 /**
- * Profile API methods
+ * User API methods
  */
-export const profileAPI = {
+export const userAPI = {
     getProfile: () => {
         return fetchWithErrorHandling(`${API_URL}/profile`, {
             method: 'GET',
@@ -111,6 +112,11 @@ export const profileAPI = {
         });
     }
 };
+
+/**
+ * Profile API methods (alias for backward compatibility)
+ */
+export const profileAPI = userAPI;
 
 /**
  * Admin API methods
