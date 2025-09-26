@@ -86,12 +86,14 @@ module.exports = defineConfig({
     {
       command: 'NODE_ENV=test node src/server.js',
       port: 3000,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: true, // Always reuse existing server
+      timeout: 120 * 1000, // 2 minutes
     },
     {
       command: 'cd public/dashboard-app && npm start',
       port: 3001, 
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: true, // Always reuse existing server
+      timeout: 120 * 1000, // 2 minutes
     }
   ],
 });

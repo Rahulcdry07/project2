@@ -1,218 +1,60 @@
-<testsuites id="" name="" tests="84" failures="0" skipped="0" errors="0" time="119.842752">
-<testsuite name="admin.spec.js" timestamp="2025-09-26T15:26:23.487Z" hostname="chromium" tests="4" failures="0" skipped="0" time="4.15" errors="0">
-<testcase name="Admin Panel › should display admin panel for admin users" classname="admin.spec.js" time="1.326">
+<testsuites id="" name="" tests="22" failures="0" skipped="0" errors="0" time="20.801706999999997">
+<testsuite name="admin.spec.js" timestamp="2025-09-26T15:52:29.436Z" hostname="chromium" tests="4" failures="0" skipped="0" time="4.45" errors="0">
+<testcase name="Admin Panel › should display admin panel for admin users" classname="admin.spec.js" time="1.462">
 </testcase>
-<testcase name="Admin Panel › should load and display users in admin panel" classname="admin.spec.js" time="0.81">
+<testcase name="Admin Panel › should load and display users in admin panel" classname="admin.spec.js" time="0.938">
 </testcase>
-<testcase name="Admin Panel › should allow admin to update user roles" classname="admin.spec.js" time="0.916">
+<testcase name="Admin Panel › should allow admin to update user roles" classname="admin.spec.js" time="0.974">
 <system-out>
 <![CDATA[Role update controls not found - test passed as UI elements exist
 ]]>
 </system-out>
 </testcase>
-<testcase name="Admin Panel › should allow admin to delete users" classname="admin.spec.js" time="1.098">
+<testcase name="Admin Panel › should allow admin to delete users" classname="admin.spec.js" time="1.076">
 </testcase>
 </testsuite>
-<testsuite name="api.spec.js" timestamp="2025-09-26T15:26:23.487Z" hostname="chromium" tests="8" failures="0" skipped="0" time="1.93" errors="0">
-<testcase name="API Tests › Authentication API › should register a new user" classname="api.spec.js" time="0.193">
+<testsuite name="api.spec.js" timestamp="2025-09-26T15:52:29.436Z" hostname="chromium" tests="8" failures="0" skipped="0" time="1.972" errors="0">
+<testcase name="API Tests › Authentication API › should register a new user" classname="api.spec.js" time="0.207">
 </testcase>
 <testcase name="API Tests › Authentication API › should login with valid credentials" classname="api.spec.js" time="0.291">
 </testcase>
-<testcase name="API Tests › Authentication API › should reject invalid login credentials" classname="api.spec.js" time="0.143">
+<testcase name="API Tests › Authentication API › should reject invalid login credentials" classname="api.spec.js" time="0.14">
 </testcase>
-<testcase name="API Tests › Authentication API › should verify email with valid token" classname="api.spec.js" time="0.213">
+<testcase name="API Tests › Authentication API › should verify email with valid token" classname="api.spec.js" time="0.252">
 </testcase>
-<testcase name="API Tests › Protected Routes › should access profile with valid token" classname="api.spec.js" time="0.322">
+<testcase name="API Tests › Protected Routes › should access profile with valid token" classname="api.spec.js" time="0.328">
 </testcase>
-<testcase name="API Tests › Protected Routes › should reject requests without token" classname="api.spec.js" time="0.336">
+<testcase name="API Tests › Protected Routes › should reject requests without token" classname="api.spec.js" time="0.287">
 </testcase>
-<testcase name="API Tests › Protected Routes › should reject requests with invalid token" classname="api.spec.js" time="0.282">
+<testcase name="API Tests › Protected Routes › should reject requests with invalid token" classname="api.spec.js" time="0.301">
 </testcase>
-<testcase name="API Tests › Health Check › should return healthy status" classname="api.spec.js" time="0.15">
-</testcase>
-</testsuite>
-<testsuite name="dashboard.spec.js" timestamp="2025-09-26T15:26:23.487Z" hostname="chromium" tests="4" failures="0" skipped="0" time="6.322" errors="0">
-<testcase name="Dashboard › should load dashboard for authenticated user" classname="dashboard.spec.js" time="0.729">
-</testcase>
-<testcase name="Dashboard › should display user information" classname="dashboard.spec.js" time="0.77">
-</testcase>
-<testcase name="Dashboard › should have working navigation" classname="dashboard.spec.js" time="0.828">
-</testcase>
-<testcase name="Dashboard › should handle unauthenticated dashboard access correctly" classname="dashboard.spec.js" time="3.995">
+<testcase name="API Tests › Health Check › should return healthy status" classname="api.spec.js" time="0.166">
 </testcase>
 </testsuite>
-<testsuite name="login.spec.js" timestamp="2025-09-26T15:26:23.487Z" hostname="chromium" tests="3" failures="0" skipped="0" time="5.681" errors="0">
-<testcase name="Login Flow › should login with valid credentials" classname="login.spec.js" time="4.028">
+<testsuite name="dashboard.spec.js" timestamp="2025-09-26T15:52:29.436Z" hostname="chromium" tests="4" failures="0" skipped="0" time="6.259" errors="0">
+<testcase name="Dashboard › should load dashboard for authenticated user" classname="dashboard.spec.js" time="0.876">
 </testcase>
-<testcase name="Login Flow › should show error for invalid credentials" classname="login.spec.js" time="0.867">
+<testcase name="Dashboard › should display user information" classname="dashboard.spec.js" time="0.671">
 </testcase>
-<testcase name="Login Flow › should show error for non-existent user" classname="login.spec.js" time="0.786">
+<testcase name="Dashboard › should have working navigation" classname="dashboard.spec.js" time="0.803">
 </testcase>
-</testsuite>
-<testsuite name="register.spec.js" timestamp="2025-09-26T15:26:23.487Z" hostname="chromium" tests="6" failures="0" skipped="0" time="17.023" errors="0">
-<testcase name="User Registration › should display registration form" classname="register.spec.js" time="0.553">
-</testcase>
-<testcase name="User Registration › should register a new user successfully" classname="register.spec.js" time="3.963">
-</testcase>
-<testcase name="User Registration › should show error for duplicate email" classname="register.spec.js" time="2.969">
-</testcase>
-<testcase name="User Registration › should show error for duplicate username" classname="register.spec.js" time="2.97">
-</testcase>
-<testcase name="User Registration › should validate password length" classname="register.spec.js" time="2.722">
-</testcase>
-<testcase name="User Registration › should redirect to login after successful registration" classname="register.spec.js" time="3.846">
+<testcase name="Dashboard › should handle unauthenticated dashboard access correctly" classname="dashboard.spec.js" time="3.909">
 </testcase>
 </testsuite>
-<testsuite name="smoke.spec.js" timestamp="2025-09-26T15:26:23.487Z" hostname="chromium" tests="3" failures="0" skipped="0" time="1.345" errors="0">
-<testcase name="Smoke Tests › backend server is running" classname="smoke.spec.js" time="0.122">
+<testsuite name="login.spec.js" timestamp="2025-09-26T15:52:29.436Z" hostname="chromium" tests="3" failures="0" skipped="0" time="5.709" errors="0">
+<testcase name="Login Flow › should login with valid credentials" classname="login.spec.js" time="3.997">
 </testcase>
-<testcase name="Smoke Tests › frontend loads correctly" classname="smoke.spec.js" time="0.525">
+<testcase name="Login Flow › should show error for invalid credentials" classname="login.spec.js" time="0.842">
 </testcase>
-<testcase name="Smoke Tests › can navigate to login page" classname="smoke.spec.js" time="0.698">
-</testcase>
-</testsuite>
-<testsuite name="admin.spec.js" timestamp="2025-09-26T15:26:23.487Z" hostname="firefox" tests="4" failures="0" skipped="0" time="5.843" errors="0">
-<testcase name="Admin Panel › should display admin panel for admin users" classname="admin.spec.js" time="2.374">
-</testcase>
-<testcase name="Admin Panel › should load and display users in admin panel" classname="admin.spec.js" time="0.956">
-</testcase>
-<testcase name="Admin Panel › should allow admin to update user roles" classname="admin.spec.js" time="1.189">
-<system-out>
-<![CDATA[Role update controls not found - test passed as UI elements exist
-]]>
-</system-out>
-</testcase>
-<testcase name="Admin Panel › should allow admin to delete users" classname="admin.spec.js" time="1.324">
+<testcase name="Login Flow › should show error for non-existent user" classname="login.spec.js" time="0.87">
 </testcase>
 </testsuite>
-<testsuite name="api.spec.js" timestamp="2025-09-26T15:26:23.487Z" hostname="firefox" tests="8" failures="0" skipped="0" time="3.653" errors="0">
-<testcase name="API Tests › Authentication API › should register a new user" classname="api.spec.js" time="0.365">
+<testsuite name="smoke.spec.js" timestamp="2025-09-26T15:52:29.436Z" hostname="chromium" tests="3" failures="0" skipped="0" time="1.132" errors="0">
+<testcase name="Smoke Tests › backend server is running" classname="smoke.spec.js" time="0.119">
 </testcase>
-<testcase name="API Tests › Authentication API › should login with valid credentials" classname="api.spec.js" time="0.428">
+<testcase name="Smoke Tests › frontend loads correctly" classname="smoke.spec.js" time="0.574">
 </testcase>
-<testcase name="API Tests › Authentication API › should reject invalid login credentials" classname="api.spec.js" time="0.288">
-</testcase>
-<testcase name="API Tests › Authentication API › should verify email with valid token" classname="api.spec.js" time="0.365">
-</testcase>
-<testcase name="API Tests › Protected Routes › should access profile with valid token" classname="api.spec.js" time="0.583">
-</testcase>
-<testcase name="API Tests › Protected Routes › should reject requests without token" classname="api.spec.js" time="0.561">
-</testcase>
-<testcase name="API Tests › Protected Routes › should reject requests with invalid token" classname="api.spec.js" time="0.73">
-</testcase>
-<testcase name="API Tests › Health Check › should return healthy status" classname="api.spec.js" time="0.333">
-</testcase>
-</testsuite>
-<testsuite name="dashboard.spec.js" timestamp="2025-09-26T15:26:23.487Z" hostname="firefox" tests="4" failures="0" skipped="0" time="6.578" errors="0">
-<testcase name="Dashboard › should load dashboard for authenticated user" classname="dashboard.spec.js" time="0.812">
-</testcase>
-<testcase name="Dashboard › should display user information" classname="dashboard.spec.js" time="0.804">
-</testcase>
-<testcase name="Dashboard › should have working navigation" classname="dashboard.spec.js" time="1.102">
-</testcase>
-<testcase name="Dashboard › should handle unauthenticated dashboard access correctly" classname="dashboard.spec.js" time="3.86">
-</testcase>
-</testsuite>
-<testsuite name="login.spec.js" timestamp="2025-09-26T15:26:23.487Z" hostname="firefox" tests="3" failures="0" skipped="0" time="6.227" errors="0">
-<testcase name="Login Flow › should login with valid credentials" classname="login.spec.js" time="4.009">
-</testcase>
-<testcase name="Login Flow › should show error for invalid credentials" classname="login.spec.js" time="1.138">
-</testcase>
-<testcase name="Login Flow › should show error for non-existent user" classname="login.spec.js" time="1.08">
-</testcase>
-</testsuite>
-<testsuite name="register.spec.js" timestamp="2025-09-26T15:26:23.487Z" hostname="firefox" tests="6" failures="0" skipped="0" time="17.473" errors="0">
-<testcase name="User Registration › should display registration form" classname="register.spec.js" time="0.665">
-</testcase>
-<testcase name="User Registration › should register a new user successfully" classname="register.spec.js" time="3.913">
-</testcase>
-<testcase name="User Registration › should show error for duplicate email" classname="register.spec.js" time="2.967">
-</testcase>
-<testcase name="User Registration › should show error for duplicate username" classname="register.spec.js" time="3.085">
-</testcase>
-<testcase name="User Registration › should validate password length" classname="register.spec.js" time="2.965">
-</testcase>
-<testcase name="User Registration › should redirect to login after successful registration" classname="register.spec.js" time="3.878">
-</testcase>
-</testsuite>
-<testsuite name="smoke.spec.js" timestamp="2025-09-26T15:26:23.487Z" hostname="firefox" tests="3" failures="0" skipped="0" time="1.655" errors="0">
-<testcase name="Smoke Tests › backend server is running" classname="smoke.spec.js" time="0.276">
-</testcase>
-<testcase name="Smoke Tests › frontend loads correctly" classname="smoke.spec.js" time="0.642">
-</testcase>
-<testcase name="Smoke Tests › can navigate to login page" classname="smoke.spec.js" time="0.737">
-</testcase>
-</testsuite>
-<testsuite name="admin.spec.js" timestamp="2025-09-26T15:26:23.487Z" hostname="Mobile Chrome" tests="4" failures="0" skipped="0" time="4.154" errors="0">
-<testcase name="Admin Panel › should display admin panel for admin users" classname="admin.spec.js" time="1.237">
-</testcase>
-<testcase name="Admin Panel › should load and display users in admin panel" classname="admin.spec.js" time="0.782">
-</testcase>
-<testcase name="Admin Panel › should allow admin to update user roles" classname="admin.spec.js" time="1.035">
-<system-out>
-<![CDATA[Role update controls not found - test passed as UI elements exist
-]]>
-</system-out>
-</testcase>
-<testcase name="Admin Panel › should allow admin to delete users" classname="admin.spec.js" time="1.1">
-</testcase>
-</testsuite>
-<testsuite name="api.spec.js" timestamp="2025-09-26T15:26:23.487Z" hostname="Mobile Chrome" tests="8" failures="0" skipped="0" time="2.318" errors="0">
-<testcase name="API Tests › Authentication API › should register a new user" classname="api.spec.js" time="0.324">
-</testcase>
-<testcase name="API Tests › Authentication API › should login with valid credentials" classname="api.spec.js" time="0.333">
-</testcase>
-<testcase name="API Tests › Authentication API › should reject invalid login credentials" classname="api.spec.js" time="0.208">
-</testcase>
-<testcase name="API Tests › Authentication API › should verify email with valid token" classname="api.spec.js" time="0.295">
-</testcase>
-<testcase name="API Tests › Protected Routes › should access profile with valid token" classname="api.spec.js" time="0.327">
-</testcase>
-<testcase name="API Tests › Protected Routes › should reject requests without token" classname="api.spec.js" time="0.33">
-</testcase>
-<testcase name="API Tests › Protected Routes › should reject requests with invalid token" classname="api.spec.js" time="0.328">
-</testcase>
-<testcase name="API Tests › Health Check › should return healthy status" classname="api.spec.js" time="0.173">
-</testcase>
-</testsuite>
-<testsuite name="dashboard.spec.js" timestamp="2025-09-26T15:26:23.487Z" hostname="Mobile Chrome" tests="4" failures="0" skipped="0" time="6.107" errors="0">
-<testcase name="Dashboard › should load dashboard for authenticated user" classname="dashboard.spec.js" time="0.768">
-</testcase>
-<testcase name="Dashboard › should display user information" classname="dashboard.spec.js" time="0.703">
-</testcase>
-<testcase name="Dashboard › should have working navigation" classname="dashboard.spec.js" time="0.763">
-</testcase>
-<testcase name="Dashboard › should handle unauthenticated dashboard access correctly" classname="dashboard.spec.js" time="3.873">
-</testcase>
-</testsuite>
-<testsuite name="login.spec.js" timestamp="2025-09-26T15:26:23.487Z" hostname="Mobile Chrome" tests="3" failures="0" skipped="0" time="5.84" errors="0">
-<testcase name="Login Flow › should login with valid credentials" classname="login.spec.js" time="4.017">
-</testcase>
-<testcase name="Login Flow › should show error for invalid credentials" classname="login.spec.js" time="0.859">
-</testcase>
-<testcase name="Login Flow › should show error for non-existent user" classname="login.spec.js" time="0.964">
-</testcase>
-</testsuite>
-<testsuite name="register.spec.js" timestamp="2025-09-26T15:26:23.487Z" hostname="Mobile Chrome" tests="6" failures="0" skipped="0" time="17.153" errors="0">
-<testcase name="User Registration › should display registration form" classname="register.spec.js" time="0.534">
-</testcase>
-<testcase name="User Registration › should register a new user successfully" classname="register.spec.js" time="3.826">
-</testcase>
-<testcase name="User Registration › should show error for duplicate email" classname="register.spec.js" time="2.946">
-</testcase>
-<testcase name="User Registration › should show error for duplicate username" classname="register.spec.js" time="3.076">
-</testcase>
-<testcase name="User Registration › should validate password length" classname="register.spec.js" time="2.844">
-</testcase>
-<testcase name="User Registration › should redirect to login after successful registration" classname="register.spec.js" time="3.927">
-</testcase>
-</testsuite>
-<testsuite name="smoke.spec.js" timestamp="2025-09-26T15:26:23.487Z" hostname="Mobile Chrome" tests="3" failures="0" skipped="0" time="1.353" errors="0">
-<testcase name="Smoke Tests › backend server is running" classname="smoke.spec.js" time="0.165">
-</testcase>
-<testcase name="Smoke Tests › frontend loads correctly" classname="smoke.spec.js" time="0.564">
-</testcase>
-<testcase name="Smoke Tests › can navigate to login page" classname="smoke.spec.js" time="0.624">
+<testcase name="Smoke Tests › can navigate to login page" classname="smoke.spec.js" time="0.439">
 </testcase>
 </testsuite>
 </testsuites>
