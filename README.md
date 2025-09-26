@@ -13,7 +13,7 @@ The project consists of:
 - **Backend**: Node.js + Express RESTful API with JWT authentication
 - **Frontend**: React single-page application with Bootstrap UI
 - **Database**: SQLite with Sequelize ORM
-- **Testing**: Comprehensive test suite with Jest, React Testing Library, and Cypress
+- **Testing**: Comprehensive test suite with Jest, React Testing Library, and Playwright
 - **CI/CD**: Automated testing and deployment with GitHub Actions
 - **Security**: Helmet, rate limiting, XSS protection, and dependency scanning
 - **Monitoring**: Prometheus metrics for application monitoring
@@ -141,8 +141,10 @@ npm test
 ### Running E2E Tests
 
 ```
-npm run cy:open  # for interactive mode
-npm run cy:run   # for headless mode
+npm run playwright:test     # Run all tests
+npm run pw:ui              # Interactive UI mode  
+npm run pw:smoke           # Smoke tests only
+npm run playwright:report  # View test reports
 ```
 
 ### Performance Testing
@@ -200,7 +202,7 @@ This project uses GitHub Actions for continuous integration and deployment:
 - **Linting**: Checks code quality and formatting
 - **Backend Testing**: Runs Node.js tests
 - **Frontend Testing**: Runs React component tests
-- **E2E Testing**: Runs Cypress end-to-end tests
+- **E2E Testing**: Runs Playwright end-to-end tests
 - **Building**: Creates production builds
 - **Security Scanning**: Checks for vulnerabilities
 - **Deployment**: Deploys to production (on main branch only)

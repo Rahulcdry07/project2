@@ -7,9 +7,14 @@
     "start": "nodemon src/server.js",
     "start:ci": "NODE_ENV=test node src/server.js",
     "start:prod": "NODE_ENV=production node src/server.js",
-    "cy:run": "start-server-and-test start:ci http://0.0.0.0:3000 \"cypress run\"",
-    "cy:open": "start-server-and-test start http://0.0.0.0:3000 \"cypress open\"",
-    "cy:run:routing": "start-server-and-test start:ci http://0.0.0.0:3000 \"cypress run --spec cypress/e2e/routing.cy.js\"",
+    "playwright:test": "playwright test",
+    "playwright:test:headed": "playwright test --headed",
+    "playwright:test:debug": "playwright test --debug",
+    "playwright:report": "playwright show-report",
+    "pw:run": "playwright test",
+    "pw:ui": "playwright test --ui",
+    "pw:smoke": "playwright test smoke.spec.js --project=chromium",
+    "pw:core": "playwright test smoke.spec.js login.spec.js admin.spec.js dashboard.spec.js api.spec.js --project=chromium",
     "test:backend": "NODE_ENV=test mocha --require test/setup.js test/backend.test.js --timeout 10000",
     "test:models": "NODE_ENV=test mocha --require test/setup.js test/models.test.js --timeout 10000",
     "test:controllers": "NODE_ENV=test mocha --require test/setup.js test/controllers.test.js --timeout 10000",
@@ -18,7 +23,7 @@
     "test:security": "npm audit --audit-level=high",
     "test:security-unit": "NODE_ENV=test mocha --require test/setup.js test/security.test.js --timeout 10000",
     "test:unit": "NODE_ENV=test mocha --require test/setup.js test/*.test.js --timeout 10000",
-    "test:all": "npm run test:unit && npm run test:security && npm run cy:run",
+    "test:all": "npm run test:unit && npm run test:security && npm run playwright:test",
     "test:load": "artillery run test/performance/load-test.yml",
     "test:dependencies": "node scripts/dependency-scan.js",
     "generate:types": "node scripts/generate-types.js",
@@ -56,6 +61,7 @@
     "morgan": "^1.10.0",
     "nodemailer": "^6.9.7",
     "prom-client": "^14.2.0",
+    "puppeteer": "^24.22.3",
     "sequelize": "^6.35.1",
     "sqlite3": "^5.1.6",
     "swagger-jsdoc": "^6.2.8",
@@ -64,9 +70,9 @@
     "xss-clean": "^0.1.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.0",
     "artillery": "^2.0.0",
     "chai": "^4.3.10",
-    "cypress": "^13.6.0",
     "eslint": "^8.56.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-security": "^1.7.1",
@@ -77,7 +83,6 @@
     "prettier": "^3.1.1",
     "sequelize-cli": "^6.6.2",
     "sinon": "^21.0.0",
-    "start-server-and-test": "^2.0.3",
     "supertest": "^6.3.3"
   }
 }
