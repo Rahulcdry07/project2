@@ -198,7 +198,7 @@ export const useApiData = (fetchFunction, dependencies = []) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     
-    const fetchData = async (isRefetch = false) => {
+    const fetchData = async () => {
         setLoading(true);
         setError(null);
         
@@ -290,4 +290,4 @@ export function useToggle(initialState) {
     const toggle = () => setState(prevState => !prevState);
     
     return [state, toggle];
-};
+}

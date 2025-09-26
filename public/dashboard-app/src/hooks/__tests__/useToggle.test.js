@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useToggle } from '../useForm';
 
@@ -144,8 +144,6 @@ describe('useToggle Hook', () => {
 
     it('toggle function reference changes on each render', () => {
       const { result, rerender } = renderHook(() => useToggle(false));
-
-      const initialToggle = result.current[1];
 
       // Toggle the value
       act(() => {

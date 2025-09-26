@@ -55,7 +55,6 @@ export const renderWithProviders = (ui, options = {}) => {
  */
 export const createMockAuthContext = ({
   user = null,
-  isAuthenticated = false,
   isLoading = false,
   error = null
 } = {}) => ({

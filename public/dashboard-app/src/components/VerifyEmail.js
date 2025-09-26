@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { authAPI } from '../services/api';
 
@@ -16,9 +16,9 @@ const VerifyEmail = () => {
       setStatus('error');
       setMessage('No verification token provided');
     }
-  }, [token]);
+  }, [token, verifyEmail]);
 
-  const verifyEmail = async () => {
+  const verifyEmail = useCallback(async () => {
     try {
       await authAPI.verifyEmail(token);
       setStatus('success');
@@ -27,7 +27,7 @@ const VerifyEmail = () => {
       setStatus('error');
       setMessage(err.message || 'Email verification failed');
     }
-  };
+  }, [token]);
 
   return (
     <div className="row justify-content-center">

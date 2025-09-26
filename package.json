@@ -27,6 +27,7 @@
     "test:load": "artillery run test/performance/load-test.yml",
     "test:dependencies": "node scripts/dependency-scan.js",
     "generate:types": "node scripts/generate-types.js",
+    "validate:ci": "node scripts/validate-ci.js",
     "db:migrate": "sequelize-cli db:migrate",
     "db:migrate:undo": "sequelize-cli db:migrate:undo",
     "db:migrate:undo:all": "sequelize-cli db:migrate:undo:all",

@@ -327,7 +327,7 @@ describe('useLocalStorage Hook', () => {
       
       const renderSpy = vi.fn();
       
-      const { result, rerender } = renderHook(() => {
+      const { rerender } = renderHook(() => {
         renderSpy();
         return useLocalStorage('testKey', 'default');
       });

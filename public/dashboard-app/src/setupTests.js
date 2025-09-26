@@ -46,7 +46,7 @@ const localStorageMock = (function() {
       store = {};
     }),
     length: 0,
-    key: vi.fn(index => null)
+    key: vi.fn(() => null)
   };
 })();
 

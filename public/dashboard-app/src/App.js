@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import { ErrorBoundary } from './components/common/FormComponents';
 import Navbar from './components/Navbar';
 
@@ -34,6 +35,11 @@ const ProtectedRoute = ({ element, requireAdmin = false }) => {
   }
   
   return element;
+};
+
+ProtectedRoute.propTypes = {
+  element: PropTypes.element.isRequired,
+  requireAdmin: PropTypes.bool
 };
 
 function App() {
