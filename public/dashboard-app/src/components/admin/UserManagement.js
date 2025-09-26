@@ -17,7 +17,7 @@ const UserManagement = () => {
       setUsers(data);
     } catch (err) {
       setError('Failed to load users');
-      console.error('Error loading users:', err);
+      // console.error('Error loading users:', err);
     } finally {
       setLoading(false);
     }
@@ -32,7 +32,7 @@ const UserManagement = () => {
       ));
     } catch (err) {
       setError('Failed to update user role');
-      console.error('Error updating user role:', err);
+      // console.error('Error updating user role:', err);
     }
   };
 
@@ -43,7 +43,7 @@ const UserManagement = () => {
         setUsers(users.filter(user => user.id !== userId));
       } catch (err) {
         setError('Failed to delete user');
-        console.error('Error deleting user:', err);
+        // console.error('Error deleting user:', err);
       }
     }
   };

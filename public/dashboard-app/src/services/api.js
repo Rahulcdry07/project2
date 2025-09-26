@@ -32,20 +32,15 @@ const createHeaders = (includeAuth = true) => {
  * @returns {Promise} Response data or error
  */
 const fetchWithErrorHandling = async (url, options) => {
-    try {
-        const response = await fetch(url, options);
-        const result = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(result.error || result.message || 'An error occurred');
-        }
-        
-        // Return the data property if it exists, otherwise return the whole result
-        return result.data || result;
-    } catch (error) {
-        console.error('API request failed:', error);
-        throw error;
+    const response = await fetch(url, options);
+    const result = await response.json();
+    
+    if (!response.ok) {
+        throw new Error(result.error || result.message || 'An error occurred');
     }
+    
+    // Return the data property if it exists, otherwise return the whole result
+    return result.data || result;
 };
 
 /**
