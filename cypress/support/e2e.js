@@ -51,22 +51,31 @@ Cypress.Commands.add('loginAsAdmin', () => {
     body: { email: adminUser.email, password: adminUser.password }
   }).then((response) => {
     const token = response.body.data.token;
+    const user = response.body.data.user;
     expect(token).to.exist;
-    cy.log('Admin login successful, token received');
+    expect(user).to.exist;
+    expect(user.role).to.eq('admin');
+    cy.log('Admin login successful, token and user data received');
     
-    // Store token in localStorage
+    // Visit any page to set localStorage (need a page context)
+    cy.visit('/');
+    
+    // Store both token and user data in localStorage
     cy.window().then((win) => {
       win.localStorage.setItem('token', token);
-      cy.log('Token stored in localStorage');
+      win.localStorage.setItem('user', JSON.stringify(user));
+      cy.log('Token and user data stored in localStorage');
       
-      // Verify token was stored correctly
+      // Verify both were stored correctly
       const storedToken = win.localStorage.getItem('token');
+      const storedUser = JSON.parse(win.localStorage.getItem('user'));
       expect(storedToken).to.eq(token);
-      cy.log('Token verification successful');
+      expect(storedUser.role).to.eq('admin');
+      cy.log('Token and user data verification successful');
     });
   });
   
-  // Verify authentication is working by accessing token from localStorage
+  // Additional verification by accessing profile API
   cy.window().then((win) => {
     const token = win.localStorage.getItem('token');
     cy.log(`Verifying authentication with token: ${token ? token.substring(0, 20) + '...' : 'null'}`);
