@@ -10,15 +10,18 @@ yarn-error.log
 .env.development.local
 .env.test.local
 .env.production.local
+.env.cypress
 
 # Build files
 /public/dashboard-app/build/
 /build
+/dist
 
 # Database
 *.sqlite
 *.sqlite3
 /src/database.sqlite
+/src/test-database.sqlite
 
 # IDE and editor files
 .idea/
@@ -31,6 +34,8 @@ yarn-error.log
 /coverage
 /cypress/videos
 /cypress/screenshots
+/playwright-report
+/test-results
 
 # Logs
 logs
@@ -39,7 +44,20 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
+server.log
 
 # Temp files
 .tmp/
 tmp/
+.cache/
+.phpunit.cache/
+
+# Scripts (if they become redundant again)
+run_*.sh
+*_env.sh
+apply_fixes.sh
+cleanup.sh
+
+# Generated files
+audit-report.json
+audit-summary.md
