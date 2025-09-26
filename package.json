@@ -11,7 +11,14 @@
     "cy:open": "start-server-and-test start http://localhost:3000 \"cypress open\"",
     "cy:run:routing": "start-server-and-test start:ci http://localhost:3000 \"cypress run --spec cypress/e2e/routing.cy.js\"",
     "test:backend": "NODE_ENV=test mocha --require test/setup.js test/backend.test.js --timeout 10000",
+    "test:models": "NODE_ENV=test mocha --require test/setup.js test/models.test.js --timeout 10000",
+    "test:controllers": "NODE_ENV=test mocha --require test/setup.js test/controllers.test.js --timeout 10000",
+    "test:middleware": "NODE_ENV=test mocha --require test/setup.js test/middleware.test.js --timeout 10000",
+    "test:utils": "NODE_ENV=test mocha --require test/setup.js test/utils.test.js --timeout 10000",
     "test:security": "npm audit --audit-level=high",
+    "test:security-unit": "NODE_ENV=test mocha --require test/setup.js test/security.test.js --timeout 10000",
+    "test:unit": "NODE_ENV=test mocha --require test/setup.js test/*.test.js --timeout 10000",
+    "test:all": "npm run test:unit && npm run test:security && npm run cy:run",
     "test:load": "artillery run test/performance/load-test.yml",
     "test:dependencies": "node scripts/dependency-scan.js",
     "generate:types": "node scripts/generate-types.js",
@@ -34,7 +41,7 @@
     "validate": "npm run lint && npm run test:security"
   },
   "keywords": [],
-  "author": "Gemini",
+  "author": "Rahul",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.1",
@@ -69,6 +76,7 @@
     "nodemon": "^3.0.2",
     "prettier": "^3.1.1",
     "sequelize-cli": "^6.6.2",
+    "sinon": "^21.0.0",
     "start-server-and-test": "^2.0.3",
     "supertest": "^6.3.3"
   }

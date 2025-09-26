@@ -26,6 +26,9 @@ describe('Admin Panel', () => {
     // Wait for any element that indicates the page has loaded
     cy.get('#root', { timeout: 10000 }).should('be.visible');
     cy.log('Root element is visible');
+    
+    // Wait a bit for React to initialize
+    cy.wait(2000);
   });
 
   it('should load the admin page and see both users', () => {
@@ -49,7 +52,7 @@ describe('Admin Panel', () => {
     cy.wait('@getUsers', { timeout: 15000 }).then(interception => {
       cy.log('API response received:', interception.response?.statusCode);
       if (interception.response?.body) {
-        cy.log(`Found ${interception.response.body.length} users in API response`);
+        cy.log(`Found ${interception.response.body.data?.length || 'unknown'} users in API response`);
       }
     });
 

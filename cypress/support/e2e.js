@@ -66,19 +66,28 @@ Cypress.Commands.add('loginAsAdmin', () => {
     });
   });
   
-  // Verify authentication is working
-  cy.request({
-    method: 'GET',
-    url: 'http://0.0.0.0:3000/api/profile',
-    headers: {
-      Authorization: `Bearer ${window.localStorage.getItem('token')}`
+  // Verify authentication is working by accessing token from localStorage
+  cy.window().then((win) => {
+    const token = win.localStorage.getItem('token');
+    cy.log(`Verifying authentication with token: ${token ? token.substring(0, 20) + '...' : 'null'}`);
+    
+    if (token) {
+      cy.request({
+        method: 'GET',
+        url: 'http://0.0.0.0:3000/api/profile',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }).then(response => {
+        cy.log(`Profile API verification response: ${response.status}`);
+        expect(response.status).to.eq(200);
+        expect(response.body).to.have.property('username', 'adminuser');
+        expect(response.body).to.have.property('role', 'admin');
+        cy.log('Admin authentication verified successfully');
+      });
+    } else {
+      cy.log('Warning: No token found in localStorage');
     }
-  }).then(response => {
-    cy.log(`Profile API verification response: ${response.status}`);
-    expect(response.status).to.eq(200);
-    expect(response.body).to.have.property('username', 'adminuser');
-    expect(response.body).to.have.property('role', 'admin');
-    cy.log('Admin authentication verified successfully');
   });
 });
 

@@ -8,13 +8,13 @@ describe('Client-side Routing', () => {
   it('should load the /register page', () => {
     cy.visit('/register');
     cy.url().should('include', '/register');
-    cy.contains('h2', 'Register').should('be.visible');
+    cy.contains('.card-header', 'Register').should('be.visible');
   });
 
   it('should load the /login page', () => {
     cy.visit('/login');
     cy.url().should('include', '/login');
-    cy.contains('h2', 'Login').should('be.visible');
+    cy.contains('.card-header', 'Login').should('be.visible');
   });
 
   it('should redirect to /login when accessing a protected route without authentication', () => {
