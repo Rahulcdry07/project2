@@ -2,7 +2,7 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import { setupMockFetch } from './test-utils/mockAPI';
+import { vi } from 'vitest';
 
 /**
  * Custom render function that includes common providers
@@ -26,12 +26,7 @@ const customRender = (ui, options = {}) => {
  * Alternative render function for tests that need control over routing
  */
 export const renderWithProviders = (ui, options = {}) => {
-  const { initialEntries = ['/'], mockFetchResponses, routerType = 'memory', ...renderOptions } = options;
-  
-  // Setup custom mock fetch if provided
-  if (mockFetchResponses) {
-    setupMockFetch(mockFetchResponses);
-  }
+  const { initialEntries = ['/'], routerType = 'memory', ...renderOptions } = options;
   
   const AllProviders = ({ children }) => {
     const RouterComponent = routerType === 'memory' ? MemoryRouter : BrowserRouter;
@@ -67,10 +62,10 @@ export const createMockAuthContext = ({
   currentUser: user,
   loading: isLoading,
   error,
-  login: jest.fn(),
-  logout: jest.fn(),
-  register: jest.fn(),
-  updateUser: jest.fn()
+  login: vi.fn(),
+  logout: vi.fn(),
+  register: vi.fn(),
+  updateUser: vi.fn()
 });
 
 // Re-export everything from testing-library
