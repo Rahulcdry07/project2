@@ -1,6 +1,9 @@
 module.exports = {
   presets: [
-    '@babel/preset-env',
+    ['@babel/preset-env', { 
+      targets: { node: 'current' },
+      modules: 'auto'
+    }],
     ['@babel/preset-react', { runtime: 'automatic' }]
   ],
   plugins: []

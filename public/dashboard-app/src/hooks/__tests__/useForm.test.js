@@ -1,411 +1,645 @@
-import { renderHook, act } from '@testing-library/react';
-import useForm from '../useForm';
+import { describe, it, expect, vi } from 'vitest';
+import { renderHook, act, waitFor } from '@testing-library/react';
+import { useForm } from '../useForm';
 
 describe('useForm Hook', () => {
-  // Basic initialization and functionality
-  test('initializes with correct values and functions', () => {
-    const initialValues = { name: '', email: '' };
-    const { result } = renderHook(() => useForm(initialValues));
+  describe('Initialization', () => {
+    it('initializes with correct default values', () => {
+      const initialValues = { name: '', email: '', age: 0 };
+      const { result } = renderHook(() => useForm(initialValues));
 
-    // Check initial state
-    expect(result.current.values).toEqual(initialValues);
-    expect(result.current.errors).toEqual({});
-    expect(result.current.touched).toEqual({});
-    expect(result.current.isSubmitting).toBe(false);
-    
-    // Check functions exist
-    expect(typeof result.current.handleChange).toBe('function');
-    expect(typeof result.current.handleBlur).toBe('function');
-    expect(typeof result.current.handleSubmit).toBe('function');
-    expect(typeof result.current.setFieldValue).toBe('function');
-    expect(typeof result.current.resetForm).toBe('function');
-  });
-
-  // Value updates
-  test('updates values when handleChange is called', () => {
-    const initialValues = { name: '', email: '' };
-    const { result } = renderHook(() => useForm(initialValues));
-
-    // Update name field
-    act(() => {
-      result.current.handleChange({
-        target: { name: 'name', value: 'John Doe' }
-      });
+      expect(result.current.values).toEqual(initialValues);
+      expect(result.current.errors).toEqual({});
+      expect(result.current.touched).toEqual({});
+      expect(result.current.isSubmitting).toBe(false);
     });
 
-    // Check updated values
-    expect(result.current.values.name).toBe('John Doe');
-    expect(result.current.values.email).toBe('');
+    it('provides all expected methods', () => {
+      const { result } = renderHook(() => useForm({}));
 
-    // Update email field
-    act(() => {
-      result.current.handleChange({
-        target: { name: 'email', value: 'john@example.com' }
-      });
-    });
-
-    // Check both fields are updated
-    expect(result.current.values).toEqual({ 
-      name: 'John Doe', 
-      email: 'john@example.com' 
+      expect(typeof result.current.handleChange).toBe('function');
+      expect(typeof result.current.handleBlur).toBe('function');
+      expect(typeof result.current.handleSubmit).toBe('function');
+      expect(typeof result.current.resetForm).toBe('function');
+      expect(typeof result.current.setValues).toBe('function');
+      expect(typeof result.current.setFieldValue).toBe('function');
     });
   });
 
-  // Validation - Required fields
-  test('validates required fields on blur', () => {
-    const initialValues = { name: '', email: '' };
-    const validationRules = {
-      name: { required: true, message: 'Name is required' },
-      email: { required: true, message: 'Email is required' }
-    };
+  describe('Input Handling', () => {
+    it('updates values on handleChange', () => {
+      const { result } = renderHook(() => useForm({ name: '', email: '' }));
 
-    const { result } = renderHook(() => 
-      useForm(initialValues, validationRules)
-    );
+      act(() => {
+        result.current.handleChange({
+          target: { name: 'name', value: 'John Doe' }
+        });
+      });
 
-    // Trigger blur on empty name field
-    act(() => {
-      result.current.handleBlur({
-        target: { name: 'name', value: '' }
+      expect(result.current.values.name).toBe('John Doe');
+      expect(result.current.values.email).toBe('');
+    });
+
+    it('handles multiple field changes', () => {
+      const { result } = renderHook(() => useForm({ name: '', email: '', city: '' }));
+
+      act(() => {
+        result.current.handleChange({
+          target: { name: 'name', value: 'John' }
+        });
+      });
+
+      act(() => {
+        result.current.handleChange({
+          target: { name: 'email', value: 'john@example.com' }
+        });
+      });
+
+      act(() => {
+        result.current.handleChange({
+          target: { name: 'city', value: 'New York' }
+        });
+      });
+
+      expect(result.current.values).toEqual({
+        name: 'John',
+        email: 'john@example.com',
+        city: 'New York'
       });
     });
 
-    // Check error is set
-    expect(result.current.errors.name).toBe('Name is required');
-    expect(result.current.touched.name).toBe(true);
+    it('marks fields as touched on handleBlur', () => {
+      const { result } = renderHook(() => useForm({ name: '', email: '' }));
 
-    // Fill the name field and blur again
-    act(() => {
-      result.current.handleChange({
-        target: { name: 'name', value: 'John Doe' }
+      act(() => {
+        result.current.handleBlur({
+          target: { name: 'name' }
+        });
       });
-      result.current.handleBlur({
-        target: { name: 'name', value: 'John Doe' }
-      });
-    });
 
-    // Check error is cleared
-    expect(result.current.errors.name).toBeUndefined();
-  });
-
-  // Validation - Pattern validation
-  test('validates patterns on blur', () => {
-    const initialValues = { email: '' };
-    const validationRules = {
-      email: {
-        required: true,
-        message: 'Email is required',
-        pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-        patternMessage: 'Invalid email format'
-      }
-    };
-
-    const { result } = renderHook(() => 
-      useForm(initialValues, validationRules)
-    );
-
-    // Enter invalid email and blur
-    act(() => {
-      result.current.handleChange({
-        target: { name: 'email', value: 'invalid-email' }
-      });
-      result.current.handleBlur({
-        target: { name: 'email', value: 'invalid-email' }
-      });
-    });
-
-    // Check pattern error
-    expect(result.current.errors.email).toBe('Invalid email format');
-
-    // Enter valid email and blur
-    act(() => {
-      result.current.handleChange({
-        target: { name: 'email', value: 'valid@example.com' }
-      });
-      result.current.handleBlur({
-        target: { name: 'email', value: 'valid@example.com' }
-      });
-    });
-
-    // Check error is cleared
-    expect(result.current.errors.email).toBeUndefined();
-  });
-
-  // Validation - Min length
-  test('validates minimum length on blur', () => {
-    const initialValues = { password: '' };
-    const validationRules = {
-      password: {
-        required: true,
-        message: 'Password is required',
-        minLength: 6,
-        minLengthMessage: 'Password must be at least 6 characters'
-      }
-    };
-
-    const { result } = renderHook(() => 
-      useForm(initialValues, validationRules)
-    );
-
-    // Enter short password and blur
-    act(() => {
-      result.current.handleChange({
-        target: { name: 'password', value: '12345' }
-      });
-      result.current.handleBlur({
-        target: { name: 'password', value: '12345' }
-      });
-    });
-
-    // Check min length error
-    expect(result.current.errors.password).toBe('Password must be at least 6 characters');
-
-    // Enter valid password and blur
-    act(() => {
-      result.current.handleChange({
-        target: { name: 'password', value: '123456' }
-      });
-      result.current.handleBlur({
-        target: { name: 'password', value: '123456' }
-      });
-    });
-
-    // Check error is cleared
-    expect(result.current.errors.password).toBeUndefined();
-  });
-
-  // Form submission with validation
-  test('validates all fields on form submission', async () => {
-    const initialValues = { name: '', email: '' };
-    const validationRules = {
-      name: { required: true, message: 'Name is required' },
-      email: { required: true, message: 'Email is required' }
-    };
-
-    const onSubmit = jest.fn();
-    const { result } = renderHook(() => 
-      useForm(initialValues, validationRules, onSubmit)
-    );
-
-    // Submit empty form
-    await act(async () => {
-      await result.current.handleSubmit({ preventDefault: jest.fn() });
-    });
-
-    // Check all fields are validated
-    expect(result.current.errors).toEqual({
-      name: 'Name is required',
-      email: 'Email is required'
-    });
-    
-    // Check all fields are marked as touched
-    expect(result.current.touched).toEqual({
-      name: true,
-      email: true
-    });
-    
-    // Check onSubmit was not called
-    expect(onSubmit).not.toHaveBeenCalled();
-  });
-
-  // Successful form submission
-  test('calls onSubmit with form values when validation passes', async () => {
-    const initialValues = { name: '', email: '' };
-    const validationRules = {
-      name: { required: true, message: 'Name is required' },
-      email: { required: true, message: 'Email is required' }
-    };
-
-    const onSubmit = jest.fn();
-    const { result } = renderHook(() => 
-      useForm(initialValues, validationRules, onSubmit)
-    );
-
-    // Fill out the form
-    act(() => {
-      result.current.handleChange({
-        target: { name: 'name', value: 'John Doe' }
-      });
-      result.current.handleChange({
-        target: { name: 'email', value: 'john@example.com' }
-      });
-    });
-
-    // Submit the form
-    await act(async () => {
-      await result.current.handleSubmit({ preventDefault: jest.fn() });
-    });
-
-    // Check onSubmit was called with correct values
-    expect(onSubmit).toHaveBeenCalledWith({
-      name: 'John Doe',
-      email: 'john@example.com'
+      expect(result.current.touched.name).toBe(true);
+      expect(result.current.touched.email).toBeUndefined();
     });
   });
 
-  // Submission state management
-  test('sets and resets isSubmitting state during form submission', async () => {
-    const initialValues = { name: 'John Doe', email: 'john@example.com' };
-    
-    // Create a delayed submission function
-    const onSubmit = jest.fn(() => new Promise(resolve => {
-      setTimeout(resolve, 100);
-    }));
-    
-    const { result } = renderHook(() => 
-      useForm(initialValues, {}, onSubmit)
-    );
+  describe('Validation - Rules Object', () => {
+    it('validates required fields', async () => {
+      const rules = { 
+        name: { required: true },
+        email: { required: true }
+      };
+      const { result } = renderHook(() => useForm({ name: '', email: '' }, rules));
 
-    // Start submission
-    let submitPromise;
-    act(() => {
-      submitPromise = result.current.handleSubmit({ preventDefault: jest.fn() });
-    });
-
-    // Check isSubmitting is true during submission
-    expect(result.current.isSubmitting).toBe(true);
-
-    // Wait for submission to complete
-    await act(async () => {
-      await submitPromise;
-    });
-
-    // Check isSubmitting is reset to false
-    expect(result.current.isSubmitting).toBe(false);
-  });
-
-  // Field value setter
-  test('setFieldValue updates a specific field value', () => {
-    const initialValues = { name: '', email: '' };
-    const { result } = renderHook(() => useForm(initialValues));
-
-    // Set field value directly
-    act(() => {
-      result.current.setFieldValue('name', 'John Doe');
-    });
-
-    // Check value is updated
-    expect(result.current.values.name).toBe('John Doe');
-    expect(result.current.values.email).toBe('');
-  });
-
-  // Form reset
-  test('resetForm restores initial values and clears errors/touched state', () => {
-    const initialValues = { name: '', email: '' };
-    const { result } = renderHook(() => useForm(initialValues));
-
-    // Change values and create errors/touched state
-    act(() => {
-      result.current.handleChange({
-        target: { name: 'name', value: 'John Doe' }
+      act(() => {
+        result.current.handleBlur({ target: { name: 'name' } });
       });
-      result.current.handleBlur({
-        target: { name: 'name', value: 'John Doe' }
+
+      await waitFor(() => {
+        expect(result.current.errors.name).toBe('name is required');
       });
     });
 
-    expect(result.current.values.name).toBe('John Doe');
-    expect(result.current.touched.name).toBe(true);
+    it('validates required fields with custom messages', async () => {
+      const rules = { 
+        name: { required: true, message: 'Name is mandatory' }
+      };
+      const { result } = renderHook(() => useForm({ name: '' }, rules));
 
-    // Reset form
-    act(() => {
-      result.current.resetForm();
+      act(() => {
+        result.current.handleBlur({ target: { name: 'name' } });
+      });
+
+      await waitFor(() => {
+        expect(result.current.errors.name).toBe('Name is mandatory');
+      });
     });
 
-    // Check everything is reset
-    expect(result.current.values).toEqual(initialValues);
-    expect(result.current.errors).toEqual({});
-    expect(result.current.touched).toEqual({});
-  });
-
-  // Custom validators
-  test('applies custom validators on blur and submission', async () => {
-    const initialValues = { password: '', confirmPassword: '' };
-    const customValidators = {
-      confirmPassword: (value, values) => {
-        if (value && value !== values.password) {
-          return 'Passwords do not match';
+    it('validates pattern requirements', async () => {
+      const rules = { 
+        email: { 
+          required: true, 
+          pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+          patternMessage: 'Please enter a valid email address'
         }
-        return '';
-      }
-    };
+      };
+      const { result } = renderHook(() => useForm({ email: '' }, rules));
 
-    const { result } = renderHook(() => 
-      useForm(initialValues, {}, null, customValidators)
-    );
+      act(() => {
+        result.current.handleChange({
+          target: { name: 'email', value: 'invalid-email' }
+        });
+      });
 
-    // Set password and confirmPassword to different values
-    act(() => {
-      result.current.handleChange({
-        target: { name: 'password', value: 'password123' }
+      act(() => {
+        result.current.handleBlur({ target: { name: 'email' } });
       });
-      result.current.handleChange({
-        target: { name: 'confirmPassword', value: 'password456' }
-      });
-      result.current.handleBlur({
-        target: { name: 'confirmPassword', value: 'password456' }
+
+      await waitFor(() => {
+        expect(result.current.errors.email).toBe('Please enter a valid email address');
       });
     });
 
-    // Check custom validator error
-    expect(result.current.errors.confirmPassword).toBe('Passwords do not match');
-
-    // Set matching passwords
-    act(() => {
-      result.current.handleChange({
-        target: { name: 'confirmPassword', value: 'password123' }
-      });
-      result.current.handleBlur({
-        target: { name: 'confirmPassword', value: 'password123' }
-      });
-    });
-
-    // Check error is cleared
-    expect(result.current.errors.confirmPassword).toBeUndefined();
-  });
-  
-  // Form submission with custom validation
-  test('validates with custom validators on submission', async () => {
-    const initialValues = { password: 'password123', confirmPassword: 'wrong' };
-    const customValidators = {
-      confirmPassword: (value, values) => {
-        if (value !== values.password) {
-          return 'Passwords do not match';
+    it('validates minimum length', async () => {
+      const rules = { 
+        password: { 
+          required: true,
+          minLength: 8,
+          minLengthMessage: 'Password must be at least 8 characters'
         }
-        return '';
-      }
-    };
-    
-    const onSubmit = jest.fn();
-    const { result } = renderHook(() => 
-      useForm(initialValues, {}, onSubmit, customValidators)
-    );
-    
-    // Submit form with mismatched passwords
-    await act(async () => {
-      await result.current.handleSubmit({ preventDefault: jest.fn() });
-    });
-    
-    // Check custom validation error
-    expect(result.current.errors.confirmPassword).toBe('Passwords do not match');
-    expect(onSubmit).not.toHaveBeenCalled();
-    
-    // Fix the password and submit again
-    act(() => {
-      result.current.handleChange({
-        target: { name: 'confirmPassword', value: 'password123' }
+      };
+      const { result } = renderHook(() => useForm({ password: '' }, rules));
+
+      act(() => {
+        result.current.handleChange({
+          target: { name: 'password', value: '123' }
+        });
+      });
+
+      act(() => {
+        result.current.handleBlur({ target: { name: 'password' } });
+      });
+
+      await waitFor(() => {
+        expect(result.current.errors.password).toBe('Password must be at least 8 characters');
       });
     });
-    
-    await act(async () => {
-      await result.current.handleSubmit({ preventDefault: jest.fn() });
+
+    it('validates maximum length', async () => {
+      const rules = { 
+        username: { 
+          maxLength: 10,
+          maxLengthMessage: 'Username cannot exceed 10 characters'
+        }
+      };
+      const { result } = renderHook(() => useForm({ username: '' }, rules));
+
+      act(() => {
+        result.current.handleChange({
+          target: { name: 'username', value: 'verylongusername' }
+        });
+      });
+
+      act(() => {
+        result.current.handleBlur({ target: { name: 'username' } });
+      });
+
+      await waitFor(() => {
+        expect(result.current.errors.username).toBe('Username cannot exceed 10 characters');
+      });
     });
-    
-    // Check submission succeeds
-    expect(result.current.errors.confirmPassword).toBeUndefined();
-    expect(onSubmit).toHaveBeenCalledWith({
-      password: 'password123',
-      confirmPassword: 'password123'
+
+    it('clears validation errors when field becomes valid', async () => {
+      const rules = { 
+        email: { 
+          required: true,
+          pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        }
+      };
+      const { result } = renderHook(() => useForm({ email: '' }, rules));
+
+      // First, create an error
+      act(() => {
+        result.current.handleChange({
+          target: { name: 'email', value: 'invalid' }
+        });
+      });
+
+      act(() => {
+        result.current.handleBlur({ target: { name: 'email' } });
+      });
+
+      await waitFor(() => {
+        expect(result.current.errors.email).toBeTruthy();
+      });
+
+      // Then fix the error
+      act(() => {
+        result.current.handleChange({
+          target: { name: 'email', value: 'valid@example.com' }
+        });
+      });
+
+      await waitFor(() => {
+        expect(result.current.errors.email).toBeUndefined();
+      });
+    });
+  });
+
+  describe('Custom Validators', () => {
+    it('applies custom validators', async () => {
+      const customValidators = {
+        age: (value) => {
+          if (value < 18) return 'Must be 18 or older';
+          return null;
+        }
+      };
+      
+      const { result } = renderHook(() => 
+        useForm({ age: 0 }, null, null, customValidators)
+      );
+
+      act(() => {
+        result.current.handleChange({
+          target: { name: 'age', value: '15' }
+        });
+      });
+
+      act(() => {
+        result.current.handleBlur({ target: { name: 'age' } });
+      });
+
+      await waitFor(() => {
+        expect(result.current.errors.age).toBe('Must be 18 or older');
+      });
+    });
+
+    it('custom validators override built-in rules', async () => {
+      const rules = { age: { required: true } };
+      const customValidators = {
+        age: (value) => {
+          if (value && value < 21) return 'Must be 21 or older';
+          return null;
+        }
+      };
+      
+      const { result } = renderHook(() => 
+        useForm({ age: 0 }, rules, null, customValidators)
+      );
+
+      act(() => {
+        result.current.handleChange({
+          target: { name: 'age', value: '18' }
+        });
+      });
+
+      act(() => {
+        result.current.handleBlur({ target: { name: 'age' } });
+      });
+
+      await waitFor(() => {
+        expect(result.current.errors.age).toBe('Must be 21 or older');
+      });
+    });
+
+    it('receives both field value and all form values in custom validator', async () => {
+      const customValidators = {
+        confirmEmail: (value, allValues) => {
+          if (value !== allValues.email) return 'Email addresses do not match';
+          return null;
+        }
+      };
+      
+      const { result } = renderHook(() => 
+        useForm({ email: '', confirmEmail: '' }, null, null, customValidators)
+      );
+
+      act(() => {
+        result.current.handleChange({
+          target: { name: 'email', value: 'test@example.com' }
+        });
+      });
+
+      act(() => {
+        result.current.handleChange({
+          target: { name: 'confirmEmail', value: 'different@example.com' }
+        });
+      });
+
+      act(() => {
+        result.current.handleBlur({ target: { name: 'confirmEmail' } });
+      });
+
+      await waitFor(() => {
+        expect(result.current.errors.confirmEmail).toBe('Email addresses do not match');
+      });
+    });
+  });
+
+  describe('Password Confirmation', () => {
+    it('validates password confirmation automatically', async () => {
+      const { result } = renderHook(() => 
+        useForm({ password: '', confirmPassword: '' })
+      );
+
+      act(() => {
+        result.current.handleChange({
+          target: { name: 'password', value: 'password123' }
+        });
+      });
+
+      act(() => {
+        result.current.handleChange({
+          target: { name: 'confirmPassword', value: 'different' }
+        });
+      });
+
+      act(() => {
+        result.current.handleBlur({ target: { name: 'confirmPassword' } });
+      });
+
+      await waitFor(() => {
+        expect(result.current.errors.confirmPassword).toBe('Passwords do not match');
+      });
+    });
+
+    it('clears password confirmation error when passwords match', async () => {
+      const { result } = renderHook(() => 
+        useForm({ password: '', confirmPassword: '' })
+      );
+
+      // Create mismatch first
+      act(() => {
+        result.current.handleChange({
+          target: { name: 'password', value: 'password123' }
+        });
+      });
+
+      act(() => {
+        result.current.handleChange({
+          target: { name: 'confirmPassword', value: 'different' }
+        });
+      });
+
+      act(() => {
+        result.current.handleBlur({ target: { name: 'confirmPassword' } });
+      });
+
+      await waitFor(() => {
+        expect(result.current.errors.confirmPassword).toBe('Passwords do not match');
+      });
+
+      // Fix the mismatch
+      act(() => {
+        result.current.handleChange({
+          target: { name: 'confirmPassword', value: 'password123' }
+        });
+      });
+
+      await waitFor(() => {
+        expect(result.current.errors.confirmPassword).toBeUndefined();
+      });
+    });
+  });
+
+  describe('Form Submission', () => {
+    it('prevents submission with validation errors', async () => {
+      const onSubmit = vi.fn();
+      const rules = { name: { required: true } };
+      
+      const { result } = renderHook(() => 
+        useForm({ name: '' }, rules, onSubmit)
+      );
+
+      await act(async () => {
+        await result.current.handleSubmit({ preventDefault: vi.fn() });
+      });
+
+      expect(onSubmit).not.toHaveBeenCalled();
+      expect(result.current.errors.name).toBe('name is required');
+    });
+
+    it('calls onSubmit when validation passes', async () => {
+      const onSubmit = vi.fn().mockResolvedValue();
+      
+      const { result } = renderHook(() => 
+        useForm({ name: 'John' }, null, onSubmit)
+      );
+
+      await act(async () => {
+        await result.current.handleSubmit({ preventDefault: vi.fn() });
+      });
+
+      expect(onSubmit).toHaveBeenCalledWith({ name: 'John' });
+    });
+
+    it('sets all fields as touched on submission', async () => {
+      const onSubmit = vi.fn();
+      
+      const { result } = renderHook(() => 
+        useForm({ name: '', email: '', city: '' }, null, onSubmit)
+      );
+
+      await act(async () => {
+        await result.current.handleSubmit({ preventDefault: vi.fn() });
+      });
+
+      expect(result.current.touched).toEqual({
+        name: true,
+        email: true,
+        city: true
+      });
+    });
+
+    it('manages isSubmitting state during async submission', async () => {
+      let resolveSubmit;
+      const submitPromise = new Promise(resolve => {
+        resolveSubmit = resolve;
+      });
+      const onSubmit = vi.fn(() => submitPromise);
+      
+      const { result } = renderHook(() => 
+        useForm({ name: 'John' }, null, onSubmit)
+      );
+
+      expect(result.current.isSubmitting).toBe(false);
+
+      // Start submission without awaiting
+      act(() => {
+        result.current.handleSubmit({ preventDefault: vi.fn() });
+      });
+
+      // Should be submitting immediately after calling handleSubmit
+      expect(result.current.isSubmitting).toBe(true);
+
+      // Resolve the submission
+      act(() => {
+        resolveSubmit();
+      });
+
+      // Wait for the submission to complete
+      await act(async () => {
+        await submitPromise;
+      });
+
+      // Should not be submitting after completion
+      expect(result.current.isSubmitting).toBe(false);
+    });
+
+    it('handles submission errors gracefully', async () => {
+      const error = new Error('Submission failed');
+      const onSubmit = vi.fn().mockRejectedValue(error);
+      
+      const { result } = renderHook(() => 
+        useForm({ name: 'John' }, null, onSubmit)
+      );
+
+      await act(async () => {
+        await result.current.handleSubmit({ preventDefault: vi.fn() });
+      });
+
+      expect(result.current.errors.form).toBe('Submission failed');
+      expect(result.current.isSubmitting).toBe(false);
+    });
+
+    it('accepts submit handler as parameter', async () => {
+      const defaultSubmit = vi.fn();
+      const paramSubmit = vi.fn().mockResolvedValue();
+      
+      const { result } = renderHook(() => 
+        useForm({ name: 'John' }, null, defaultSubmit)
+      );
+
+      await act(async () => {
+        await result.current.handleSubmit(paramSubmit);
+      });
+
+      expect(paramSubmit).toHaveBeenCalledWith({ name: 'John' });
+      expect(defaultSubmit).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Utility Methods', () => {
+    it('resets form to initial state', () => {
+      const initialValues = { name: 'Initial', email: 'test@example.com' };
+      const { result } = renderHook(() => useForm(initialValues));
+
+      // Make changes
+      act(() => {
+        result.current.handleChange({
+          target: { name: 'name', value: 'Changed' }
+        });
+      });
+
+      act(() => {
+        result.current.handleBlur({ target: { name: 'name' } });
+      });
+
+      // Reset
+      act(() => {
+        result.current.resetForm();
+      });
+
+      expect(result.current.values).toEqual(initialValues);
+      expect(result.current.errors).toEqual({});
+      expect(result.current.touched).toEqual({});
+      expect(result.current.isSubmitting).toBe(false);
+    });
+
+    it('sets specific field value with setFieldValue', () => {
+      const { result } = renderHook(() => useForm({ name: '', age: 0 }));
+
+      act(() => {
+        result.current.setFieldValue('name', 'New Name');
+      });
+
+      act(() => {
+        result.current.setFieldValue('age', 25);
+      });
+
+      expect(result.current.values.name).toBe('New Name');
+      expect(result.current.values.age).toBe(25);
+    });
+
+    it('sets all values with setValues', () => {
+      const { result } = renderHook(() => useForm({ name: '', email: '' }));
+
+      act(() => {
+        result.current.setValues({ name: 'John', email: 'john@example.com' });
+      });
+
+      expect(result.current.values).toEqual({
+        name: 'John',
+        email: 'john@example.com'
+      });
+    });
+  });
+
+  describe('Function Validation', () => {
+    it('works with function-based validation', async () => {
+      const validateForm = (values) => {
+        const errors = {};
+        if (!values.email) {
+          errors.email = 'Email is required';
+        }
+        if (values.email && !values.email.includes('@')) {
+          errors.email = 'Invalid email format';
+        }
+        return errors;
+      };
+
+      const { result } = renderHook(() => 
+        useForm({ email: '' }, validateForm)
+      );
+
+      act(() => {
+        result.current.handleBlur({ target: { name: 'email' } });
+      });
+
+      await waitFor(() => {
+        expect(result.current.errors.email).toBe('Email is required');
+      });
+
+      act(() => {
+        result.current.handleChange({
+          target: { name: 'email', value: 'invalid' }
+        });
+      });
+
+      await waitFor(() => {
+        expect(result.current.errors.email).toBe('Invalid email format');
+      });
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('handles empty string values in validation', async () => {
+      const rules = { name: { required: true } };
+      const { result } = renderHook(() => useForm({ name: '   ' }, rules));
+
+      act(() => {
+        result.current.handleBlur({ target: { name: 'name' } });
+      });
+
+      await waitFor(() => {
+        expect(result.current.errors.name).toBe('name is required');
+      });
+    });
+
+    it('handles numeric fields correctly', async () => {
+      const rules = { 
+        age: { 
+          required: true,
+          minLength: 1
+        }
+      };
+      const { result } = renderHook(() => useForm({ age: 0 }, rules));
+
+      act(() => {
+        result.current.handleChange({
+          target: { name: 'age', value: 25 }
+        });
+      });
+
+      expect(result.current.values.age).toBe(25);
+    });
+
+    it('skips validation for non-required empty fields', async () => {
+      const rules = { 
+        optional: { 
+          minLength: 5,
+          minLengthMessage: 'Must be at least 5 characters'
+        }
+      };
+      const { result } = renderHook(() => useForm({ optional: '' }, rules));
+
+      act(() => {
+        result.current.handleBlur({ target: { name: 'optional' } });
+      });
+
+      // Should not validate minLength for empty non-required field
+      await waitFor(() => {
+        expect(result.current.errors.optional).toBeUndefined();
+      });
     });
   });
 });

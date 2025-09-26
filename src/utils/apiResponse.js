@@ -58,7 +58,7 @@ exports.sendValidationError = (res, errors) => {
  * @param {Object} res - Express response object
  * @param {Function} next - Express next function
  */
-exports.errorHandler = (err, req, res, next) => {
+exports.errorHandler = (err, req, res, _next) => {
     console.error('Global error:', err);
     
     // Check if this is a Sequelize validation error

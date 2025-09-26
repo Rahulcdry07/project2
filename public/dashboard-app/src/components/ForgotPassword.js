@@ -1,55 +1,83 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { authAPI } from '../services/api';
 
 const ForgotPassword = () => {
-    const [email, setEmail] = useState('');
-    const [message, setMessage] = useState('');
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setMessage(''); // Clear previous messages
-        try {
-            const response = await fetch('/api/forgot-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email }),
-            });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setMessage('');
+    setError('');
 
-            const result = await response.json();
+    try {
+      await authAPI.forgotPassword(email);
+      setMessage('Password reset email sent! Check your inbox.');
+    } catch (err) {
+      setError(err.message || 'Failed to send reset email');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-            if (response.ok) {
-                setMessage(result.message);
-            } else {
-                setMessage(`Error: ${result.error}`);
-            }
-        } catch (error) {
-            console.error('Error sending reset link:', error);
-            setMessage('Network error sending reset link.');
-        }
-    };
+  return (
+    <div className="row justify-content-center">
+      <div className="col-md-6 col-lg-4">
+        <div className="card">
+          <div className="card-body">
+            <h1 className="card-title text-center mb-4">Forgot Password</h1>
+            
+            {message && (
+              <div className="alert alert-success" role="alert">
+                {message}
+              </div>
+            )}
+            
+            {error && (
+              <div className="alert alert-danger" role="alert">
+                {error}
+              </div>
+            )}
 
-    return (
-        <div className="container d-flex justify-content-center align-items-center min-vh-100">
-            <div className="card p-4 shadow-sm" style={{ width: '24rem' }}>
-                <h2 className="card-title text-center mb-4">Forgot Your Password?</h2>
-                <p className="text-center mb-3">Enter your email address and we will send you a link to reset your password.</p>
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-3">
-                        <label htmlFor="email" className="form-label">Email Address</label>
-                        <input
-                            type="email"
-                            className="form-control"
-                            id="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <button type="submit" className="btn btn-primary w-100">Send Reset Link</button>
-                </form>
-                {message && <p className="text-center mt-3" id="message">{message}</p>}
+            <form onSubmit={handleSubmit}>
+              <div className="mb-3">
+                <label htmlFor="email" className="form-label">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  className="form-control"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="btn btn-primary w-100"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Sending...' : 'Send Reset Email'}
+              </button>
+            </form>
+
+            <div className="text-center mt-3">
+              <p>
+                Remember your password?{' '}
+                <Link to="/login">Login here</Link>
+              </p>
             </div>
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
 export default ForgotPassword;

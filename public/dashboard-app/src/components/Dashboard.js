@@ -1,47 +1,44 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { getCurrentUser } from '../utils/auth';
 
 const Dashboard = () => {
-    const [username, setUsername] = useState('');
-    const navigate = useNavigate();
+  const [user, setUser] = useState(null);
 
-    useEffect(() => {
-        const fetchUser = async () => {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                navigate('/login');
-                return;
-            }
-            try {
-                const response = await fetch('/api/profile', {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                const user = await response.json();
-                if (response.ok) {
-                    setUsername(user.username);
-                } else if (user.error === 'Token expired.' || user.error === 'Invalid token.' || user.error === 'No token provided.') {
-                    localStorage.removeItem('token');
-                    navigate('/login');
-                }
-            } catch (error) {
-                console.error('Error fetching user data:', error);
-                localStorage.removeItem('token');
-                navigate('/login');
-            }
-        };
-        fetchUser();
-    }, [navigate]);
+  useEffect(() => {
+    const currentUser = getCurrentUser();
+    setUser(currentUser);
+  }, []);
 
-    return (
-        <div className="container">
-            <header className="main-header">
-                <h1>Dashboard</h1>
-                <p>Welcome to your dashboard, <span id="username">{username}</span>!</p>
-            </header>
-            {/* Placeholder for other dashboard content */}
-            <p>More dashboard content will go here.</p>
+  return (
+    <div className="container mt-4">
+      <h1>Dashboard</h1>
+      {user && (
+        <p>Welcome to your dashboard, {user.username}!</p>
+      )}
+      <div className="row">
+        <div className="col-md-6">
+          <div className="card">
+            <div className="card-body">
+              <h5 className="card-title">Quick Actions</h5>
+              <p className="card-text">
+                Access your most used features quickly.
+              </p>
+            </div>
+          </div>
         </div>
-    );
+        <div className="col-md-6">
+          <div className="card">
+            <div className="card-body">
+              <h5 className="card-title">Recent Activity</h5>
+              <p className="card-text">
+                No recent activity to show.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Dashboard;
