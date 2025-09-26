@@ -47,13 +47,14 @@ jobs:
           JWT_SECRET: test-jwt-secret
 
       - name: Run OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.10.0
+        uses: zaproxy/action-baseline@v0.12.0
         with:
           target: 'http://localhost:3000'
           rules_file_name: '.zap/rules.tsv'
           cmd_options: '-a -j -m 3 -T 15'
           allow_issue_writing: false
           fail_action: false
+          artifact_name: 'zap-security-report'
 
       - name: Stop application
         if: always()
@@ -72,11 +73,11 @@ jobs:
           echo "=== Current directory contents ==="
           ls -la
 
-      - name: Upload ZAP Report
+      - name: Upload ZAP Security Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: zap-scan-results
+          name: security-scan-report
           path: |
             report_html.html
             report_json.json
