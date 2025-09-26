@@ -73,15 +73,4 @@ jobs:
           find . -name "*report*" -type f || echo "No files with 'report' in name found"
           echo "=== Current directory contents ==="
           ls -la
-
-      - name: Upload ZAP Security Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-scan-report
-          path: |
-            report_json.json
-            report_md.md
-            report_html.html
-          retention-days: 7
-          if-no-files-found: warn
+          echo "=== ZAP action will automatically upload reports as artifact ==="
