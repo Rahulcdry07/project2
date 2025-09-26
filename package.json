@@ -22,6 +22,7 @@
     "test:utils": "NODE_ENV=test mocha --require test/setup.js test/utils.test.js --timeout 10000",
     "test:security": "npm audit --audit-level=high",
     "test:security-unit": "NODE_ENV=test mocha --require test/setup.js test/security.test.js --timeout 10000",
+    "test:security-config": "bash scripts/test-security.sh",
     "test:unit": "NODE_ENV=test mocha --require test/setup.js test/*.test.js --timeout 10000",
     "test:all": "npm run test:unit && npm run test:security && npm run playwright:test",
     "test:load": "artillery run test/performance/load-test.yml",
