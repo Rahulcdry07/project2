@@ -51,7 +51,7 @@ jobs:
         with:
           target: 'http://localhost:3000'
           rules_file_name: '.zap/rules.tsv'
-          cmd_options: '-a'
+          cmd_options: '-a -j -m 3 -T 15'
           allow_issue_writing: false
           fail_action: false
 
@@ -63,12 +63,26 @@ jobs:
           fi
           pkill -f "node.*server.js" || true
 
+      - name: List generated reports
+        if: always()
+        run: |
+          echo "=== Checking for ZAP report files ==="
+          ls -la report_* || echo "No report files found with report_* pattern"
+          ls -la *.html *.json *.md || echo "No report files found with extensions"
+          echo "=== Current directory contents ==="
+          ls -la
+
       - name: Upload ZAP Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: zap-report
+          name: zap-scan-results
           path: |
             report_html.html
             report_json.json
             report_md.md
+            *.html
+            *.json
+            *.md
+          retention-days: 7
+          if-no-files-found: warn
