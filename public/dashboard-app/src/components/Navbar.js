@@ -1,14 +1,16 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { isAuthenticated, getCurrentUser, clearAuthData, isAdmin } from '../utils/auth';
+import { isAuthenticated, getCurrentUser, isAdmin } from '../utils/auth';
+import { useAuth } from '../contexts/AuthContext';
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const user = getCurrentUser();
   const isAuth = isAuthenticated();
 
   const handleLogout = () => {
-    clearAuthData();
+    logout();
     navigate('/login');
   };
 
@@ -56,11 +58,15 @@ const Navbar = () => {
                     className="nav-link dropdown-toggle btn btn-link" 
                     type="button"
                     data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    aria-haspopup="true"
+                    aria-label="Developer tools and resources"
+                    id="tools-dropdown-button"
                   >
-                    <i className="bi bi-tools me-1"></i>
+                    <i className="bi bi-tools me-1" aria-hidden="true"></i>
                     Tools
                   </button>
-                  <ul className="dropdown-menu">
+                  <ul className="dropdown-menu" aria-labelledby="tools-dropdown-button" role="menu">
                     <li>
                       <a 
                         className="dropdown-item" 
@@ -109,34 +115,40 @@ const Navbar = () => {
                     className="nav-link dropdown-toggle btn btn-link" 
                     type="button"
                     data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    aria-haspopup="true"
+                    aria-label={`User menu for ${user?.username}${isAdmin() ? ' (Admin)' : ''}`}
+                    id="user-dropdown-button"
                   >
-                    <i className="bi bi-person-circle me-1"></i>
+                    <i className="bi bi-person-circle me-1" aria-hidden="true"></i>
                     {user?.username}
                     {isAdmin() && <span className="badge bg-warning text-dark ms-1">Admin</span>}
                   </button>
-                  <ul className="dropdown-menu dropdown-menu-end">
-                    <li>
-                      <Link className="dropdown-item" to="/profile">
-                        <i className="bi bi-person-gear me-1"></i>
+                  <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="user-dropdown-button" role="menu">
+                    <li role="none">
+                      <Link className="dropdown-item" to="/profile" role="menuitem">
+                        <i className="bi bi-person-gear me-1" aria-hidden="true"></i>
                         Profile Settings
                       </Link>
                     </li>
-                    <li>
-                      <Link className="dropdown-item" to="/files">
-                        <i className="bi bi-files me-1"></i>
+                    <li role="none">
+                      <Link className="dropdown-item" to="/files" role="menuitem">
+                        <i className="bi bi-files me-1" aria-hidden="true"></i>
                         My Files
                       </Link>
                     </li>
-                    <li><hr className="dropdown-divider" /></li>
-                    <li>
+                    <li role="separator"><hr className="dropdown-divider" /></li>
+                    <li role="none">
                       <button 
                         className="dropdown-item text-danger" 
                         onClick={(e) => {
                           e.preventDefault();
                           handleLogout();
                         }}
+                        role="menuitem"
+                        aria-label="Sign out of your account"
                       >
-                        <i className="bi bi-box-arrow-right me-1"></i>
+                        <i className="bi bi-box-arrow-right me-1" aria-hidden="true"></i>
                         Logout
                       </button>
                     </li>
