@@ -4,6 +4,7 @@
 const { Sequelize } = require('sequelize');
 const { DB_STORAGE, DB_LOGGING } = require('../config/env');
 const UserModel = require('./User');
+const FileVectorModel = require('./FileVector');
 
 // Initialize Sequelize with SQLite
 const sequelize = new Sequelize({
@@ -14,6 +15,11 @@ const sequelize = new Sequelize({
 
 // Initialize models
 const User = UserModel(sequelize);
+const FileVector = FileVectorModel(sequelize);
+
+// Set up associations
+User.hasMany(FileVector, { foreignKey: 'user_id' });
+FileVector.belongsTo(User, { foreignKey: 'user_id' });
 
 // Test the database connection
 const testConnection = async () => {
@@ -30,5 +36,6 @@ const testConnection = async () => {
 module.exports = {
     sequelize,
     User,
+    FileVector,
     testConnection
 };

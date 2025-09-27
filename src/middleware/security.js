@@ -27,30 +27,49 @@ const configureSecurityMiddleware = (app, options = {}) => {
     app.set('trust proxy', 1);
   }
 
-  // Set security HTTP headers
-  app.use(helmet());
+  // Set security HTTP headers with CSP configuration
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:", "https://via.placeholder.com", "https:"],
+        connectSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'"],
+        frameSrc: ["'self'"],
+      },
+    },
+  }));
 
   // Parse cookies
   app.use(cookieParser());
 
-  // Rate limiting
-  const limiter = rateLimit({
-    max: rateLimitMax,
-    windowMs: rateLimitWindowMs,
-    message: 'Too many requests from this IP, please try again later',
-    standardHeaders: true,
-    legacyHeaders: false,
-    handler: (req, res, next, options) => {
-      logger.warn(`Rate limit exceeded for IP: ${req.ip}`);
-      res.status(options.statusCode).json({
-        status: 'error',
-        message: options.message,
-      });
-    }
-  });
+  // Rate limiting - conditionally disabled in test mode
+  // Enable rate limiting if: not in test mode OR testing security specifically OR custom config provided
+  const enableRateLimit = !isTestMode || process.env.TESTING_SECURITY === 'true' || options.rateLimitMax || options.rateLimitWindowMs;
+  
+  if (enableRateLimit) {
+    const limiter = rateLimit({
+      max: rateLimitMax,
+      windowMs: rateLimitWindowMs,
+      message: 'Too many requests from this IP, please try again later',
+      standardHeaders: true,
+      legacyHeaders: false,
+      handler: (req, res, next, options) => {
+        logger.warn(`Rate limit exceeded for IP: ${req.ip}`);
+        res.status(options.statusCode).json({
+          status: 'error',
+          message: options.message,
+        });
+      }
+    });
 
-  // Apply rate limiting to API routes
-  app.use('/api', limiter);
+    // Apply rate limiting to API routes
+    app.use('/api', limiter);
+  }
 
   // CORS configuration
   app.use(
@@ -67,22 +86,6 @@ const configureSecurityMiddleware = (app, options = {}) => {
 
   // Prevent parameter pollution
   app.use(hpp());
-
-  // Content Security Policy
-  if (process.env.NODE_ENV === 'production') {
-    app.use(
-      helmet.contentSecurityPolicy({
-        directives: {
-          defaultSrc: ['\'self\''],
-          scriptSrc: ['\'self\'', '\'unsafe-inline\'', '\'unsafe-eval\''],
-          styleSrc: ['\'self\'', '\'unsafe-inline\'', 'https://fonts.googleapis.com'],
-          fontSrc: ['\'self\'', 'https://fonts.gstatic.com'],
-          imgSrc: ['\'self\'', 'data:', 'https://via.placeholder.com'],
-          connectSrc: ['\'self\'', 'https://api.example.com'],
-        },
-      })
-    );
-  }
 
   logger.info('Security middleware configured');
 };

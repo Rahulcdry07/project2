@@ -27,7 +27,11 @@ const setupTestDatabase = async function() {
   }
   
   try {
+    // Disable foreign key constraints for SQLite
+    await testSequelize.query('PRAGMA foreign_keys = OFF;');
     await testSequelize.sync({ force: true });
+    // Re-enable foreign key constraints
+    await testSequelize.query('PRAGMA foreign_keys = ON;');
     console.log('Database synchronized successfully');
   } catch (error) {
     console.error('Error syncing database:', error);

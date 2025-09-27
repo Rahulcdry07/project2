@@ -13,6 +13,7 @@ import VerifyEmail from './components/VerifyEmail';
 // Main components
 import Dashboard from './components/Dashboard';
 import Profile from './components/Profile';
+import FileManager from './components/FileManager';
 
 // Admin components
 import UserManagement from './components/admin/UserManagement';
@@ -64,6 +65,10 @@ function App() {
             <Route 
               path="/profile" 
               element={<ProtectedRoute element={<Profile />} />} 
+            />
+            <Route 
+              path="/files" 
+              element={<ProtectedRoute element={<FileManager />} />} 
             />
             
             {/* Admin routes */}
