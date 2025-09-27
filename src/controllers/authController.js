@@ -7,7 +7,9 @@ const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 
 const { User } = require('../models');
+// const { dbUtils } = require('../database');
 const { JWT_SECRET } = require('../config/env');
+const authService = require('../services/authService');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/email');
 const { sendSuccess, sendError, sendValidationError } = require('../utils/apiResponse');
 
@@ -31,7 +33,7 @@ exports.register = async (req, res) => {
             return sendValidationError(res, { message: 'Password must be at least 6 characters long.' });
         }
 
-        // Check if username or email already exists
+                // Check if user already exists
         const existingUser = await User.findOne({ where: { [Op.or]: [{ username }, { email }] } });
         if (existingUser) {
             if (existingUser.username === username) {
@@ -75,6 +77,8 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
+        
+        // Find user by email
         const user = await User.findOne({ where: { email } });
         
         if (!user) {
@@ -90,11 +94,11 @@ exports.login = async (req, res) => {
             return sendError(res, 'Please verify your email before logging in.', 403);
         }
 
-        // Create JWT
-        const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '30m' });
+        // Generate tokens using auth service
+        const tokens = await authService.generateTokens(user);
 
         return sendSuccess(res, {
-            token,
+            ...tokens,
             user: {
                 id: user.id,
                 username: user.username,
@@ -113,8 +117,16 @@ exports.login = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-exports.logout = (req, res) => {
-    return sendSuccess(res, null, 'Logout successful.');
+exports.logout = async (req, res) => {
+    try {
+        // Revoke refresh token if user is authenticated
+        if (req.userId) {
+            await authService.revokeRefreshToken(req.userId);
+        }
+        return sendSuccess(res, null, 'Logout successful.');
+    } catch (error) {
+        return sendError(res, error.message);
+    }
 };
 
 /**
@@ -201,6 +213,82 @@ exports.resetPassword = async (req, res) => {
         await user.save();
         
         return sendSuccess(res, null, 'Password has been reset successfully.');
+    } catch (error) {
+        return sendError(res, error.message);
+    }
+};
+
+/**
+ * Refresh access token
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.refreshToken = async (req, res) => {
+    try {
+        const { refreshToken } = req.body;
+        
+        if (!refreshToken) {
+            return sendValidationError(res, { message: 'Refresh token is required.' });
+        }
+
+        const tokens = await authService.refreshAccessToken(refreshToken);
+        
+        return sendSuccess(res, tokens, 'Tokens refreshed successfully.');
+    } catch (error) {
+        return sendError(res, error.message, 401);
+    }
+};
+
+/**
+ * Revoke refresh token (logout from all devices)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.revokeToken = async (req, res) => {
+    try {
+        await authService.revokeAllRefreshTokens(req.userId);
+        return sendSuccess(res, null, 'All sessions revoked successfully.');
+    } catch (error) {
+        return sendError(res, error.message);
+    }
+};
+
+/**
+ * Change user password
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.changePassword = async (req, res) => {
+    try {
+        const { oldPassword, newPassword } = req.body;
+        
+        if (!oldPassword || !newPassword) {
+            return sendValidationError(res, { message: 'Both old and new passwords are required.' });
+        }
+        
+        if (newPassword.length < 6) {
+            return sendValidationError(res, { message: 'New password must be at least 6 characters long.' });
+        }
+        
+        const user = await User.findByPk(req.userId);
+        if (!user) {
+            return sendError(res, 'User not found.', 404);
+        }
+        
+        // Verify old password
+        const passwordMatch = await bcrypt.compare(oldPassword, user.password);
+        if (!passwordMatch) {
+            return sendValidationError(res, { message: 'Current password is incorrect.' });
+        }
+        
+        // Update password
+        user.password = await bcrypt.hash(newPassword, 10);
+        await user.save();
+        
+        // Revoke all refresh tokens to force re-login on all devices
+        await authService.revokeAllRefreshTokens(user.id);
+        
+        return sendSuccess(res, null, 'Password changed successfully. Please log in again.');
     } catch (error) {
         return sendError(res, error.message);
     }

@@ -1,13 +1,32 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const path = require('path');
 const bcrypt = require('bcrypt');
+// const DatabaseUtils = require('./utils/database');
+const logger = require('./utils/logger');
 require('dotenv').config();
 
-// Initialize Sequelize with SQLite
+// Initialize Sequelize with SQLite and optimization settings
 const sequelize = new Sequelize({
   dialect: 'sqlite',
   storage: process.env.DB_STORAGE || path.join(__dirname, 'database.sqlite'),
-  logging: process.env.DB_LOGGING === 'true',
+  logging: process.env.DB_LOGGING === 'true' ? (sql, timing) => {
+    logger.debug('Database Query', { sql, timing });
+  } : false,
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000
+  },
+  define: {
+    freezeTableName: true,
+    timestamps: true,
+    underscored: false
+  },
+  dialectOptions: {
+    // SQLite specific optimizations
+    busyTimeout: 30000
+  }
 });
 
 // Test the database connection
@@ -119,7 +138,26 @@ User.addHook('beforeUpdate', async (user, _options) => {
   }
 });
 
+// Initialize database utilities
+// const dbUtils = new DatabaseUtils(sequelize);
+
+// Add pragma settings for SQLite optimization
+sequelize.addHook('afterConnect', async (connection) => {
+  try {
+    // SQLite performance optimizations
+    await connection.query('PRAGMA journal_mode = WAL;');
+    await connection.query('PRAGMA synchronous = NORMAL;');
+    await connection.query('PRAGMA cache_size = 1000;');
+    await connection.query('PRAGMA temp_store = memory;');
+    await connection.query('PRAGMA mmap_size = 268435456;'); // 256MB
+    logger.info('SQLite optimizations applied');
+  } catch (error) {
+    logger.error('Error applying SQLite optimizations', { error: error.message });
+  }
+});
+
 module.exports = {
   sequelize,
   User,
+  // dbUtils,
 };

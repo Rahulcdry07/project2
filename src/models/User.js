@@ -77,6 +77,65 @@ module.exports = (sequelize) => {
         remember_token: {
             type: DataTypes.STRING,
         },
+        refresh_token: {
+            type: DataTypes.TEXT,
+        },
+        refresh_token_expires_at: {
+            type: DataTypes.DATE,
+        },
+        profile_picture: {
+            type: DataTypes.STRING,
+        },
+        bio: {
+            type: DataTypes.TEXT(500),
+            validate: {
+                len: {
+                    args: [0, 500],
+                    msg: 'Bio must be less than 500 characters'
+                }
+            }
+        },
+        location: {
+            type: DataTypes.STRING(100),
+            validate: {
+                len: {
+                    args: [0, 100],
+                    msg: 'Location must be less than 100 characters'
+                }
+            }
+        },
+        website: {
+            type: DataTypes.STRING,
+            validate: {
+                isUrl: {
+                    msg: 'Please provide a valid website URL'
+                }
+            }
+        },
+        github_url: {
+            type: DataTypes.STRING,
+            validate: {
+                isUrl: {
+                    msg: 'Please provide a valid GitHub URL'
+                }
+            }
+        },
+        linkedin_url: {
+            type: DataTypes.STRING,
+            validate: {
+                isUrl: {
+                    msg: 'Please provide a valid LinkedIn URL'
+                }
+            }
+        },
+        twitter_url: {
+            type: DataTypes.STRING,
+            validate: {
+                isUrl: {
+                    msg: 'Please provide a valid Twitter URL'
+                }
+            }
+        },
     });
 
     // Add a method to the User model to compare passwords
