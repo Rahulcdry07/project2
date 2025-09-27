@@ -137,9 +137,200 @@ const validateFileName = (filename) => {
     return !dangerousExtensions.includes(extension);
 };
 
+/**
+ * Validate file type based on MIME type and extension
+ * @param {Array|Object} allowedTypes - Array of allowed MIME types or single file object
+ * @returns {Function} Middleware function
+ */
+function validateFileType(allowedTypes = ['image/jpeg', 'image/png', 'application/pdf']) {
+    return (req, res, next) => {
+        if (!req.file && !req.files) {
+            return next();
+        }
+
+        let files;
+        if (req.files && Array.isArray(req.files)) {
+            files = req.files;
+        } else if (req.file) {
+            files = [req.file];
+        } else {
+            return next();
+        }
+
+        // MIME type to extension mapping for generic types
+        const mimeToExtension = {
+            'application/pdf': ['.pdf'],
+            'image/jpeg': ['.jpg', '.jpeg'],
+            'image/png': ['.png'],
+            'image/gif': ['.gif'],
+            'text/plain': ['.txt'],
+            'application/msword': ['.doc'],
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
+        };
+
+        for (const file of files) {
+            if (file) {
+                let isAllowed = allowedTypes.includes(file.mimetype);
+                
+                // If MIME type is generic, check file extension
+                if (!isAllowed && file.mimetype === 'application/octet-stream' && file.originalname) {
+                    const extension = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf('.'));
+                    
+                    // Check if any allowed type matches this extension
+                    for (const allowedType of allowedTypes) {
+                        const extensions = mimeToExtension[allowedType];
+                        if (extensions && extensions.includes(extension)) {
+                            isAllowed = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!isAllowed) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `File type ${file.mimetype} is not allowed`
+                    });
+                }
+            }
+        }
+        next();
+    };
+}
+
+/**
+ * Validate file size
+ * @param {number} maxSize - Maximum file size in bytes
+ * @returns {Function} Middleware function
+ */
+function validateFileSizeMiddleware(maxSize = 10 * 1024 * 1024) { // 10MB default
+    return (req, res, next) => {
+        if (!req.file && !req.files) {
+            return next();
+        }
+
+        let files;
+        if (req.files && Array.isArray(req.files)) {
+            files = req.files;
+        } else if (req.file) {
+            files = [req.file];
+        } else {
+            return next();
+        }
+
+        let totalSize = 0;
+        
+        for (const file of files) {
+            if (file && file.size > maxSize) {
+                return res.status(400).json({
+                    success: false,
+                    message: `File ${file.originalname} exceeds maximum size of ${maxSize} bytes`
+                });
+            }
+            if (file) {
+                totalSize += file.size;
+            }
+        }
+
+        if (totalSize > maxSize) {
+            return res.status(400).json({
+                success: false,
+                message: `Total file size exceeds maximum allowed size`
+            });
+        }
+
+        next();
+    };
+}
+
+/**
+ * Basic malware scanning (placeholder implementation)
+ * @returns {Function} Middleware function
+ */
+function scanForMalware() {
+    return (req, res, next) => {
+        if (!req.file && !req.files) {
+            return next();
+        }
+
+        let files;
+        if (req.files && Array.isArray(req.files)) {
+            files = req.files;
+        } else if (req.file) {
+            files = [req.file];
+        } else {
+            return next();
+        }
+
+        for (const file of files) {
+            if (file) {
+                // Basic suspicious pattern detection
+                if (file.originalname.includes('.exe') || 
+                    file.originalname.includes('virus') ||
+                    file.originalname.includes('malware')) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'File appears to contain suspicious content'
+                    });
+                }
+            }
+        }
+        next();
+    };
+}
+
+/**
+ * Sanitize filename middleware to prevent path traversal and other issues
+ * @returns {Function} Middleware function
+ */
+function sanitizeFilenameMiddleware() {
+    return (req, res, next) => {
+        if (!req.file && !req.files) {
+            return next();
+        }
+
+        let files;
+        if (req.files && Array.isArray(req.files)) {
+            files = req.files;
+        } else if (req.file) {
+            files = [req.file];
+        } else {
+            return next();
+        }
+
+        for (const file of files) {
+            if (file) {
+                file.originalname = sanitizeFilename(file.originalname);
+            }
+        }
+        next();
+    };
+}
+
+/**
+ * Sanitize filename to prevent path traversal and other issues
+ * @param {string} filename - Original filename
+ * @returns {string} Sanitized filename
+ */
+function sanitizeFilename(filename) {
+    if (!filename) return 'file';
+    
+    // Remove path separators and dangerous characters
+    return filename
+        .replace(/[<>:"/\\|?*]/g, '')
+        .replace(/\.\./g, '')
+        .replace(/^\.+/, '')
+        .substring(0, 255) || 'file';
+}
+
 module.exports = {
     validateFileSignature,
     scanFileContent,
-    validateFileSize,
-    validateFileName
+    validateFileSizeHelper: validateFileSize,
+    validateFileName,
+    validateFileType,
+    validateFileSize: validateFileSizeMiddleware,
+    scanForMalware,
+    sanitizeFilename: sanitizeFilenameMiddleware,
+    sanitizeFilenameHelper: sanitizeFilename
 };

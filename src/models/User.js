@@ -86,6 +86,58 @@ module.exports = (sequelize) => {
         profile_picture: {
             type: DataTypes.STRING,
         },
+        profile_picture_url: {
+            type: DataTypes.STRING,
+        },
+        first_name: {
+            type: DataTypes.STRING(50),
+            validate: {
+                len: {
+                    args: [0, 50],
+                    msg: 'First name must be less than 50 characters'
+                }
+            }
+        },
+        last_name: {
+            type: DataTypes.STRING(50),
+            validate: {
+                len: {
+                    args: [0, 50],
+                    msg: 'Last name must be less than 50 characters'
+                }
+            }
+        },
+        phone: {
+            type: DataTypes.STRING(20),
+            validate: {
+                is: {
+                    args: /^[\+]?[\d\-\s\(\)]+$/,
+                    msg: 'Please provide a valid phone number'
+                }
+            }
+        },
+        date_of_birth: {
+            type: DataTypes.DATEONLY,
+        },
+        two_factor_enabled: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
+        },
+        session_timeout: {
+            type: DataTypes.INTEGER,
+            defaultValue: 30 // minutes
+        },
+        notification_preferences: {
+            type: DataTypes.JSON,
+            defaultValue: {}
+        },
+        login_count: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0
+        },
+        last_login_at: {
+            type: DataTypes.DATE
+        },
         bio: {
             type: DataTypes.TEXT(500),
             validate: {

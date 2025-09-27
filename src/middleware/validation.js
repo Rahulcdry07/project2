@@ -364,6 +364,165 @@ const validateSensitiveOperation = [
         .withMessage('Operation requires confirmation')
 ];
 
+/**
+ * Enhanced profile validation middleware
+ * @returns {Function} Middleware function
+ */
+function validateProfileMiddleware() {
+    return (req, res, next) => {
+        const profileData = req.body;
+        const validation = validateProfile(profileData);
+        
+        if (!validation.isValid) {
+            return res.status(400).json({
+                success: false,
+                message: 'Profile validation failed',
+                errors: validation.errors
+            });
+        }
+        
+        // Update req.body with sanitized data
+        req.body = validation.data;
+        next();
+    };
+}
+
+/**
+ * Enhanced password validation middleware
+ * @returns {Function} Middleware function
+ */
+function validatePasswordMiddleware() {
+    return (req, res, next) => {
+        const password = req.body.password;
+        const validation = validatePassword(password);
+        
+        if (!validation.isValid) {
+            return res.status(400).json({
+                success: false,
+                message: 'Password validation failed',
+                errors: validation.errors
+            });
+        }
+        
+        next();
+    };
+}
+
+/**
+ * Enhanced email validation middleware  
+ * @returns {Function} Middleware function
+ */
+function validateEmailMiddleware() {
+    return (req, res, next) => {
+        const email = req.body.email;
+        const validation = validateEmail(email);
+        
+        if (!validation.isValid) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email validation failed',
+                errors: validation.errors
+            });
+        }
+        
+        // Update req.body with normalized email
+        req.body.email = validation.normalizedEmail;
+        next();
+    };
+}
+
+/**
+ * Enhanced profile validation
+ * @param {Object} profileData - Profile data to validate
+ * @returns {Object} Validation result
+ */
+function validateProfile(profileData) {
+    const errors = [];
+    
+    if (profileData.phoneNumber) {
+        if (!/^\+?[\d\s\-\(\)]{10,15}$/.test(profileData.phoneNumber)) {
+            errors.push({ field: 'phoneNumber', message: 'Invalid phone number format' });
+        }
+    }
+    
+    if (profileData.dateOfBirth) {
+        const birthDate = new Date(profileData.dateOfBirth);
+        if (birthDate > new Date()) {
+            errors.push({ field: 'dateOfBirth', message: 'Date of birth cannot be in the future' });
+        }
+    }
+    
+    if (profileData.bio && profileData.bio.length > 500) {
+        errors.push({ field: 'bio', message: 'Bio must not exceed 500 characters' });
+    }
+    
+    // XSS sanitization
+    if (profileData.bio) {
+        profileData.bio = profileData.bio
+            .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+            .replace(/<[^>]*>/g, '');
+    }
+    
+    return { isValid: errors.length === 0, errors, data: profileData };
+}
+
+/**
+ * Enhanced password validation
+ * @param {string} password - Password to validate
+ * @returns {Object} Validation result
+ */
+function validatePassword(password) {
+    const errors = [];
+    
+    if (!password || password.length < 8) {
+        errors.push({ field: 'password', message: 'Password must be at least 8 characters long' });
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+        errors.push({ field: 'password', message: 'Password must contain at least one uppercase letter' });
+    }
+    
+    if (!/[a-z]/.test(password)) {
+        errors.push({ field: 'password', message: 'Password must contain at least one lowercase letter' });
+    }
+    
+    if (!/[0-9]/.test(password)) {
+        errors.push({ field: 'password', message: 'Password must contain at least one number' });
+    }
+    
+    if (!/[!@#$%^&*]/.test(password)) {
+        errors.push({ field: 'password', message: 'Password must contain at least one special character (!@#$%^&*)' });
+    }
+    
+    return { isValid: errors.length === 0, errors };
+}
+
+/**
+ * Enhanced email validation
+ * @param {string} email - Email to validate
+ * @returns {Object} Validation result
+ */
+function validateEmail(email) {
+    const errors = [];
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        errors.push({ field: 'email', message: 'Invalid email format' });
+    }
+    
+    // Check for disposable email domains
+    const disposableDomains = ['10minutemail.com', 'tempmail.org', 'guerrillamail.com'];
+    const domain = email.split('@')[1];
+    if (disposableDomains.includes(domain)) {
+        errors.push({ field: 'email', message: 'Disposable email addresses are not allowed' });
+    }
+    
+    // Normalize email case
+    const normalizedEmail = email.toLowerCase().trim();
+    
+    return { isValid: errors.length === 0, errors, normalizedEmail };
+}
+
 module.exports = {
     handleValidationErrors,
     validateRegistration,
@@ -378,5 +537,34 @@ module.exports = {
     validateFileUpload,
     validateId,
     validateSensitiveOperation,
-    sanitizeInput
+    sanitizeInput,
+    validateProfile: validateProfileMiddleware,
+    validatePassword: validatePasswordMiddleware,
+    validateEmail: validateEmailMiddleware,
+    validateProfileHelper: validateProfile,
+    validatePasswordHelper: validatePassword,
+    validateEmailHelper: validateEmail
+};
+
+module.exports = {
+    handleValidationErrors,
+    validateRegistration,
+    validateLogin,
+    validatePasswordReset,
+    validateForgotPassword,
+    validateChangePassword,
+    validateProfileUpdate,
+    validateAdminUserUpdate,
+    validatePagination,
+    validateSearch,
+    validateFileUpload,
+    validateId,
+    validateSensitiveOperation,
+    sanitizeInput,
+    validateProfile: validateProfileMiddleware,
+    validatePassword: validatePasswordMiddleware,
+    validateEmail: validateEmailMiddleware,
+    validateProfileHelper: validateProfile,
+    validatePasswordHelper: validatePassword,
+    validateEmailHelper: validateEmail
 };

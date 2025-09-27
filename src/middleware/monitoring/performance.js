@@ -97,24 +97,25 @@ const trackDatabaseQueries = (sequelize) => {
 /**
  * Memory usage monitoring
  */
-const memoryMonitoring = () => {
-    setInterval(() => {
-        const memory = process.memoryUsage();
-        const usage = {
-            rss: `${Math.round(memory.rss / 1024 / 1024)}MB`,
-            heapTotal: `${Math.round(memory.heapTotal / 1024 / 1024)}MB`,
-            heapUsed: `${Math.round(memory.heapUsed / 1024 / 1024)}MB`,
-            external: `${Math.round(memory.external / 1024 / 1024)}MB`,
-            arrayBuffers: `${Math.round(memory.arrayBuffers / 1024 / 1024)}MB`
-        };
+const memoryMonitoring = (req, res, next) => {
+    const memory = process.memoryUsage();
+    const usage = {
+        rss: `${Math.round(memory.rss / 1024 / 1024)}MB`,
+        heapTotal: `${Math.round(memory.heapTotal / 1024 / 1024)}MB`,
+        heapUsed: `${Math.round(memory.heapUsed / 1024 / 1024)}MB`,
+        external: `${Math.round(memory.external / 1024 / 1024)}MB`,
+        arrayBuffers: `${Math.round(memory.arrayBuffers / 1024 / 1024)}MB`
+    };
 
-        logger.debug('Memory usage', usage);
+    // Log memory usage for this request
+    req.memoryUsage = usage;
 
-        // Alert on high memory usage
-        if (memory.heapUsed > 200 * 1024 * 1024) { // 200MB
-            logger.warn('High memory usage alert', usage);
-        }
-    }, 60000); // Check every minute
+    // Alert on high memory usage
+    if (memory.heapUsed > 200 * 1024 * 1024) { // 200MB
+        logger.warn('High memory usage alert', usage);
+    }
+    
+    next();
 };
 
 /**
@@ -186,10 +187,54 @@ const requestLogging = (req, res, next) => {
     next();
 };
 
+/**
+ * API performance tracking middleware
+ * @returns {Function} Middleware function
+ */
+function trackApiPerformance() {
+    return performanceMonitoring;
+}
+
+/**
+ * Memory usage tracker
+ * @returns {Function} Middleware function
+ */
+function memoryUsageTracker() {
+    return memoryMonitoring;
+}
+
+/**
+ * Slow query detector
+ * @param {number} threshold - Threshold in milliseconds
+ * @returns {Function} Middleware function
+ */
+function slowQueryDetector(threshold = 1000) {
+    return (req, res, next) => {
+        const startTime = Date.now();
+        
+        res.on('finish', () => {
+            const duration = Date.now() - startTime;
+            if (duration > threshold) {
+                logger.warn('Slow operation detected', {
+                    method: req.method,
+                    url: req.url,
+                    duration: `${duration}ms`,
+                    threshold: `${threshold}ms`
+                });
+            }
+        });
+        
+        next();
+    };
+}
+
 module.exports = {
     performanceMonitoring,
     trackDatabaseQueries,
     memoryMonitoring,
     errorTracking,
-    requestLogging
+    requestLogging,
+    trackApiPerformance,
+    memoryUsageTracker,
+    slowQueryDetector
 };

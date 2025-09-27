@@ -47,24 +47,29 @@ const configureSecurityMiddleware = (app, options = {}) => {
   // Parse cookies
   app.use(cookieParser());
 
-  // Rate limiting
-  const limiter = rateLimit({
-    max: rateLimitMax,
-    windowMs: rateLimitWindowMs,
-    message: 'Too many requests from this IP, please try again later',
-    standardHeaders: true,
-    legacyHeaders: false,
-    handler: (req, res, next, options) => {
-      logger.warn(`Rate limit exceeded for IP: ${req.ip}`);
-      res.status(options.statusCode).json({
-        status: 'error',
-        message: options.message,
-      });
-    }
-  });
+  // Rate limiting - conditionally disabled in test mode
+  // Enable rate limiting if: not in test mode OR testing security specifically OR custom config provided
+  const enableRateLimit = !isTestMode || process.env.TESTING_SECURITY === 'true' || options.rateLimitMax || options.rateLimitWindowMs;
+  
+  if (enableRateLimit) {
+    const limiter = rateLimit({
+      max: rateLimitMax,
+      windowMs: rateLimitWindowMs,
+      message: 'Too many requests from this IP, please try again later',
+      standardHeaders: true,
+      legacyHeaders: false,
+      handler: (req, res, next, options) => {
+        logger.warn(`Rate limit exceeded for IP: ${req.ip}`);
+        res.status(options.statusCode).json({
+          status: 'error',
+          message: options.message,
+        });
+      }
+    });
 
-  // Apply rate limiting to API routes
-  app.use('/api', limiter);
+    // Apply rate limiting to API routes
+    app.use('/api', limiter);
+  }
 
   // CORS configuration
   app.use(

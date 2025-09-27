@@ -7,6 +7,9 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 
+// Enable security testing mode to allow rate limiting in tests
+process.env.TESTING_SECURITY = 'true';
+
 // Import security-related modules
 const configureSecurityMiddleware = require('../src/middleware/security');
 const { setupTestDatabase, teardownTestDatabase, getTestModels } = require('./setup');

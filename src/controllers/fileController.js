@@ -10,7 +10,107 @@ const pdfParse = require('pdf-parse');
 const axios = require('axios');
 
 /**
- * Upload and process document
+ * Upload multiple files
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.uploadFiles = async (req, res) => {
+    try {
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({ 
+                success: false,
+                message: 'No files uploaded' 
+            });
+        }
+
+        const user = await User.findByPk(req.userId);
+        if (!user) {
+            // Clean up uploaded files
+            req.files.forEach(file => deleteUploadedFile(file.path));
+            return res.status(404).json({ 
+                success: false,
+                error: 'User not found' 
+            });
+        }
+
+        const uploadedFiles = [];
+        const errors = [];
+
+        for (const file of req.files) {
+            try {
+                const fileRecord = await FileVector.create({
+                    filename: file.filename,
+                    original_name: file.originalname,
+                    file_path: file.path,
+                    file_size: file.size,
+                    mime_type: file.mimetype,
+                    user_id: req.userId,
+                    processing_status: 'pending'
+                });
+
+                uploadedFiles.push({
+                    id: fileRecord.id,
+                    filename: fileRecord.filename,
+                    originalname: fileRecord.original_name,
+                    size: fileRecord.file_size,
+                    mimetype: fileRecord.mime_type,
+                    created_at: fileRecord.createdAt
+                });
+
+                // Start background processing
+                if (file.mimetype === 'application/pdf') {
+                    setImmediate(() => processPDF(fileRecord.id));
+                }
+            } catch (error) {
+                console.error('Error creating file record:', error);
+                deleteUploadedFile(file.path);
+                errors.push({
+                    filename: file.originalname,
+                    error: error.message
+                });
+            }
+        }
+
+        // If all files failed, return error
+        if (errors.length === req.files.length) {
+            return res.status(500).json({
+                success: false,
+                message: 'Upload failed',
+                errors: errors
+            });
+        }
+
+        // Partial success or full success
+        const response = {
+            success: true,
+            message: uploadedFiles.length === req.files.length 
+                ? 'Files uploaded successfully' 
+                : 'Some files uploaded successfully',
+            data: {
+                files: uploadedFiles
+            }
+        };
+
+        if (errors.length > 0) {
+            response.errors = errors;
+        }
+
+        res.status(200).json(response);
+
+    } catch (error) {
+        if (req.files) {
+            req.files.forEach(file => deleteUploadedFile(file.path));
+        }
+        res.status(500).json({ 
+            success: false,
+            message: 'Upload failed',
+            error: error.message 
+        });
+    }
+};
+
+/**
+ * Upload and process document (legacy method)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
@@ -66,7 +166,87 @@ exports.uploadDocument = async (req, res) => {
 };
 
 /**
- * Get user's documents
+ * Get user's files with pagination and filters
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getUserFiles = async (req, res) => {
+    try {
+        const { page = 1, limit = 10, search, type, sortBy = 'created_at', order = 'DESC' } = req.query;
+        const offset = (page - 1) * limit;
+
+        const { Op } = require('sequelize');
+        const whereClause = { user_id: req.userId };
+
+        // Add search filter
+        if (search) {
+            whereClause[Op.or] = [
+                { original_name: { [Op.like]: `%${search}%` } },
+                { filename: { [Op.like]: `%${search}%` } }
+            ];
+        }
+
+        // Add type filter
+        if (type) {
+            whereClause.mime_type = { [Op.like]: `%${type}%` };
+        }
+
+        // Map API field names to database field names for sorting
+        const sortFieldMap = {
+            'size': 'file_size',
+            'mimetype': 'mime_type',
+            'originalname': 'original_name',
+            'created_at': 'createdAt',
+            'updated_at': 'updatedAt'
+        };
+        
+        const dbSortBy = sortFieldMap[sortBy] || sortBy;
+
+        const { count, rows: files } = await FileVector.findAndCountAll({
+            where: whereClause,
+            limit: parseInt(limit),
+            offset: parseInt(offset),
+            order: [[dbSortBy, order]],
+            attributes: [
+                'id', 'filename', 'original_name', 'file_size', 'mime_type',
+                'processing_status', 'createdAt', 'updatedAt'
+            ]
+        });
+
+        const totalSize = await FileVector.sum('file_size', {
+            where: { user_id: req.userId }
+        });
+
+        res.status(200).json({
+            success: true,
+            data: {
+                files: files.map(file => ({
+                    id: file.id,
+                    filename: file.filename,
+                    originalname: file.original_name,
+                    size: file.file_size,
+                    mimetype: file.mime_type,
+                    processing_status: file.processing_status,
+                    created_at: file.createdAt,
+                    updated_at: file.updatedAt
+                })),
+                total: count,
+                totalSize: totalSize || 0,
+                page: parseInt(page),
+                totalPages: Math.ceil(count / limit)
+            }
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Get user's documents (legacy method)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
@@ -146,7 +326,46 @@ exports.getDocument = async (req, res) => {
 };
 
 /**
- * Download document
+ * Download file
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.downloadFile = async (req, res) => {
+    try {
+        const { fileId } = req.params;
+        const file = await FileVector.findOne({
+            where: { id: fileId, user_id: req.userId }
+        });
+
+        if (!file) {
+            return res.status(404).json({ 
+                success: false,
+                message: 'File not found' 
+            });
+        }
+
+        const filePath = file.file_path;
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ 
+                success: false,
+                message: 'File not found on server' 
+            });
+        }
+
+        res.setHeader('Content-Disposition', `attachment; filename="${file.original_name}"`);
+        res.setHeader('Content-Type', file.mime_type);
+        res.download(path.resolve(filePath), file.original_name);
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Download document (legacy method)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
@@ -175,7 +394,162 @@ exports.downloadDocument = async (req, res) => {
 };
 
 /**
- * Delete document
+ * Delete file
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.deleteFile = async (req, res) => {
+    try {
+        const { fileId } = req.params;
+        const file = await FileVector.findOne({
+            where: { id: fileId, user_id: req.userId }
+        });
+
+        if (!file) {
+            return res.status(404).json({ 
+                success: false,
+                message: 'File not found' 
+            });
+        }
+
+        // Delete file from filesystem
+        try {
+            if (fs.existsSync(file.file_path)) {
+                fs.unlinkSync(file.file_path);
+            }
+        } catch (fsError) {
+            console.error('Error deleting file from filesystem:', fsError);
+        }
+
+        // Delete database record
+        await file.destroy();
+
+        res.status(200).json({ 
+            success: true,
+            message: 'File deleted successfully' 
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Bulk delete files
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.bulkDeleteFiles = async (req, res) => {
+    try {
+        const { fileIds } = req.body;
+
+        if (!fileIds || !Array.isArray(fileIds) || fileIds.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'No file IDs provided'
+            });
+        }
+
+        const files = await FileVector.findAll({
+            where: { 
+                id: fileIds,
+                user_id: req.userId 
+            }
+        });
+
+        let deletedCount = 0;
+
+        for (const file of files) {
+            try {
+                // Delete file from filesystem
+                if (fs.existsSync(file.file_path)) {
+                    fs.unlinkSync(file.file_path);
+                }
+
+                // Delete database record
+                await file.destroy();
+                deletedCount++;
+            } catch (error) {
+                console.error(`Error deleting file ${file.id}:`, error);
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            message: `${deletedCount} files deleted successfully`
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Get file analytics
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getFileAnalytics = async (req, res) => {
+    try {
+        const { Op } = require('sequelize');
+
+        const totalFiles = await FileVector.count({
+            where: { user_id: req.userId }
+        });
+
+        const totalSize = await FileVector.sum('file_size', {
+            where: { user_id: req.userId }
+        }) || 0;
+
+        const averageSize = totalFiles > 0 ? totalSize / totalFiles : 0;
+
+        // Get type breakdown
+        const typeBreakdown = await FileVector.findAll({
+            where: { user_id: req.userId },
+            attributes: [
+                'mime_type',
+                [require('sequelize').fn('COUNT', '*'), 'count'],
+                [require('sequelize').fn('SUM', require('sequelize').col('file_size')), 'size']
+            ],
+            group: ['mime_type']
+        });
+
+        // Get compression stats (mock since we don't have compression_ratio)
+        const compressionStats = {
+            averageRatio: 1.0
+        };
+
+        res.status(200).json({
+            success: true,
+            data: {
+                totalFiles,
+                totalSize,
+                averageSize: Math.round(averageSize),
+                typeBreakdown: typeBreakdown.map(item => ({
+                    type: item.mime_type.split('/')[1] || item.mime_type,
+                    count: parseInt(item.dataValues.count),
+                    size: parseInt(item.dataValues.size) || 0
+                })),
+                compressionStats
+            }
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Delete document (legacy method)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */

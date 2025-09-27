@@ -8,22 +8,40 @@ const { authenticate } = require('../middleware/auth');
 const { uploadDocument, handleMulterError, validateUploadedFile } = require('../middleware/upload');
 const { uploadLimiter } = require('../middleware/rateLimiting');
 
-// Upload document
-router.post('/upload', authenticate, uploadLimiter, uploadDocument.single('document'), handleMulterError, validateUploadedFile, fileController.uploadDocument);
+// Multi-file upload (new endpoint)
+router.post('/upload', authenticate, uploadLimiter, uploadDocument.array('files', 10), handleMulterError, validateUploadedFile, fileController.uploadFiles);
 
-// Get user's documents
-router.get('/', authenticate, fileController.getDocuments);
+// Single document upload (legacy endpoint)
+router.post('/upload-document', authenticate, uploadLimiter, uploadDocument.single('document'), handleMulterError, validateUploadedFile, fileController.uploadDocument);
+
+// Get user's files (with filtering, pagination, search)
+router.get('/', authenticate, fileController.getUserFiles);
+
+// Get user's documents (legacy endpoint)
+router.get('/documents', authenticate, fileController.getDocuments);
+
+// Get file analytics
+router.get('/analytics', authenticate, fileController.getFileAnalytics);
 
 // Search documents
 router.get('/search', authenticate, fileController.searchDocuments);
 
-// Get specific document
+// Download file
+router.get('/:fileId/download', authenticate, fileController.downloadFile);
+
+// Get specific document (legacy)
 router.get('/:id', authenticate, fileController.getDocument);
 
-// Download document
-router.get('/:id/download', authenticate, fileController.downloadDocument);
+// Download document (legacy)
+router.get('/:id/download-document', authenticate, fileController.downloadDocument);
 
-// Delete document
-router.delete('/:id', authenticate, fileController.deleteDocument);
+// Bulk delete files
+router.post('/bulk-delete', authenticate, fileController.bulkDeleteFiles);
+
+// Delete file
+router.delete('/:fileId', authenticate, fileController.deleteFile);
+
+// Delete document (legacy)
+router.delete('/:id/document', authenticate, fileController.deleteDocument);
 
 module.exports = router;

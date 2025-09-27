@@ -99,6 +99,7 @@ exports.login = async (req, res) => {
 
         return sendSuccess(res, {
             ...tokens,
+            token: tokens.accessToken, // Add this for compatibility
             user: {
                 id: user.id,
                 username: user.username,
