@@ -1,90 +1,127 @@
 import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { authAPI } from '../services/api';
 
 const ResetPassword = () => {
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [message, setMessage] = useState('');
-    const location = useLocation();
-    const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const token = searchParams.get('token');
+  
+  const [formData, setFormData] = useState({
+    password: '',
+    confirmPassword: ''
+  });
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-    const getTokenFromUrl = () => {
-        const params = new URLSearchParams(location.search);
-        return params.get('token');
-    };
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setMessage(''); // Clear previous messages
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setMessage('');
+    setError('');
 
-        if (password !== confirmPassword) {
-            setMessage('Error: Passwords do not match.');
-            return;
-        }
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      setIsLoading(false);
+      return;
+    }
 
-        const token = getTokenFromUrl();
-        if (!token) {
-            setMessage('Error: Password reset token is missing.');
-            return;
-        }
+    try {
+      await authAPI.resetPassword(token, formData.password);
+      setMessage('Password reset successful! You can now login with your new password.');
+      setTimeout(() => {
+        navigate('/login');
+      }, 3000);
+    } catch (err) {
+      setError(err.message || 'Failed to reset password');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-        try {
-            const response = await fetch('/api/reset-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token, password }),
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                setMessage(result.message);
-                // Optionally redirect to login after successful reset
-                setTimeout(() => {
-                    navigate('/login');
-                }, 3000);
-            } else {
-                setMessage(`Error: ${result.error}`);
-            }
-        } catch (error) {
-            console.error('Error resetting password:', error);
-            setMessage('Network error resetting password.');
-        }
-    };
-
+  if (!token) {
     return (
-        <div className="container d-flex justify-content-center align-items-center min-vh-100">
-            <div className="card p-4 shadow-sm" style={{ width: '24rem' }}>
-                <h2 className="card-title text-center mb-4">Reset Your Password</h2>
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-3">
-                        <label htmlFor="password" className="form-label">New Password</label>
-                        <input
-                            type="password"
-                            className="form-control"
-                            id="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="mb-3">
-                        <label htmlFor="confirm-password" className="form-label">Confirm New Password</label>
-                        <input
-                            type="password"
-                            className="form-control"
-                            id="confirm-password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <button type="submit" className="btn btn-primary w-100">Reset Password</button>
-                </form>
-                {message && <p className="text-center mt-3" id="message">{message}</p>}
-            </div>
+      <div className="row justify-content-center">
+        <div className="col-md-6">
+          <div className="alert alert-danger" role="alert">
+            Invalid reset token. Please request a new password reset.
+          </div>
         </div>
+      </div>
     );
+  }
+
+  return (
+    <div className="row justify-content-center">
+      <div className="col-md-6 col-lg-4">
+        <div className="card">
+          <div className="card-body">
+            <h1 className="card-title text-center mb-4">Reset Password</h1>
+            
+            {message && (
+              <div className="alert alert-success" role="alert">
+                {message}
+              </div>
+            )}
+            
+            {error && (
+              <div className="alert alert-danger" role="alert">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit}>
+              <div className="mb-3">
+                <label htmlFor="password" className="form-label">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  className="form-control"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div className="mb-3">
+                <label htmlFor="confirmPassword" className="form-label">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  className="form-control"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="btn btn-primary w-100"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Resetting...' : 'Reset Password'}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default ResetPassword;

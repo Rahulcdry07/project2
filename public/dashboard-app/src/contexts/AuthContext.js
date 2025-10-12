@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { getToken, setAuthData, clearAuthData, getCurrentUser } from '../utils/auth';
 import { authAPI } from '../services/api';
 
@@ -24,7 +25,7 @@ export const AuthProvider = ({ children }) => {
                     setCurrentUser(user);
                 }
             } catch (err) {
-                console.error('Failed to initialize auth state:', err);
+                // console.error('Failed to initialize auth state:', err);
                 setError('Failed to initialize authentication');
             } finally {
                 setLoading(false);
@@ -129,6 +130,10 @@ export const useAuth = () => {
     }
     
     return context;
+};
+
+AuthProvider.propTypes = {
+    children: PropTypes.node.isRequired
 };
 
 export default AuthContext;

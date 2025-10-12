@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import { ErrorBoundary } from './components/common/FormComponents';
 import Navbar from './components/Navbar';
 
@@ -12,6 +13,11 @@ import VerifyEmail from './components/VerifyEmail';
 // Main components
 import Dashboard from './components/Dashboard';
 import Profile from './components/Profile';
+
+// Tender components
+import TenderList from './components/tenders/TenderList';
+import TenderDetail from './components/tenders/TenderDetail';
+import TenderManagement from './components/tenders/TenderManagement';
 
 // Admin components
 import UserManagement from './components/admin/UserManagement';
@@ -36,6 +42,11 @@ const ProtectedRoute = ({ element, requireAdmin = false }) => {
   return element;
 };
 
+ProtectedRoute.propTypes = {
+  element: PropTypes.element.isRequired,
+  requireAdmin: PropTypes.bool
+};
+
 function App() {
   return (
     <Router>
@@ -50,6 +61,10 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             
+            {/* Tender routes (public) */}
+            <Route path="/tenders" element={<TenderList />} />
+            <Route path="/tenders/:id" element={<TenderDetail />} />
+            
             {/* Protected routes */}
             <Route 
               path="/dashboard" 
@@ -62,13 +77,17 @@ function App() {
             
             {/* Admin routes */}
             <Route 
-              path="/admin" 
+              path="/admin/users" 
               element={<ProtectedRoute element={<UserManagement />} requireAdmin={true} />} 
+            />
+            <Route 
+              path="/admin/tenders" 
+              element={<ProtectedRoute element={<TenderManagement />} requireAdmin={true} />} 
             />
             
             {/* Default route */}
-            <Route path="/" element={<Navigate to="/dashboard" />} />
-            <Route path="*" element={<Navigate to="/dashboard" />} />
+            <Route path="/" element={<Navigate to="/tenders" />} />
+            <Route path="*" element={<Navigate to="/tenders" />} />
           </Routes>
         </main>
       </ErrorBoundary>

@@ -32,38 +32,34 @@ const createHeaders = (includeAuth = true) => {
  * @returns {Promise} Response data or error
  */
 const fetchWithErrorHandling = async (url, options) => {
-    try {
-        const response = await fetch(url, options);
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.message || 'An error occurred');
-        }
-        
-        return data;
-    } catch (error) {
-        console.error('API request failed:', error);
-        throw error;
+    const response = await fetch(url, options);
+    const result = await response.json();
+    
+    if (!response.ok) {
+        throw new Error(result.error || result.message || 'An error occurred');
     }
+    
+    // Return the data property if it exists, otherwise return the whole result
+    return result.data || result;
 };
 
 /**
  * Authentication API methods
  */
 export const authAPI = {
-    login: (email, password) => {
+    login: (credentials) => {
         return fetchWithErrorHandling(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: createHeaders(false),
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify(credentials)
         });
     },
     
-    register: (username, email, password) => {
+    register: (userData) => {
         return fetchWithErrorHandling(`${API_URL}/auth/register`, {
             method: 'POST',
             headers: createHeaders(false),
-            body: JSON.stringify({ username, email, password })
+            body: JSON.stringify(userData)
         });
     },
     
@@ -93,9 +89,9 @@ export const authAPI = {
 };
 
 /**
- * Profile API methods
+ * User API methods
  */
-export const profileAPI = {
+export const userAPI = {
     getProfile: () => {
         return fetchWithErrorHandling(`${API_URL}/profile`, {
             method: 'GET',
@@ -111,6 +107,11 @@ export const profileAPI = {
         });
     }
 };
+
+/**
+ * Profile API methods (alias for backward compatibility)
+ */
+export const profileAPI = userAPI;
 
 /**
  * Admin API methods
@@ -133,6 +134,50 @@ export const adminAPI = {
     
     deleteUser: (userId) => {
         return fetchWithErrorHandling(`${API_URL}/admin/users/${userId}`, {
+            method: 'DELETE',
+            headers: createHeaders()
+        });
+    }
+};
+
+/**
+ * Tender API methods
+ */
+export const tenderAPI = {
+    getTenders: (params = {}) => {
+        const queryString = new URLSearchParams(params).toString();
+        const url = queryString ? `${API_URL}/tenders?${queryString}` : `${API_URL}/tenders`;
+        return fetchWithErrorHandling(url, {
+            method: 'GET',
+            headers: createHeaders(false) // Public endpoint
+        });
+    },
+    
+    getTender: (id) => {
+        return fetchWithErrorHandling(`${API_URL}/tenders/${id}`, {
+            method: 'GET',
+            headers: createHeaders(false) // Public endpoint
+        });
+    },
+    
+    createTender: (tenderData) => {
+        return fetchWithErrorHandling(`${API_URL}/tenders`, {
+            method: 'POST',
+            headers: createHeaders(),
+            body: JSON.stringify(tenderData)
+        });
+    },
+    
+    updateTender: (id, tenderData) => {
+        return fetchWithErrorHandling(`${API_URL}/tenders/${id}`, {
+            method: 'PUT',
+            headers: createHeaders(),
+            body: JSON.stringify(tenderData)
+        });
+    },
+    
+    deleteTender: (id) => {
+        return fetchWithErrorHandling(`${API_URL}/tenders/${id}`, {
             method: 'DELETE',
             headers: createHeaders()
         });

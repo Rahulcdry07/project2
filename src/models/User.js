@@ -85,7 +85,7 @@ module.exports = (sequelize) => {
     };
 
     // Error handling hooks
-    User.addHook('beforeCreate', async (user, options) => {
+    User.addHook('beforeCreate', async (user, _options) => {
         try {
             // Add any additional validations or data transformations here
             if (user.email) {
@@ -96,7 +96,7 @@ module.exports = (sequelize) => {
         }
     });
 
-    User.addHook('beforeUpdate', async (user, options) => {
+    User.addHook('beforeUpdate', async (user, _options) => {
         try {
             // Add any additional validations or data transformations here
             if (user.changed('email')) {

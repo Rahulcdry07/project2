@@ -1,107 +1,116 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { userAPI } from '../services/api';
+import { getCurrentUser, setAuthData, getToken } from '../utils/auth';
 
 const Profile = () => {
-    const [username, setUsername] = useState('');
-    const [email, setEmail] = useState('');
-    const [message, setMessage] = useState('');
-    const navigate = useNavigate();
+  const [user, setUser] = useState(getCurrentUser());
+  const [formData, setFormData] = useState({
+    username: '',
+    email: ''
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
-    useEffect(() => {
-        const fetchProfile = async () => {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                navigate('/login');
-                return;
-            }
-            try {
-                const response = await fetch('/api/profile', {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    setUsername(data.username);
-                    setEmail(data.email);
-                } else if (data.error === 'Token expired.' || data.error === 'Invalid token.' || data.error === 'No token provided.') {
-                    localStorage.removeItem('token');
-                    navigate('/login');
-                } else {
-                    setMessage(`Error: ${data.error}`);
-                }
-            } catch (error) {
-                console.error('Error fetching profile:', error);
-                setMessage('Network error fetching profile.');
-                localStorage.removeItem('token');
-                navigate('/login');
-            }
-        };
-        fetchProfile();
-    }, [navigate]);
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        username: user.username || '',
+        email: user.email || ''
+      });
+    }
+  }, [user]);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setMessage(''); // Clear previous messages
-        const token = localStorage.getItem('token');
-        if (!token) {
-            navigate('/login');
-            return;
-        }
-        try {
-            const response = await fetch('/api/profile', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify({ username, email }),
-            });
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
 
-            const result = await response.json();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setMessage('');
+    setError('');
 
-            if (response.ok) {
-                setMessage(result.message || 'Profile updated successfully!');
-            } else {
-                setMessage(`Error: ${result.error}`);
-            }
-        } catch (error) {
-            console.error('Error updating profile:', error);
-            setMessage('Network error updating profile.');
-        }
-    };
+    try {
+      const updatedUser = await userAPI.updateProfile(formData);
+      setUser(updatedUser);
+      setAuthData(updatedUser, getToken());
+      setMessage('Profile updated successfully!');
+    } catch (err) {
+      setError(err.message || 'Failed to update profile');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    return (
-        <div className="container d-flex justify-content-center align-items-center min-vh-100">
-            <div className="card p-4 shadow-sm" style={{ width: '24rem' }}>
-                <h2 className="card-title text-center mb-4">Your Profile</h2>
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-3">
-                        <label htmlFor="username" className="form-label">Username</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            id="username"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="mb-3">
-                        <label htmlFor="email" className="form-label">Email Address</label>
-                        <input
-                            type="email"
-                            className="form-control"
-                            id="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <button type="submit" className="btn btn-primary w-100">Update Profile</button>
-                </form>
-                {message && <p className="text-center mt-3" id="message">{message}</p>}
-            </div>
+  return (
+    <div className="container mt-4">
+      <h1>User Profile</h1>
+      
+      {message && (
+        <div className="alert alert-success" role="alert">
+          {message}
         </div>
-    );
+      )}
+      
+      {error && (
+        <div className="alert alert-danger" role="alert">
+          {error}
+        </div>
+      )}
+
+      <div className="row">
+        <div className="col-md-8">
+          <div className="card">
+            <div className="card-body">
+              <form onSubmit={handleSubmit}>
+                <div className="mb-3">
+                  <label htmlFor="username" className="form-label">
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="username"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="email" className="form-label">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Updating...' : 'Update Profile'}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Profile;

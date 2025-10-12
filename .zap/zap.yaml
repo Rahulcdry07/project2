@@ -1,0 +1,29 @@
+# ZAP Baseline Scan Configuration
+# This file configures OWASP ZAP for baseline security testing
+
+# Context configuration for the application
+contexts:
+  - name: "Web App Context"
+    urls:
+      - "http://localhost:3000"
+    includePaths:
+      - "http://localhost:3000/.*"
+    excludePaths:
+      - "http://localhost:3000/static/.*"
+      - "http://localhost:3000/.*\\.js"
+      - "http://localhost:3000/.*\\.css"
+      - "http://localhost:3000/.*\\.png"
+      - "http://localhost:3000/.*\\.jpg"
+      - "http://localhost:3000/.*\\.ico"
+      - "http://localhost:3000/favicon.ico"
+      - "http://localhost:3000/dashboard-app/.*"
+
+# Scanning parameters
+parameters:
+  failOnError: false
+  failOnWarning: false
+  maxScanDurationInMins: 5
+  maxAlertsPerRule: 10
+
+# Target URL
+target: "http://localhost:3000"

@@ -1,49 +1,52 @@
 import '@testing-library/jest-dom';
-import { server } from './mocks/server';
+import { vi } from 'vitest';
 
-// Enable API mocking before tests
-beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
+// Mock the API services to avoid MSW ES module issues
+vi.mock('./services/api');
 
-// Reset any request handlers between tests
-afterEach(() => server.resetHandlers());
-
-// Disable API mocking after the tests
-afterAll(() => server.close());
-
-// Mock window.location
-delete window.location;
+// Mock window.location - handle it more carefully for Vitest
 Object.defineProperty(window, 'location', {
   value: {
-    href: '',
-    assign: jest.fn(),
-    reload: jest.fn(),
+    href: 'http://localhost:3000',
+    origin: 'http://localhost:3000',
+    protocol: 'http:',
+    host: 'localhost:3000',
+    hostname: 'localhost',
+    port: '3000',
     pathname: '/',
     search: '',
     hash: '',
+    assign: vi.fn(),
+    reload: vi.fn(),
+    replace: vi.fn(),
   },
   writable: true,
+  configurable: true,
 });
 
+// Set the base URL for fetch requests
+global.REACT_APP_API_BASE_URL = 'http://localhost:3000/api';
+
 // Mock window dialogs
-window.confirm = jest.fn(() => true);
-window.alert = jest.fn();
+window.confirm = vi.fn(() => true);
+window.alert = vi.fn();
 
 // Mock localStorage
 const localStorageMock = (function() {
   let store = {};
   return {
-    getItem: jest.fn(key => store[key] || null),
-    setItem: jest.fn((key, value) => {
+    getItem: vi.fn(key => store[key] || null),
+    setItem: vi.fn((key, value) => {
       store[key] = value.toString();
     }),
-    removeItem: jest.fn(key => {
+    removeItem: vi.fn(key => {
       delete store[key];
     }),
-    clear: jest.fn(() => {
+    clear: vi.fn(() => {
       store = {};
     }),
     length: 0,
-    key: jest.fn(index => null)
+    key: vi.fn(() => null)
   };
 })();
 
@@ -51,14 +54,11 @@ Object.defineProperty(window, 'localStorage', {
   value: localStorageMock
 });
 
-// Set timeout for async operations
-jest.setTimeout(10000);
-
 // Mock window.matchMedia which is used in some components but not available in JSDOM
 window.matchMedia = window.matchMedia || function() {
   return {
     matches: false,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
   };
 };
