@@ -18,6 +18,7 @@ import Profile from './components/Profile';
 import TenderList from './components/tenders/TenderList';
 import TenderDetail from './components/tenders/TenderDetail';
 import TenderManagement from './components/tenders/TenderManagement';
+import TenderRecommendations from './components/tenders/TenderRecommendations';
 
 // Admin components
 import UserManagement from './components/admin/UserManagement';
@@ -73,6 +74,10 @@ function App() {
             <Route 
               path="/profile" 
               element={<ProtectedRoute element={<Profile />} />} 
+            />
+            <Route 
+              path="/recommendations" 
+              element={<ProtectedRoute element={<TenderRecommendations />} />} 
             />
             
             {/* Admin routes */}

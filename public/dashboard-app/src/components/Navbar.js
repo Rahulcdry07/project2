@@ -46,6 +46,12 @@ const Navbar = () => {
                   </Link>
                 </li>
                 <li className="nav-item">
+                  <Link className="nav-link" to="/recommendations">
+                    <i className="bi bi-star me-1"></i>
+                    For You
+                  </Link>
+                </li>
+                <li className="nav-item">
                   <Link className="nav-link" to="/profile">
                     <i className="bi bi-person me-1"></i>
                     Profile
