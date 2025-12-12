@@ -1,0 +1,44 @@
+# Prettier ignore patterns
+
+# Dependencies
+node_modules
+package-lock.json
+
+# Build outputs
+build
+dist
+*.min.js
+*.bundle.js
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+
+# Logs
+logs
+*.log
+
+# Test coverage
+coverage
+.nyc_output
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Generated files
+playwright-report
+test-results
+
+# Documentation
+CHANGELOG.md

@@ -139,3 +139,126 @@ export const adminAPI = {
         });
     }
 };
+
+/**
+ * Settings API methods
+ */
+export const settingsAPI = {
+    getSettings: () => {
+        return fetchWithErrorHandling(`${API_URL}/settings`, {
+            method: 'GET',
+            headers: createHeaders()
+        });
+    },
+    
+    updateSettings: (settings) => {
+        return fetchWithErrorHandling(`${API_URL}/settings`, {
+            method: 'PUT',
+            headers: createHeaders(),
+            body: JSON.stringify(settings)
+        });
+    },
+    
+    changePassword: (currentPassword, newPassword) => {
+        return fetchWithErrorHandling(`${API_URL}/settings/change-password`, {
+            method: 'POST',
+            headers: createHeaders(),
+            body: JSON.stringify({ currentPassword, newPassword })
+        });
+    },
+    
+    updateEmail: (email, password) => {
+        return fetchWithErrorHandling(`${API_URL}/settings/email`, {
+            method: 'PUT',
+            headers: createHeaders(),
+            body: JSON.stringify({ email, password })
+        });
+    }
+};
+
+/**
+ * Activity API methods
+ */
+export const activityAPI = {
+    getActivityLogs: (page = 1, limit = 20) => {
+        return fetchWithErrorHandling(`${API_URL}/activity?page=${page}&limit=${limit}`, {
+            method: 'GET',
+            headers: createHeaders()
+        });
+    }
+};
+
+/**
+ * Notification API methods
+ */
+export const notificationAPI = {
+    getNotifications: (page = 1, limit = 20, unreadOnly = false) => {
+        return fetchWithErrorHandling(`${API_URL}/notifications?page=${page}&limit=${limit}&unreadOnly=${unreadOnly}`, {
+            method: 'GET',
+            headers: createHeaders()
+        });
+    },
+    
+    markAsRead: (id) => {
+        return fetchWithErrorHandling(`${API_URL}/notifications/${id}/read`, {
+            method: 'PUT',
+            headers: createHeaders()
+        });
+    },
+    
+    markAllAsRead: () => {
+        return fetchWithErrorHandling(`${API_URL}/notifications/read-all`, {
+            method: 'PUT',
+            headers: createHeaders()
+        });
+    },
+    
+    deleteNotification: (id) => {
+        return fetchWithErrorHandling(`${API_URL}/notifications/${id}`, {
+            method: 'DELETE',
+            headers: createHeaders()
+        });
+    }
+};
+
+/**
+ * Notes API methods
+ */
+export const notesAPI = {
+    getNotes: (page = 1, limit = 50) => {
+        return fetchWithErrorHandling(`${API_URL}/notes?page=${page}&limit=${limit}`, {
+            method: 'GET',
+            headers: createHeaders()
+        });
+    },
+    
+    getNote: (id) => {
+        return fetchWithErrorHandling(`${API_URL}/notes/${id}`, {
+            method: 'GET',
+            headers: createHeaders()
+        });
+    },
+    
+    createNote: (noteData) => {
+        return fetchWithErrorHandling(`${API_URL}/notes`, {
+            method: 'POST',
+            headers: createHeaders(),
+            body: JSON.stringify(noteData)
+        });
+    },
+    
+    updateNote: (id, noteData) => {
+        return fetchWithErrorHandling(`${API_URL}/notes/${id}`, {
+            method: 'PUT',
+            headers: createHeaders(),
+            body: JSON.stringify(noteData)
+        });
+    },
+    
+    deleteNote: (id) => {
+        return fetchWithErrorHandling(`${API_URL}/notes/${id}`, {
+            method: 'DELETE',
+            headers: createHeaders()
+        });
+    }
+};

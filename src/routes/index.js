@@ -4,18 +4,13 @@
 const express = require('express');
 const router = express.Router();
 
-// Import route modules
-const authRoutes = require('./authRoutes');
-const profileRoutes = require('./profileRoutes');
-const adminRoutes = require('./adminRoutes');
-const healthRoutes = require('./healthRoutes');
-const metricsRoutes = require('./metricsRoutes');
+// Import v1 routes
+const v1Routes = require('./v1');
 
-// Register routes
-router.use('/auth', authRoutes);
-router.use('/profile', profileRoutes);
-router.use('/admin', adminRoutes);
-router.use('/health', healthRoutes);
-router.use('/metrics', metricsRoutes);
+// Mount v1 routes
+router.use('/v1', v1Routes);
+
+// Redirect root /api to /api/v1 for backward compatibility
+router.use('/', v1Routes);
 
 module.exports = router;

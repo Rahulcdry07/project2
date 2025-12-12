@@ -38,6 +38,9 @@ yarn-error.log
 /coverage
 /cypress/videos
 /cypress/screenshots
+test-results/
+playwright-results.json
+playwright-results.xml
 
 # Logs
 logs

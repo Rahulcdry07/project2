@@ -4,6 +4,7 @@
 const express = require('express');
 const path = require('path');
 const morgan = require('morgan');
+const compression = require('compression');
 const routes = require('./routes');
 const { NODE_ENV } = require('./config/env');
 const testRoutes = require('./testRoutes');
@@ -18,6 +19,17 @@ const app = express();
 
 // Enable trust proxy to work correctly with rate limiting behind proxies
 app.set('trust proxy', 1);
+
+// Compression middleware (must be early in the middleware stack)
+app.use(compression({
+    filter: (req, res) => {
+        if (req.headers['x-no-compression']) {
+            return false;
+        }
+        return compression.filter(req, res);
+    },
+    level: 6 // Compression level (0-9, default 6)
+}));
 
 // Middleware
 app.use(express.json());

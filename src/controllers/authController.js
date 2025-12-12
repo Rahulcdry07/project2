@@ -5,11 +5,14 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
+const logger = require('../utils/logger');
 
 const { User } = require('../models');
 const { JWT_SECRET } = require('../config/env');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/email');
 const { sendSuccess, sendError, sendValidationError } = require('../utils/apiResponse');
+const { logActivity } = require('./activityController');
+const { createNotification } = require('./notificationController');
 
 /**
  * Register a new user
@@ -17,17 +20,17 @@ const { sendSuccess, sendError, sendValidationError } = require('../utils/apiRes
  * @param {Object} res - Express response object
  */
 exports.register = async (req, res) => {
-    console.log('Received registration request with body:', req.body);
+    logger.info('Received registration request', { username: req.body.username, email: req.body.email });
     try {
         const { username, email, password } = req.body;
 
         if (!username || !email || !password) {
-            console.log('Validation failed: Missing fields');
+            logger.warn('Registration validation failed: Missing fields');
             return sendValidationError(res, { message: 'Please fill in all fields.' });
         }
 
         if (password.length < 6) {
-            console.log('Validation failed: Password too short');
+            logger.warn('Registration validation failed: Password too short');
             return sendValidationError(res, { message: 'Password must be at least 6 characters long.' });
         }
 
@@ -45,7 +48,7 @@ exports.register = async (req, res) => {
         const verificationToken = crypto.randomBytes(32).toString('hex');
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        await User.create({
+        const newUser = await User.create({
             username,
             email,
             password: hashedPassword,
@@ -55,6 +58,14 @@ exports.register = async (req, res) => {
         // Send verification email
         await sendVerificationEmail(email, verificationToken);
 
+        // Create welcome notification
+        await createNotification(
+            newUser.id,
+            'info',
+            'Welcome!',
+            `Welcome to our platform, ${username}! We're excited to have you here.`
+        );
+
         return sendSuccess(
             res, 
             null,
@@ -62,7 +73,7 @@ exports.register = async (req, res) => {
             201
         );
     } catch (error) {
-        console.error('Error during registration:', error);
+        logger.error('Error during registration', { error: error.message, stack: error.stack });
         return sendError(res, error.message, 400);
     }
 };
@@ -92,6 +103,9 @@ exports.login = async (req, res) => {
 
         // Create JWT
         const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '30m' });
+
+        // Log login activity
+        await logActivity(user.id, 'login', 'User logged in successfully', req);
 
         return sendSuccess(res, {
             token,

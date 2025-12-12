@@ -105,3 +105,164 @@ code {
   border: 3px solid #fff;
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }
+
+/* Toast animations */
+.toast-enter {
+  animation: slideIn 0.3s ease-out;
+}
+
+.toast-exit {
+  animation: slideOut 0.3s ease-in forwards;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.toast-container .toast {
+  margin-bottom: 0.75rem;
+}
+
+/* Responsive utilities */
+@media (max-width: 767.98px) {
+  /* Mobile adjustments */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  /* Card adjustments */
+  .card {
+    margin-bottom: 1rem;
+  }
+
+  .card:hover {
+    transform: none;
+  }
+
+  /* Table responsive improvements */
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+
+  .table th,
+  .table td {
+    padding: 0.5rem;
+  }
+
+  /* Button adjustments */
+  .btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .btn-sm {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  /* Form adjustments */
+  .form-control,
+  .form-select {
+    font-size: 1rem;
+  }
+
+  /* Toast adjustments */
+  .toast-container {
+    left: 1rem !important;
+    right: 1rem !important;
+  }
+
+  .toast {
+    max-width: 100%;
+  }
+
+  /* Modal adjustments */
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+
+  /* Stats cards on mobile */
+  .col-md-3.col-sm-6 {
+    margin-bottom: 1rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  /* Extra small devices */
+  .navbar-brand {
+    font-size: 1rem;
+  }
+
+  /* Hide longer text in tables on mobile */
+  .table-responsive .text-muted {
+    font-size: 0.75rem;
+  }
+
+  /* Stack form buttons */
+  .modal-footer .btn {
+    display: block;
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .modal-footer .btn:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Adjust empty state on mobile */
+  .text-center i[class*="bi-"] {
+    font-size: 3rem !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991.98px) {
+  /* Tablet adjustments */
+  .col-md-3 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+}
+
+/* Improved touch targets for mobile */
+@media (hover: none) and (pointer: coarse) {
+  .btn,
+  .btn-link,
+  .nav-link,
+  .list-group-item-action {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .form-check-input {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+}

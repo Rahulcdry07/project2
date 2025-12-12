@@ -13,7 +13,7 @@ test.describe('Dashboard', () => {
     const user = {
       username: 'dashuser',
       email: 'dash@example.com',
-      password: 'password123'
+      password: 'Password123!'
     };
     
     await page.request.post('http://localhost:3000/api/auth/register', { data: user });
@@ -26,7 +26,16 @@ test.describe('Dashboard', () => {
       data: { email: user.email, password: user.password }
     });
     
+    if (!loginResponse.ok()) {
+      const errorData = await loginResponse.json();
+      throw new Error(`Login failed: ${JSON.stringify(errorData)}`);
+    }
+    
     const loginData = await loginResponse.json();
+    if (!loginData.data || !loginData.data.token) {
+      throw new Error(`Invalid login response: ${JSON.stringify(loginData)}`);
+    }
+    
     const token = loginData.data.token;
     const userData = loginData.data.user;
     

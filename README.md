@@ -19,6 +19,33 @@ The project consists of:
 - **Monitoring**: Prometheus metrics for application monitoring
 - **Documentation**: Swagger API documentation
 
+## Project Structure
+
+```
+project2/
+├── config/              # Configuration files
+│   ├── babel/          # Babel transpilation config
+│   ├── eslint/         # ESLint linting rules
+│   └── playwright/     # Playwright E2E test config
+├── docs/               # Documentation
+│   ├── guides/         # Developer guides
+│   └── testing/        # Testing documentation
+├── public/             # Static frontend assets
+│   ├── css/           # Stylesheets
+│   └── dashboard-app/ # React application
+├── scripts/           # Utility scripts
+├── src/               # Backend source code
+│   ├── config/        # App configuration
+│   ├── controllers/   # Route controllers
+│   ├── middleware/    # Express middleware
+│   ├── models/        # Sequelize models
+│   ├── routes/        # API routes
+│   └── utils/         # Helper utilities
+├── test/              # Backend tests
+└── tests/             # E2E tests
+    └── playwright/    # Playwright test files
+```
+
 ## Features
 
 - User authentication (register, login, logout)
@@ -239,7 +266,12 @@ npm run generate:types
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+Please read [docs/guides/CONTRIBUTING.md](docs/guides/CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
+For testing documentation, see:
+- [docs/testing/TESTING_GUIDE.md](docs/testing/TESTING_GUIDE.md) - Comprehensive testing guide
+- [docs/testing/CI_TEST.md](docs/testing/CI_TEST.md) - CI/CD testing setup
+- [docs/testing/TESTING_MIGRATION.md](docs/testing/TESTING_MIGRATION.md) - Migration from Cypress to Playwright
 
 ## License
 

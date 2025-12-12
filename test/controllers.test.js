@@ -499,7 +499,8 @@ describe('Controllers', () => {
         userId: adminUser.id,
         userRole: 'admin',
         params: {},
-        body: {}
+        body: {},
+        query: {} // Add query object for pagination
       };
       res = {
         status: sinon.stub().returnsThis(),
@@ -513,11 +514,13 @@ describe('Controllers', () => {
 
         expect(res.json.calledOnce).to.be.true;
         const responseData = res.json.firstCall.args[0];
-        expect(responseData).to.be.an('array');
-        expect(responseData.length).to.equal(2);
+        expect(responseData).to.be.an('object');
+        expect(responseData.data).to.be.an('array');
+        expect(responseData.pagination).to.be.an('object');
+        expect(responseData.data.length).to.equal(2);
         
         // Check that passwords are excluded
-        responseData.forEach(user => {
+        responseData.data.forEach(user => {
           expect(user.password).to.be.undefined;
           expect(user.verification_token).to.be.undefined;
           expect(user.reset_token).to.be.undefined;

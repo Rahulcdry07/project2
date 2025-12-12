@@ -3,13 +3,14 @@
  */
 const nodemailer = require('nodemailer');
 const { EMAIL_CONFIG, NODE_ENV, CLIENT_URL } = require('../config/env');
+const logger = NODE_ENV !== 'test' ? require('./logger') : { info: () => {}, error: () => {} };
 
 // Set up the email transporter based on environment
 const transporter = NODE_ENV === 'test' 
   ? {
       // Mock transporter for testing
       sendMail: (mailOptions) => {
-        console.log('Test mode - email would be sent:', mailOptions);
+        logger.info('Test mode - email would be sent', { to: mailOptions.to, subject: mailOptions.subject });
         return Promise.resolve({ messageId: 'test-message-id' });
       }
     }
@@ -31,7 +32,7 @@ const sendVerificationEmail = async (email, token) => {
             html: `<p>Please verify your email by clicking on this link: <a href="${verificationLink}">${verificationLink}</a></p>`,
         });
     } catch (error) {
-        console.error('Error sending verification email:', error);
+        logger.error('Error sending verification email', { error: error.message });
         return { error: error.message };
     }
 };
@@ -52,7 +53,7 @@ const sendPasswordResetEmail = async (email, token) => {
             html: `<p>You requested a password reset. Please click this link to reset your password: <a href="${resetLink}">${resetLink}</a></p>`,
         });
     } catch (error) {
-        console.error('Error sending password reset email:', error);
+        logger.error('Error sending password reset email', { error: error.message });
         return { error: error.message };
     }
 };

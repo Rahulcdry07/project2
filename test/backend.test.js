@@ -101,7 +101,8 @@ describe('Auth API', () => {
         });
 
       expect(res.statusCode).to.equal(400);
-      expect(res.body.errors.message).to.equal('Please fill in all fields.');
+      expect(res.body.error).to.equal('Validation failed');
+      expect(res.body.details).to.be.an('array');
     });
     
     it('should not register a user with invalid input - short password', async function() {
@@ -115,7 +116,8 @@ describe('Auth API', () => {
         });
 
       expect(res.statusCode).to.equal(400);
-      expect(res.body.errors.message).to.equal('Password must be at least 6 characters long.');
+      expect(res.body.error).to.equal('Validation failed');
+      expect(res.body.details).to.be.an('array');
     });
   });
 
@@ -371,7 +373,8 @@ describe('Auth API', () => {
         });
       
       expect(res.statusCode).to.equal(400);
-      expect(res.body.errors.message).to.equal('Password must be at least 6 characters long.');
+      expect(res.body.error).to.equal('Validation failed');
+      expect(res.body.details).to.be.an('array');
     });
   });
 });
@@ -538,10 +541,12 @@ describe('Admin API', () => {
         .set('Authorization', `Bearer ${adminToken}`);
       
       expect(res.statusCode).to.equal(200);
-      expect(res.body).to.be.an('array');
-      expect(res.body.length).to.equal(2);
-      expect(res.body[0].username).to.be.oneOf(['adminuser', 'regularuser']);
-      expect(res.body[1].username).to.be.oneOf(['adminuser', 'regularuser']);
+      expect(res.body).to.be.an('object');
+      expect(res.body.data).to.be.an('array');
+      expect(res.body.pagination).to.be.an('object');
+      expect(res.body.data.length).to.equal(2);
+      expect(res.body.data[0].username).to.be.oneOf(['adminuser', 'regularuser']);
+      expect(res.body.data[1].username).to.be.oneOf(['adminuser', 'regularuser']);
     });
     
     it('should not get users when authenticated as regular user', async function() {

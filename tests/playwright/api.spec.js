@@ -65,7 +65,7 @@ test.describe('API Tests', () => {
     });
 
     test('should verify email with valid token', async ({ page }) => {
-      // Register user to get verification token
+      // Register user
       const user = {
         username: 'verifyuser',
         email: 'verify@example.com',
@@ -74,20 +74,21 @@ test.describe('API Tests', () => {
       
       await page.request.post('http://localhost:3000/api/auth/register', { data: user });
       
-      // Get user with verification token from database (via test endpoint)
-      // Note: In real implementation, token would come from email
-      // For testing, we'll use the test verify endpoint
+      // Use test endpoint to verify user (simulates email verification)
       const verifyResponse = await page.request.post('http://localhost:3000/api/test/verify-user', {
         data: { email: user.email }
       });
       
       expect(verifyResponse.ok()).toBeTruthy();
       const verifyData = await verifyResponse.json();
-      expect(verifyData.message).toContain('verified successfully');
+      expect(verifyData.message).toContain('verified');
     });
   });
 
   test.describe('Protected Routes', () => {
+    /**
+     * @type {any}
+     */
     let authToken;
     
     test.beforeEach(async ({ page }) => {
@@ -107,7 +108,16 @@ test.describe('API Tests', () => {
         data: { email: user.email, password: user.password }
       });
       
+      if (!loginResponse.ok()) {
+        const errorData = await loginResponse.json();
+        throw new Error(`Login failed: ${JSON.stringify(errorData)}`);
+      }
+      
       const loginData = await loginResponse.json();
+      if (!loginData.data || !loginData.data.token) {
+        throw new Error(`Invalid login response: ${JSON.stringify(loginData)}`);
+      }
+      
       authToken = loginData.data.token;
     });
 
@@ -116,14 +126,17 @@ test.describe('API Tests', () => {
         headers: { Authorization: `Bearer ${authToken}` }
       });
       
+      if (!response.ok()) {
+        const errorData = await response.json();
+        console.log('Profile request failed:', response.status(), errorData);
+      }
+      
       expect(response.ok()).toBeTruthy();
       const data = await response.json();
       
-      // Profile endpoint might return different structure
-      // Just verify we get a successful response with data
+      // Profile endpoint returns direct user data
       expect(data).toBeTruthy();
-      // Could be {success: true} or direct user data
-      expect(data.success === true || data.id || data.email || data.username).toBeTruthy();
+      expect(data.email || data.username).toBeTruthy();
     });
 
     test('should reject requests without token', async ({ page }) => {

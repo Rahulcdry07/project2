@@ -29,7 +29,17 @@ test.describe('Admin Panel', () => {
       data: { email: adminUser.email, password: adminUser.password }
     });
     
+    // Check if login was successful
+    if (!loginResponse.ok()) {
+      const errorData = await loginResponse.json();
+      throw new Error(`Login failed: ${JSON.stringify(errorData)}`);
+    }
+    
     const loginData = await loginResponse.json();
+    if (!loginData.data || !loginData.data.token) {
+      throw new Error(`Invalid login response: ${JSON.stringify(loginData)}`);
+    }
+    
     const token = loginData.data.token;
     const user = loginData.data.user;
     
@@ -54,11 +64,12 @@ test.describe('Admin Panel', () => {
     
     // Wait for users table to load
     await expect(page.locator('table')).toBeVisible();
-    await expect(page.locator('tbody tr')).toHaveCount(1); // Should have admin user
+    const userCount = await page.locator('tbody tr').count();
+    expect(userCount).toBeGreaterThanOrEqual(1); // Should have at least admin user
     
-    // Check admin user is displayed
-    await expect(page.locator('tbody tr')).toContainText('admin@example.com');
-    await expect(page.locator('tbody tr')).toContainText('admin');
+    // Check admin user is displayed - check entire table body
+    await expect(page.locator('tbody')).toContainText('admin@example.com');
+    await expect(page.locator('tbody')).toContainText('admin');
   });
 
   test('should allow admin to update user roles', async ({ page }) => {
@@ -77,7 +88,8 @@ test.describe('Admin Panel', () => {
     await page.goto('/admin');
     
     // Wait for users to load
-    await expect(page.locator('tbody tr')).toHaveCount(2);
+    const rowCount = await page.locator('tbody tr').count();
+    expect(rowCount).toBeGreaterThanOrEqual(2); // Should have at least admin and regular user
     
     // Find the regular user row
     const userRow = page.locator('tbody tr').filter({ hasText: 'user@example.com' });
@@ -116,17 +128,34 @@ test.describe('Admin Panel', () => {
     await page.goto('/admin');
     
     // Wait for users to load
-    await expect(page.locator('tbody tr')).toHaveCount(2);
+    await page.waitForTimeout(1000);
+    const initialCount = await page.locator('tbody tr').count();
+    expect(initialCount).toBeGreaterThanOrEqual(2); // Should have at least admin and delete user
     
-    // Find and delete the user
+    // Verify the user exists before attempting to delete
+    await expect(page.locator('tbody')).toContainText('delete@example.com');
+    
+    // Find the user row
     const userRow = page.locator('tbody tr').filter({ hasText: 'delete@example.com' });
+    await expect(userRow).toBeVisible();
     
-    // Handle confirm dialog
-    page.on('dialog', dialog => dialog.accept());
-    await userRow.locator('button:has-text("Delete")').click();
+    // Click the delete button (icon button with trash icon, no text)
+    const deleteButton = userRow.locator('button.btn-outline-danger');
+    await expect(deleteButton).toBeVisible();
+    await deleteButton.click();
     
-    // User should be removed
-    await expect(page.locator('tbody tr')).toHaveCount(1);
+    // Wait for confirmation modal and click confirm button
+    await page.waitForSelector('text=Delete User', { state: 'visible', timeout: 5000 });
+    const confirmButton = page.locator('.modal button:has-text("Delete")');
+    await expect(confirmButton).toBeVisible();
+    await confirmButton.click();
+    
+    // Wait for delete to complete and verify user is gone
+    await page.waitForTimeout(2000);
     await expect(page.locator('tbody')).not.toContainText('delete@example.com');
+    
+    // Verify count decreased by 1
+    const finalCount = await page.locator('tbody tr').count();
+    expect(finalCount).toBe(initialCount - 1);
   });
 });

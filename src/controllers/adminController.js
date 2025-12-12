@@ -2,6 +2,7 @@
  * Admin controller
  */
 const { User } = require('../models');
+const logger = require('../utils/logger');
 
 /**
  * Get all users
@@ -9,12 +10,24 @@ const { User } = require('../models');
  * @param {Object} res - Express response object
  */
 exports.getAllUsers = async (req, res) => {
-    console.log('[AdminController] getAllUsers called');
-    console.log('[AdminController] Request user:', { id: req.userId, role: req.userRole });
+    logger.info('getAllUsers called', { userId: req.userId, userRole: req.userRole });
     
     try {
-        const users = await User.findAll({
-            attributes: { exclude: ['password', 'verification_token', 'reset_token', 'reset_token_expires_at'] }
+        // Pagination parameters
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+        
+        // Sorting parameters
+        const sortBy = req.query.sortBy || 'createdAt';
+        const sortOrder = req.query.sortOrder === 'asc' ? 'ASC' : 'DESC';
+        
+        // Query with pagination
+        const { count, rows: users } = await User.findAndCountAll({
+            attributes: { exclude: ['password', 'verification_token', 'reset_token', 'reset_token_expires_at'] },
+            limit,
+            offset,
+            order: [[sortBy, sortOrder]]
         });
         
         // Map the database fields to match the frontend expectations
@@ -28,13 +41,31 @@ exports.getAllUsers = async (req, res) => {
             updatedAt: user.updatedAt
         }));
         
-        console.log(`[AdminController] Found ${mappedUsers.length} users`);
-        console.log('[AdminController] User data sample:', 
-            mappedUsers.length > 0 ? JSON.stringify(mappedUsers[0]) : 'No users found');
+        // Calculate pagination metadata
+        const totalPages = Math.ceil(count / limit);
+        const hasNextPage = page < totalPages;
+        const hasPrevPage = page > 1;
         
-        res.json(mappedUsers);
+        logger.info(`Found ${count} users, returning page ${page}`, { 
+            total: count,
+            page,
+            limit,
+            totalPages
+        });
+        
+        res.json({
+            data: mappedUsers,
+            pagination: {
+                total: count,
+                page,
+                limit,
+                totalPages,
+                hasNextPage,
+                hasPrevPage
+            }
+        });
     } catch (error) {
-        console.error('[AdminController] Error in getAllUsers:', error);
+        logger.error('Error in getAllUsers', { error: error.message, stack: error.stack });
         res.status(500).json({ error: error.message });
     }
 };
@@ -48,23 +79,26 @@ exports.updateUserRole = async (req, res) => {
     const userId = req.params.id;
     const { role } = req.body;
     
-    console.log(`[AdminController] updateUserRole called for user ID: ${userId}`);
-    console.log(`[AdminController] New role: ${role}`);
-    console.log('[AdminController] Request user:', { id: req.userId, role: req.userRole });
+    logger.info('updateUserRole called', { 
+        targetUserId: userId, 
+        newRole: role, 
+        requestUserId: req.userId, 
+        requestUserRole: req.userRole 
+    });
     
     try {
         const user = await User.findByPk(userId);
         
         if (!user) {
-            console.log(`[AdminController] User with ID ${userId} not found`);
+            logger.warn('updateUserRole: User not found', { userId });
             return res.status(404).json({ error: 'User not found' });
         }
         
-        console.log(`[AdminController] Found user: ${user.username}, current role: ${user.role}`);
+        logger.info('Found user for role update', { username: user.username, currentRole: user.role });
         
         await user.update({ role });
         
-        console.log(`[AdminController] Role updated successfully to: ${role}`);
+        logger.info('Role updated successfully', { userId, username: user.username, newRole: role });
         
         const { id, username, email, role: userRole, is_verified } = user;
         res.json({ 
@@ -75,7 +109,7 @@ exports.updateUserRole = async (req, res) => {
             emailVerified: is_verified === true
         });
     } catch (error) {
-        console.error('[AdminController] Error in updateUserRole:', error);
+        logger.error('Error in updateUserRole', { error: error.message, stack: error.stack, userId });
         res.status(400).json({ error: error.message });
     }
 };
@@ -88,25 +122,24 @@ exports.updateUserRole = async (req, res) => {
 exports.deleteUser = async (req, res) => {
     const userId = req.params.id;
     
-    console.log(`[AdminController] deleteUser called for user ID: ${userId}`);
-    console.log('[AdminController] Request user:', { id: req.userId, role: req.userRole });
+    logger.info('deleteUser called', { userId, requestUserId: req.userId, requestUserRole: req.userRole });
     
     try {
         const user = await User.findByPk(userId);
         
         if (!user) {
-            console.log(`[AdminController] User with ID ${userId} not found`);
+            logger.warn('deleteUser: User not found', { userId });
             return res.status(404).json({ error: 'User not found' });
         }
         
-        console.log(`[AdminController] Found user: ${user.username}, role: ${user.role}`);
+        logger.info('Found user for deletion', { username: user.username, role: user.role });
         
         await user.destroy();
-        console.log(`[AdminController] User ${user.username} deleted successfully`);
+        logger.info('User deleted successfully', { userId, username: user.username });
         
         res.json({ message: 'User deleted successfully.' });
     } catch (error) {
-        console.error('[AdminController] Error in deleteUser:', error);
+        logger.error('Error in deleteUser', { error: error.message, stack: error.stack, userId });
         res.status(500).json({ error: error.message });
     }
 };

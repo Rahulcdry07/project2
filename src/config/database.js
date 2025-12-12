@@ -1,8 +1,10 @@
+const logger = require('../utils/logger');
+
 module.exports = {
   development: {
     dialect: 'sqlite',
     storage: './src/database.sqlite',
-    logging: console.log
+    logging: (msg) => logger.debug(msg)
   },
   test: {
     dialect: 'sqlite',

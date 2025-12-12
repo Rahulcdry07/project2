@@ -13,6 +13,11 @@ import VerifyEmail from './components/VerifyEmail';
 // Main components
 import Dashboard from './components/Dashboard';
 import Profile from './components/Profile';
+import Settings from './components/Settings.jsx';
+import ActivityLog from './components/ActivityLog.jsx';
+import Notifications from './components/Notifications.jsx';
+import Notes from './components/Notes.jsx';
+import Upload from './components/Upload.jsx';
 
 // Admin components
 import UserManagement from './components/admin/UserManagement';
@@ -64,6 +69,26 @@ function App() {
             <Route 
               path="/profile" 
               element={<ProtectedRoute element={<Profile />} />} 
+            />
+            <Route 
+              path="/upload" 
+              element={<ProtectedRoute element={<Upload />} />} 
+            />
+            <Route 
+              path="/settings" 
+              element={<ProtectedRoute element={<Settings />} />} 
+            />
+            <Route 
+              path="/activity" 
+              element={<ProtectedRoute element={<ActivityLog />} />} 
+            />
+            <Route 
+              path="/notifications" 
+              element={<ProtectedRoute element={<Notifications />} />} 
+            />
+            <Route 
+              path="/notes" 
+              element={<ProtectedRoute element={<Notes />} />} 
             />
             
             {/* Admin routes */}
