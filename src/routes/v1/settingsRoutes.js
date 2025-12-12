@@ -3,13 +3,13 @@
  */
 const express = require('express');
 const router = express.Router();
-const { authenticate } = require('../middleware/auth');
+const { authenticate } = require('../../middleware/auth');
 const {
     getSettings,
     updateSettings,
     changePassword,
     updateEmail
-} = require('../controllers/settingsController');
+} = require('../../controllers/settingsController');
 
 // Get user settings
 router.get('/', authenticate, getSettings);

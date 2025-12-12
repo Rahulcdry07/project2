@@ -3,8 +3,8 @@
  */
 const express = require('express');
 const router = express.Router();
-const tenderController = require('../controllers/tenderController');
-const { authenticate, isAdmin } = require('../middleware/auth');
+const tenderController = require('../../controllers/tenderController');
+const { authenticate, isAdmin } = require('../../middleware/auth');
 
 // List tenders (public)
 router.get('/', tenderController.list);

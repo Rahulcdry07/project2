@@ -3,14 +3,14 @@
  */
 const express = require('express');
 const router = express.Router();
-const { authenticate } = require('../middleware/auth');
+const { authenticate } = require('../../middleware/auth');
 const {
     getNotes,
     getNote,
     createNote,
     updateNote,
     deleteNote
-} = require('../controllers/notesController');
+} = require('../../controllers/notesController');
 
 // Get all notes
 router.get('/', authenticate, getNotes);

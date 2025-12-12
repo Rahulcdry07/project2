@@ -10,11 +10,11 @@ const profileRoutes = require('./profileRoutes');
 const adminRoutes = require('./adminRoutes');
 const healthRoutes = require('./healthRoutes');
 const metricsRoutes = require('./metricsRoutes');
-const activityRoutes = require('../activityRoutes');
-const notificationRoutes = require('../notificationRoutes');
-const notesRoutes = require('../notesRoutes');
-const settingsRoutes = require('../settingsRoutes');
-const tenderRoutes = require('../tenderRoutes');
+const activityRoutes = require('./activityRoutes');
+const notificationRoutes = require('./notificationRoutes');
+const notesRoutes = require('./notesRoutes');
+const settingsRoutes = require('./settingsRoutes');
+const tenderRoutes = require('./tenderRoutes');
 
 // Mount routes
 router.use('/auth', authRoutes);

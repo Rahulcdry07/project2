@@ -3,13 +3,13 @@
  */
 const express = require('express');
 const router = express.Router();
-const { authenticate } = require('../middleware/auth');
+const { authenticate } = require('../../middleware/auth');
 const { 
     getNotifications,
     markAsRead,
     markAllAsRead,
     deleteNotification
-} = require('../controllers/notificationController');
+} = require('../../controllers/notificationController');
 
 // Get user's notifications
 router.get('/', authenticate, getNotifications);
