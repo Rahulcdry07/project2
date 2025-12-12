@@ -2,7 +2,7 @@
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up(queryInterface, Sequelize) {
+  async up(queryInterface, _Sequelize) {
     const sampleTenders = [
       {
         title: 'Construction of New Highway Bridge',
@@ -147,7 +147,7 @@ module.exports = {
     await queryInterface.bulkInsert('Tenders', sampleTenders, {});
   },
 
-  async down(queryInterface, Sequelize) {
+  async down(queryInterface, _Sequelize) {
     await queryInterface.bulkDelete('Tenders', null, {});
   }
 };

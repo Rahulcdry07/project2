@@ -1,0 +1,46 @@
+# Commit Message Template
+#
+# Format: <type>(<scope>): <subject>
+#
+# <body>
+#
+# Tests: ✅ <passing>/<total> passing
+# Breaking Changes: <yes/no>
+#
+# ─────────────────────────────────────────────────────────
+# Types:
+#   feat     - New feature
+#   fix      - Bug fix
+#   docs     - Documentation only
+#   style    - Code style (formatting, missing semi colons, etc)
+#   refactor - Code change that neither fixes a bug nor adds a feature
+#   perf     - Performance improvement
+#   test     - Adding or updating tests
+#   chore    - Maintenance tasks
+#   build    - Build system or external dependencies
+#   ci       - CI/CD configuration
+#
+# Scope examples:
+#   auth, tenders, admin, database, api, frontend, backend
+#
+# ─────────────────────────────────────────────────────────
+# BEFORE COMMITTING:
+#   1. Run: npm run test:verify
+#   2. Verify: All 349 tests passing
+#   3. Run: npm run lint
+#   4. Check: No console.logs or debug code
+#
+# ─────────────────────────────────────────────────────────
+# Example:
+#
+# feat(tenders): add status filtering
+#
+# - Added status dropdown to tender list
+# - Updated TenderList component with filter state
+# - Added tests for active/closed/draft statuses
+# - All existing tests still passing
+#
+# Tests: ✅ 352/352 passing
+# Breaking Changes: no
+#
+# ─────────────────────────────────────────────────────────

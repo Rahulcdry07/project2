@@ -23,6 +23,8 @@ describe('Controllers', () => {
     const testModels = getTestModels();
     User = testModels.User;
     sequelize = testModels.sequelize;
+    // Ensure User table exists
+    await User.sync({ force: true });
   });
 
   after(async function() {
@@ -30,8 +32,15 @@ describe('Controllers', () => {
     await teardownTestDatabase();
   });
 
-  beforeEach(async () => {
-    await User.destroy({ where: {} });
+  beforeEach(async function() {
+    this.timeout(5000);
+    try {
+      await User.sequelize.query('PRAGMA foreign_keys = OFF');
+      await User.destroy({ where: {}, force: true });
+      await User.sequelize.query('PRAGMA foreign_keys = ON');
+    } catch (error) {
+      await User.sync({ force: true });
+    }
   });
 
   describe('Auth Controller', () => {

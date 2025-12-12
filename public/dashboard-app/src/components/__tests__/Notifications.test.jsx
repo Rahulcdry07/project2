@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import Notifications from '../Notifications.jsx';
 import * as api from '../../services/api';
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, expect, beforeEach, vi } from 'vitest';
 
 vi.mock('../../services/api');
 
@@ -45,7 +45,7 @@ const renderNotifications = () => {
 
 describe('Notifications Component', () => {
   beforeEach(() => {
-    api.notificationAPI = {
+    vi.spyOn(api, 'notificationAPI', 'get').mockReturnValue({
       getNotifications: vi.fn().mockResolvedValue({
         notifications: mockNotifications,
         unreadCount: 2
@@ -53,7 +53,7 @@ describe('Notifications Component', () => {
       markAsRead: vi.fn().mockResolvedValue({ success: true }),
       markAllAsRead: vi.fn().mockResolvedValue({ success: true }),
       deleteNotification: vi.fn().mockResolvedValue({ success: true })
-    };
+    });
   });
 
   afterEach(() => {
@@ -146,10 +146,12 @@ describe('Notifications Component', () => {
   });
 
   test('shows different icons for notification types', async () => {
-    renderNotifications();
+    const { container } = renderNotifications();
     
     await waitFor(() => {
-      const icons = document.querySelectorAll('.bi-info-circle, .bi-check-circle, .bi-exclamation-triangle');
+      /* eslint-disable testing-library/no-container, testing-library/no-node-access */
+      const icons = container.querySelectorAll('.bi-info-circle, .bi-check-circle, .bi-exclamation-triangle');
+      /* eslint-enable testing-library/no-container, testing-library/no-node-access */
       expect(icons.length).toBeGreaterThan(0);
     });
   });

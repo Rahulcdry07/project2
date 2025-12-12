@@ -5,7 +5,7 @@ import Settings from '../Settings.jsx';
 import * as api from '../../services/api';
 import * as auth from '../../utils/auth';
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, expect, beforeEach, vi } from 'vitest';
 
 vi.mock('../../services/api');
 vi.mock('../../utils/auth');
@@ -29,7 +29,7 @@ const renderSettings = () => {
 describe('Settings Component', () => {
   beforeEach(() => {
     auth.getCurrentUser.mockReturnValue(mockCurrentUser);
-    api.settingsAPI = {
+    vi.spyOn(api, 'settingsAPI', 'get').mockReturnValue({
       getSettings: vi.fn().mockResolvedValue({
         theme: 'light',
         language: 'en',
@@ -39,7 +39,7 @@ describe('Settings Component', () => {
       }),
       updateSettings: vi.fn().mockResolvedValue({ success: true }),
       changePassword: vi.fn().mockResolvedValue({ success: true })
-    };
+    });
   });
 
   afterEach(() => {
@@ -82,8 +82,8 @@ describe('Settings Component', () => {
     
     await waitFor(() => {
       expect(screen.getByLabelText('Theme')).toBeInTheDocument();
-      expect(screen.getByLabelText('Language')).toBeInTheDocument();
     });
+    expect(screen.getByLabelText('Language')).toBeInTheDocument();
   });
 
   test('changes password successfully', async () => {

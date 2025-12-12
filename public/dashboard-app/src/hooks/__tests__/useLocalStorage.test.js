@@ -48,6 +48,7 @@ describe('useLocalStorage Hook', () => {
 
     it('handles invalid JSON in localStorage', () => {
       localStorageMock.getItem.mockReturnValue('invalid json');
+      /* eslint-disable-next-line no-console */
       console.error = vi.fn();
       
       const { result } = renderHook(() => 
@@ -55,6 +56,7 @@ describe('useLocalStorage Hook', () => {
       );
 
       expect(result.current[0]).toBe('defaultValue');
+      /* eslint-disable-next-line no-console */
       expect(console.error).toHaveBeenCalled();
     });
 
@@ -197,6 +199,7 @@ describe('useLocalStorage Hook', () => {
       localStorageMock.setItem.mockImplementation(() => {
         throw new Error('Storage quota exceeded');
       });
+      /* eslint-disable-next-line no-console */
       console.error = vi.fn();
       
       const { result } = renderHook(() => 
@@ -209,6 +212,7 @@ describe('useLocalStorage Hook', () => {
 
       // Value should still update in state
       expect(result.current[0]).toBe('newValue');
+      /* eslint-disable-next-line no-console */
       expect(console.error).toHaveBeenCalled();
     });
 
@@ -216,6 +220,7 @@ describe('useLocalStorage Hook', () => {
       localStorageMock.getItem.mockImplementation(() => {
         throw new Error('Storage access denied');
       });
+      /* eslint-disable-next-line no-console */
       console.error = vi.fn();
       
       const { result } = renderHook(() => 
@@ -223,6 +228,7 @@ describe('useLocalStorage Hook', () => {
       );
 
       expect(result.current[0]).toBe('defaultValue');
+      /* eslint-disable-next-line no-console */
       expect(console.error).toHaveBeenCalled();
     });
   });

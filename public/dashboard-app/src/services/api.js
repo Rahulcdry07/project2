@@ -262,3 +262,51 @@ export const notesAPI = {
         });
     }
 };
+
+/**
+ * Tender API methods
+ */
+export const tenderAPI = {
+    getTenders: (filters = {}) => {
+        const queryParams = new URLSearchParams();
+        Object.entries(filters).forEach(([key, value]) => {
+            if (value) queryParams.append(key, value);
+        });
+        const queryString = queryParams.toString();
+        const url = queryString ? `${API_URL}/v1/tenders?${queryString}` : `${API_URL}/v1/tenders`;
+        return fetchWithErrorHandling(url, {
+            method: 'GET',
+            headers: createHeaders(false) // Public endpoint
+        });
+    },
+
+    getTender: (id) => {
+        return fetchWithErrorHandling(`${API_URL}/v1/tenders/${id}`, {
+            method: 'GET',
+            headers: createHeaders(false) // Public endpoint
+        });
+    },
+
+    createTender: (tenderData) => {
+        return fetchWithErrorHandling(`${API_URL}/v1/tenders`, {
+            method: 'POST',
+            headers: createHeaders(),
+            body: JSON.stringify(tenderData)
+        });
+    },
+
+    updateTender: (id, tenderData) => {
+        return fetchWithErrorHandling(`${API_URL}/v1/tenders/${id}`, {
+            method: 'PUT',
+            headers: createHeaders(),
+            body: JSON.stringify(tenderData)
+        });
+    },
+
+    deleteTender: (id) => {
+        return fetchWithErrorHandling(`${API_URL}/v1/tenders/${id}`, {
+            method: 'DELETE',
+            headers: createHeaders()
+        });
+    }
+};

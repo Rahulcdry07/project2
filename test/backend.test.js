@@ -13,6 +13,8 @@ const TEST_TIMEOUT = 5000;
 before(async function() {
   this.timeout(10000);
   await setupTestDatabase();
+  // Ensure the User table exists by syncing
+  await User.sync({ force: true });
 });
 
 // Cleanup after all tests  
@@ -22,12 +24,17 @@ after(async function() {
 });
 
 describe('Auth API', () => {
-  beforeEach(async () => {
-    // Force sync the User model to ensure table exists
-    await User.sequelize.query('DELETE FROM Users', { raw: true }).catch(() => {
-      // If Users table doesn't exist, try User table
-      return User.sequelize.query('DELETE FROM User', { raw: true });
-    });
+  beforeEach(async function() {
+    this.timeout(TEST_TIMEOUT);
+    // Clean up users table - use raw query to bypass FK constraints
+    try {
+      await User.sequelize.query('PRAGMA foreign_keys = OFF');
+      await User.destroy({ where: {}, force: true });
+      await User.sequelize.query('PRAGMA foreign_keys = ON');
+    } catch (error) {
+      // If that fails, just sync the table
+      await User.sync({ force: true });
+    }
   });
 
   describe('POST /api/auth/register', () => {
@@ -383,8 +390,15 @@ describe('Profile API', () => {
   let token;
   let userId;
   
-  beforeEach(async () => {
-    await User.destroy({ where: {} });
+  beforeEach(async function() {
+    this.timeout(TEST_TIMEOUT);
+    try {
+      await User.sequelize.query('PRAGMA foreign_keys = OFF');
+      await User.destroy({ where: {}, force: true });
+      await User.sequelize.query('PRAGMA foreign_keys = ON');
+    } catch (error) {
+      await User.sync({ force: true });
+    }
     
     // Create a verified user
     await request(app)
@@ -482,8 +496,15 @@ describe('Admin API', () => {
   let userToken;
   let regularUserId;
   
-  beforeEach(async () => {
-    await User.destroy({ where: {} });
+  beforeEach(async function() {
+    this.timeout(TEST_TIMEOUT);
+    try {
+      await User.sequelize.query('PRAGMA foreign_keys = OFF');
+      await User.destroy({ where: {}, force: true });
+      await User.sequelize.query('PRAGMA foreign_keys = ON');
+    } catch (error) {
+      await User.sync({ force: true });
+    }
     
     // Create an admin user
     await request(app)
@@ -625,8 +646,15 @@ describe('Authentication Middleware', () => {
   let expiredToken;
   let userId;
   
-  beforeEach(async () => {
-    await User.destroy({ where: {} });
+  beforeEach(async function() {
+    this.timeout(TEST_TIMEOUT);
+    try {
+      await User.sequelize.query('PRAGMA foreign_keys = OFF');
+      await User.destroy({ where: {}, force: true });
+      await User.sequelize.query('PRAGMA foreign_keys = ON');
+    } catch (error) {
+      await User.sync({ force: true });
+    }
     
     // Create a verified user
     await request(app)

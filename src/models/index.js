@@ -19,7 +19,19 @@ const sequelize = new Sequelize({
     dialect: 'sqlite',
     storage: DB_STORAGE,
     logging: DB_LOGGING,
+    dialectOptions: {
+        // Enable foreign key constraints
+        foreignKeys: true
+    },
+    define: {
+        // Ensure foreign keys are properly handled
+        underscored: false,
+        timestamps: true
+    }
 });
+
+// Enable foreign keys for SQLite
+sequelize.query('PRAGMA foreign_keys = ON');
 
 // Initialize models
 const User = UserModel(sequelize);
@@ -33,16 +45,16 @@ const TenderDocument = TenderDocumentModel(sequelize);
 const ApplicationDocument = ApplicationDocumentModel(sequelize);
 
 // Set up associations
-User.hasMany(ActivityLog, { foreignKey: 'userId', as: 'activityLogs' });
+User.hasMany(ActivityLog, { foreignKey: 'userId', as: 'activityLogs', onDelete: 'CASCADE' });
 ActivityLog.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
-User.hasMany(Notification, { foreignKey: 'userId', as: 'notifications' });
+User.hasMany(Notification, { foreignKey: 'userId', as: 'notifications', onDelete: 'CASCADE' });
 Notification.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
-User.hasMany(Note, { foreignKey: 'userId', as: 'notes' });
+User.hasMany(Note, { foreignKey: 'userId', as: 'notes', onDelete: 'CASCADE' });
 Note.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
-User.hasOne(UserSettings, { foreignKey: 'userId', as: 'settings' });
+User.hasOne(UserSettings, { foreignKey: 'userId', as: 'settings', onDelete: 'CASCADE' });
 UserSettings.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
 // Tender associations
@@ -59,11 +71,13 @@ const models = {
 };
 
 // Call associate function for tender models
+/* eslint-disable security/detect-object-injection */
 Object.keys(models).forEach(modelName => {
     if (models[modelName].associate) {
         models[modelName].associate(models);
     }
 });
+/* eslint-enable security/detect-object-injection */
 
 // Test the database connection
 const testConnection = async () => {

@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { tenderAPI } from '../../services/api';
-import { LoadingSpinner, Alert } from '../common/FormComponents';
+import { LoadingSpinner, Alert } from '../common/FormComponents.jsx';
 
 const TenderForm = ({ tender, onSubmit, onCancel, loading }) => {
     const [formData, setFormData] = useState({

@@ -3,6 +3,7 @@ import { renderHook, waitFor, act } from '@testing-library/react';
 import { useApiData } from '../useForm';
 
 // Mock console.error to avoid noise in tests
+/* eslint-disable no-console */
 const originalConsoleError = console.error;
 beforeEach(() => {
   console.error = vi.fn();
@@ -11,6 +12,7 @@ beforeEach(() => {
 afterEach(() => {
   console.error = originalConsoleError;
 });
+/* eslint-enable no-console */
 
 describe('useApiData Hook', () => {
   describe('Successful API calls', () => {

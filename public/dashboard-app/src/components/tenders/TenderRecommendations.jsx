@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { tenderAPI } from '../../services/api';
 import { getCurrentUser } from '../../utils/auth';
-import { LoadingSpinner, Alert } from '../common/FormComponents';
+import { LoadingSpinner, Alert } from '../common/FormComponents.jsx';
 
 const TenderRecommendations = () => {
   const [recommendations, setRecommendations] = useState([]);

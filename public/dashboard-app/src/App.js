@@ -20,10 +20,10 @@ import Notes from './components/Notes.jsx';
 import Upload from './components/Upload.jsx';
 
 // Tender components
-import TenderList from './components/tenders/TenderList';
-import TenderDetail from './components/tenders/TenderDetail';
-import TenderManagement from './components/tenders/TenderManagement';
-import TenderRecommendations from './components/tenders/TenderRecommendations';
+import TenderList from './components/tenders/TenderList.jsx';
+import TenderDetail from './components/tenders/TenderDetail.jsx';
+import TenderManagement from './components/tenders/TenderManagement.jsx';
+import TenderRecommendations from './components/tenders/TenderRecommendations.jsx';
 
 // Admin components
 import UserManagement from './components/admin/UserManagement';

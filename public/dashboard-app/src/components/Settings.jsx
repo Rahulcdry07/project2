@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { settingsAPI } from '../services/api';
 import { getCurrentUser } from '../utils/auth';
 import { useToast } from '../hooks/useToast';
@@ -27,11 +27,7 @@ const Settings = () => {
   });
   const [passwordErrors, setPasswordErrors] = useState({});
 
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       setLoading(true);
       const data = await settingsAPI.getSettings();
@@ -41,7 +37,11 @@ const Settings = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showError]);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   const handleSettingsChange = (e) => {
     const { name, value, type, checked } = e.target;

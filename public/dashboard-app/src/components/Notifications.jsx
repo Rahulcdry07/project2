@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { notificationAPI } from '../services/api';
 import { useToast } from '../hooks/useToast';
 import { ToastContainer } from './common/Toast';
@@ -9,11 +9,7 @@ const Notifications = () => {
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  useEffect(() => {
-    loadNotifications();
-  }, []);
-
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     try {
       setLoading(true);
       const data = await notificationAPI.getNotifications(1, 50);
@@ -24,7 +20,11 @@ const Notifications = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showError]);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
 
   const handleMarkAsRead = async (id) => {
     try {

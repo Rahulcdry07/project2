@@ -38,7 +38,8 @@ const Navbar = () => {
       <nav className="navbar navbar-dark bg-dark">
         <div className="container-fluid">
           <Link className="navbar-brand" to="/">
-            MyApp
+            <i className="bi bi-briefcase me-2"></i>
+            Tender Management System
           </Link>
           
           {isAuth ? (
@@ -46,6 +47,18 @@ const Navbar = () => {
               {/* Desktop Navigation */}
               <div className="d-none d-lg-flex align-items-center flex-grow-1">
                 <ul className="navbar-nav me-auto ms-4 flex-row gap-3">
+                  <li className="nav-item">
+                    <Link className="nav-link" to="/tenders">
+                      <i className="bi bi-file-earmark-text me-1"></i>
+                      Browse Tenders
+                    </Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link className="nav-link" to="/recommendations">
+                      <i className="bi bi-stars me-1"></i>
+                      Recommendations
+                    </Link>
+                  </li>
                   <li className="nav-item">
                     <Link className="nav-link" to="/upload">
                       <i className="bi bi-cloud-upload me-1"></i>
@@ -77,11 +90,30 @@ const Navbar = () => {
                     </Link>
                   </li>
                   {isAdmin() && (
-                    <li className="nav-item">
-                      <Link className="nav-link" to="/admin">
+                    <li className="nav-item dropdown">
+                      <button 
+                        className="nav-link dropdown-toggle btn btn-link text-white" 
+                        type="button"
+                        data-bs-toggle="dropdown" 
+                        aria-expanded="false"
+                      >
                         <i className="bi bi-shield-lock me-1"></i>
                         Admin
-                      </Link>
+                      </button>
+                      <ul className="dropdown-menu dropdown-menu-dark">
+                        <li>
+                          <Link className="dropdown-item" to="/admin/users">
+                            <i className="bi bi-people me-2"></i>
+                            User Management
+                          </Link>
+                        </li>
+                        <li>
+                          <Link className="dropdown-item" to="/admin/tenders">
+                            <i className="bi bi-file-earmark-check me-2"></i>
+                            Tender Management
+                          </Link>
+                        </li>
+                      </ul>
                     </li>
                   )}
                 </ul>
@@ -114,14 +146,22 @@ const Navbar = () => {
               </button>
             </>
           ) : (
-            <div className="d-flex">
-              <Link className="btn btn-outline-light btn-sm me-2" to="/login">
-                Login
-              </Link>
-              <Link className="btn btn-light btn-sm" to="/register">
-                Register
-              </Link>
-            </div>
+            <>
+              <div className="d-none d-md-flex me-3">
+                <Link className="btn btn-outline-light btn-sm me-2" to="/tenders">
+                  <i className="bi bi-file-earmark-text me-1"></i>
+                  Browse Tenders
+                </Link>
+              </div>
+              <div className="d-flex">
+                <Link className="btn btn-outline-light btn-sm me-2" to="/login">
+                  Login
+                </Link>
+                <Link className="btn btn-light btn-sm" to="/register">
+                  Register
+                </Link>
+              </div>
+            </>
           )}
         </div>
       </nav>
@@ -148,6 +188,24 @@ const Navbar = () => {
           </div>
           <div className="offcanvas-body">
             <ul className="navbar-nav flex-column">
+              <li className="nav-item mb-2">
+                <button 
+                  className="nav-link btn btn-link text-white text-start w-100"
+                  onClick={() => handleNavClick('/tenders')}
+                >
+                  <i className="bi bi-file-earmark-text me-2"></i>
+                  Browse Tenders
+                </button>
+              </li>
+              <li className="nav-item mb-2">
+                <button 
+                  className="nav-link btn btn-link text-white text-start w-100"
+                  onClick={() => handleNavClick('/recommendations')}
+                >
+                  <i className="bi bi-stars me-2"></i>
+                  Recommendations
+                </button>
+              </li>
               <li className="nav-item mb-2">
                 <button 
                   className="nav-link btn btn-link text-white text-start w-100"
@@ -194,15 +252,29 @@ const Navbar = () => {
                 </button>
               </li>
               {isAdmin() && (
-                <li className="nav-item mb-2">
-                  <button 
-                    className="nav-link btn btn-link text-white text-start w-100"
-                    onClick={() => handleNavClick('/admin')}
-                  >
-                    <i className="bi bi-shield-lock me-2"></i>
-                    Admin
-                  </button>
-                </li>
+                <>
+                  <li className="nav-item mb-2">
+                    <div className="text-muted small ps-3 mt-3 mb-2">ADMIN</div>
+                  </li>
+                  <li className="nav-item mb-2">
+                    <button 
+                      className="nav-link btn btn-link text-white text-start w-100"
+                      onClick={() => handleNavClick('/admin/users')}
+                    >
+                      <i className="bi bi-people me-2"></i>
+                      User Management
+                    </button>
+                  </li>
+                  <li className="nav-item mb-2">
+                    <button 
+                      className="nav-link btn btn-link text-white text-start w-100"
+                      onClick={() => handleNavClick('/admin/tenders')}
+                    >
+                      <i className="bi bi-file-earmark-check me-2"></i>
+                      Tender Management
+                    </button>
+                  </li>
+                </>
               )}
             </ul>
             <hr className="border-secondary" />

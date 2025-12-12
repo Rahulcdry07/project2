@@ -3,6 +3,7 @@ import { render } from '@testing-library/react';
 import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { vi } from 'vitest';
+import PropTypes from 'prop-types';
 
 /**
  * Custom render function that includes common providers
@@ -17,6 +18,10 @@ const customRender = (ui, options = {}) => {
         </AuthProvider>
       </BrowserRouter>
     );
+  };
+  
+  AllProviders.propTypes = {
+    children: PropTypes.node.isRequired
   };
 
   return render(ui, { wrapper: AllProviders, ...options });
@@ -45,6 +50,10 @@ export const renderWithProviders = (ui, options = {}) => {
         </AuthProvider>
       </RouterComponent>
     );
+  };
+  
+  AllProviders.propTypes = {
+    children: PropTypes.node.isRequired
   };
 
   return render(ui, { wrapper: AllProviders, ...renderOptions });

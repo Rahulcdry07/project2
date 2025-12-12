@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { notesAPI } from '../services/api';
 import { useToast } from '../hooks/useToast';
 import { ToastContainer } from './common/Toast';
@@ -14,11 +14,7 @@ const Notes = () => {
   const [noteToDelete, setNoteToDelete] = useState(null);
   const [formData, setFormData] = useState({ title: '', content: '', color: 'default' });
 
-  useEffect(() => {
-    loadNotes();
-  }, []);
-
-  const loadNotes = async () => {
+  const loadNotes = useCallback(async () => {
     try {
       setLoading(true);
       const data = await notesAPI.getNotes();
@@ -28,7 +24,11 @@ const Notes = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showError]);
+
+  useEffect(() => {
+    loadNotes();
+  }, [loadNotes]);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -133,14 +133,24 @@ const Notes = () => {
                     ></textarea>
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Color</label>
-                    <div className="d-flex gap-2">
+                    <label className="form-label" htmlFor="note-color-selector">Color</label>
+                    <div className="d-flex gap-2" id="note-color-selector" role="group" aria-label="Select note color">
                       {colors.map(c => (
                         <div
                           key={c.name}
+                          role="button"
+                          tabIndex={0}
                           className={`${c.bg} border rounded p-2 cursor-pointer ${formData.color === c.name ? 'border-primary border-3' : ''}`}
                           style={{ width: '40px', height: '40px', cursor: 'pointer' }}
                           onClick={() => setFormData(prev => ({ ...prev, color: c.name }))}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              setFormData(prev => ({ ...prev, color: c.name }));
+                            }
+                          }}
+                          aria-label={`Select ${c.name} color`}
+                          aria-pressed={formData.color === c.name}
                         ></div>
                       ))}
                     </div>

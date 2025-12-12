@@ -1,7 +1,7 @@
 /**
  * Activity Log Controller - Handles activity tracking
  */
-const { ActivityLog, User } = require('../models');
+const { ActivityLog } = require('../models');
 const { sendSuccess, sendError } = require('../utils/apiResponse');
 const logger = require('../utils/logger');
 

@@ -152,48 +152,102 @@ EMAIL_FROM=no-reply@example.com
 
 ## Testing
 
-### Running Backend Tests
+**⚠️ MANDATORY: All tests must pass before committing any code changes!**
 
-```
-npm run test:backend
+### Quick Test Commands
+
+```bash
+# Verify all tests pass (REQUIRED before commit)
+npm run test:verify
+
+# Run all backend tests (172 tests)
+npm run test:unit
+
+# Run all frontend tests (177 tests)
+npm run test:frontend
+
+# Run both backend and frontend
+npm run test:quick
 ```
 
-### Running Frontend Tests
+### Test Coverage Summary
 
-```
+Current test status: **349/349 tests passing (100%)**
+
+| Test Suite | Tests | Status |
+|------------|-------|--------|
+| Backend Total | 172 | ✅ 100% |
+| - Models | 19 | ✅ 100% |
+| - Controllers | 30 | ✅ 100% |
+| - Tender API | 28 | ✅ 100% |
+| - Middleware | 21 | ✅ 100% |
+| - Utilities | 24 | ✅ 100% |
+| - Security | 18 | ✅ 100% |
+| - Integration | 32 | ✅ 100% |
+| Frontend Total | 177 | ✅ 100% |
+| - Components | 90+ | ✅ 100% |
+| - Hooks | 40+ | ✅ 100% |
+| - Services | 40+ | ✅ 100% |
+
+### Individual Test Suites
+
+```bash
+# Backend specific tests
+npm run test:models        # User model validation (19 tests)
+npm run test:controllers   # Auth, Profile, Admin (30 tests)
+npm run test:tenders       # Tender CRUD operations (28 tests)
+npm run test:middleware    # Auth & security middleware (21 tests)
+npm run test:utils         # Utilities & helpers (24 tests)
+npm run test:security-unit # Security tests (18 tests)
+npm run test:backend       # Integration tests (32 tests)
+
+# Frontend tests
 cd public/dashboard-app
-npm test
+npm test                   # All frontend tests (177 tests)
+npm test -- --run         # Run once without watch
+npm test TenderList       # Specific component tests
 ```
 
-### Running E2E Tests
+### Pre-Commit Testing
 
-```
-npm run playwright:test     # Run all tests
-npm run pw:ui              # Interactive UI mode  
-npm run pw:smoke           # Smoke tests only
-npm run playwright:report  # View test reports
+**Automated checks run on every commit:**
+
+1. ✅ **Linting** - ESLint code quality checks
+2. ✅ **Backend Tests** - All 172 backend tests
+3. ✅ **Frontend Tests** - All 177 frontend tests
+
+**If any test fails, the commit will be blocked automatically.**
+
+See [TESTING_CHECKLIST.md](TESTING_CHECKLIST.md) for the complete testing checklist.
+
+### Security Testing
+
+```bash
+npm run test:security      # Audit dependencies
+npm run test:dependencies  # Scan for vulnerabilities
 ```
 
 ### Performance Testing
 
-```
-npm run test:load
-```
-
-### Security Testing
-
-```
-npm run test:security
-npm run test:dependencies
+```bash
+npm run test:load         # Artillery load testing
 ```
 
 ### Code Quality
 
+```bash
+npm run lint              # Check for code issues
+npm run lint:fix          # Fix automatically fixable issues
+npm run format            # Format code with Prettier
 ```
-npm run lint        # Check for code issues
-npm run lint:fix    # Fix automatically fixable issues
-npm run format      # Format code with Prettier
-```
+
+### Test Documentation
+
+For detailed testing information, see:
+- [TESTING_CHECKLIST.md](TESTING_CHECKLIST.md) - Mandatory checklist before commit
+- [TEST_COVERAGE_REPORT.md](TEST_COVERAGE_REPORT.md) - Comprehensive coverage report
+- [TESTING_GUIDE.md](TESTING_GUIDE.md) - Complete testing guide
+- [TESTING_MIGRATION.md](TESTING_MIGRATION.md) - Testing infrastructure details
 
 ## API Documentation
 

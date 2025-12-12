@@ -6,7 +6,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { tenderAPI } from '../../services/api';
 import { isAdmin, isAuthenticated } from '../../utils/auth';
-import { LoadingSpinner, Alert } from '../common/FormComponents';
+import { LoadingSpinner, Alert } from '../common/FormComponents.jsx';
 
 const TenderDetail = () => {
     const { id } = useParams();

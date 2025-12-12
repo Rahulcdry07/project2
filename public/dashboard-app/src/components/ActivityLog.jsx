@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { activityAPI } from '../services/api';
 
 const ActivityLog = () => {
@@ -7,22 +7,22 @@ const ActivityLog = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    loadActivities();
-  }, [page]);
-
-  const loadActivities = async () => {
+  const loadActivities = useCallback(async () => {
     try {
       setLoading(true);
       const data = await activityAPI.getActivityLogs(page, 20);
       setActivities(data.activities || []);
       setTotalPages(data.totalPages || 1);
     } catch (error) {
-      console.error('Failed to load activities:', error);
+      // Error handling - could be logged to error tracking service
     } finally {
       setLoading(false);
     }
-  };
+  }, [page]);
+
+  useEffect(() => {
+    loadActivities();
+  }, [loadActivities]);
 
   const getActivityIcon = (action) => {
     const icons = {

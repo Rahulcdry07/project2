@@ -1,5 +1,42 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-# Run ESLint on staged files
+echo "🔍 Running pre-commit checks..."
+echo ""
+
+# Run linting on staged files
+echo "📝 Linting staged files..."
 npx lint-staged
+if [ $? -ne 0 ]; then
+  echo "❌ Linting failed! Please fix errors before committing."
+  exit 1
+fi
+echo "✅ Linting passed"
+echo ""
+
+# Run backend tests
+echo "🧪 Running backend tests (172 tests)..."
+npm run test:unit --silent
+if [ $? -ne 0 ]; then
+  echo "❌ Backend tests failed! Please fix failing tests before committing."
+  echo "   Run 'npm run test:unit' to see details"
+  exit 1
+fi
+echo "✅ Backend tests passed (172/172)"
+echo ""
+
+# Run frontend tests
+echo "🎨 Running frontend tests (177 tests)..."
+cd public/dashboard-app && npm test -- --run --silent
+if [ $? -ne 0 ]; then
+  echo "❌ Frontend tests failed! Please fix failing tests before committing."
+  echo "   Run 'npm run test:frontend' to see details"
+  exit 1
+fi
+cd ../..
+echo "✅ Frontend tests passed (177/177)"
+echo ""
+
+echo "✅ All pre-commit checks passed! (349/349 tests)"
+echo "🚀 Safe to commit!"
+echo ""

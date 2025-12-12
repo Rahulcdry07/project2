@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, expect, beforeEach, vi } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import ActivityLog from '../ActivityLog.jsx';
 import * as api from '../../services/api';
@@ -41,14 +41,14 @@ const renderActivityLog = () => {
 
 describe('ActivityLog Component', () => {
   beforeEach(() => {
-    api.activityAPI = {
+    vi.spyOn(api, 'activityAPI', 'get').mockReturnValue({
       getActivityLogs: vi.fn().mockResolvedValue({
         activities: mockActivities,
         total: 3,
         page: 1,
         totalPages: 1
       })
-    };
+    });
   });
 
   afterEach(() => {
@@ -109,10 +109,12 @@ describe('ActivityLog Component', () => {
   });
 
   test('shows activity icons based on action type', async () => {
-    renderActivityLog();
+    const { container } = renderActivityLog();
     
     await waitFor(() => {
-      const icons = document.querySelectorAll('.bi');
+      /* eslint-disable testing-library/no-container, testing-library/no-node-access */
+      const icons = container.querySelectorAll('.bi');
+      /* eslint-enable testing-library/no-container, testing-library/no-node-access */
       expect(icons.length).toBeGreaterThan(0);
     });
   });

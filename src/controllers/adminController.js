@@ -1,7 +1,7 @@
 /**
  * Admin controller
  */
-const { User } = require('../models');
+const { User, ActivityLog, Notification, Note, UserSettings } = require('../models');
 const logger = require('../utils/logger');
 
 /**
@@ -134,7 +134,14 @@ exports.deleteUser = async (req, res) => {
         
         logger.info('Found user for deletion', { username: user.username, role: user.role });
         
-        await user.destroy();
+        // Manually delete related records to avoid FK constraint issues
+        await ActivityLog.destroy({ where: { userId } });
+        await Notification.destroy({ where: { userId } });
+        await Note.destroy({ where: { userId } });
+        await UserSettings.destroy({ where: { userId } });
+        
+        // Now delete the user
+        await user.destroy({ force: true });
         logger.info('User deleted successfully', { userId, username: user.username });
         
         res.json({ message: 'User deleted successfully.' });

@@ -67,7 +67,7 @@ module.exports = {
                 estimated_value, currency, submission_deadline, published_date, status,
                 contact_person, contact_email, contact_phone, requirements,
                 documents_required, eligibility_criteria, evaluation_criteria, tags, is_featured,
-                created_by: req.user.id
+                created_by: req.userId
             });
             res.status(201).json({ success: true, tender });
         } catch (err) {

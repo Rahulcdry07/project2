@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import Notes from '../Notes.jsx';
 import * as api from '../../services/api';
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, expect, beforeEach, vi } from 'vitest';
 
 vi.mock('../../services/api');
 
@@ -37,7 +37,7 @@ const renderNotes = () => {
 
 describe('Notes Component', () => {
   beforeEach(() => {
-    api.notesAPI = {
+    vi.spyOn(api, 'notesAPI', 'get').mockReturnValue({
       getNotes: vi.fn().mockResolvedValue({
         notes: mockNotes,
         total: 2
@@ -45,7 +45,7 @@ describe('Notes Component', () => {
       createNote: vi.fn().mockResolvedValue({ success: true }),
       updateNote: vi.fn().mockResolvedValue({ success: true }),
       deleteNote: vi.fn().mockResolvedValue({ success: true })
-    };
+    });
   });
 
   afterEach(() => {
@@ -118,23 +118,27 @@ describe('Notes Component', () => {
   });
 
   test('allows color selection', async () => {
-    renderNotes();
+    const { container } = renderNotes();
     
     await waitFor(() => {
-      const colorOptions = document.querySelectorAll('.rounded.p-2');
+      /* eslint-disable testing-library/no-container, testing-library/no-node-access */
+      const colorOptions = container.querySelectorAll('.rounded.p-2');
+      /* eslint-enable testing-library/no-container, testing-library/no-node-access */
       expect(colorOptions.length).toBeGreaterThan(0);
     });
   });
 
   test('shows edit form when editing note', async () => {
-    renderNotes();
+    const { container } = renderNotes();
     
     await waitFor(() => {
       expect(screen.getByText('Meeting Notes')).toBeInTheDocument();
     });
     
     // Open dropdown and click edit
-    const dropdownButtons = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+    /* eslint-disable testing-library/no-container, testing-library/no-node-access */
+    const dropdownButtons = container.querySelectorAll('[data-bs-toggle="dropdown"]');
+    /* eslint-enable testing-library/no-container, testing-library/no-node-access */
     if (dropdownButtons.length > 0) {
       fireEvent.click(dropdownButtons[0]);
     }
