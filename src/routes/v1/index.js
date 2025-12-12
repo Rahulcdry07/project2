@@ -14,6 +14,7 @@ const activityRoutes = require('../activityRoutes');
 const notificationRoutes = require('../notificationRoutes');
 const notesRoutes = require('../notesRoutes');
 const settingsRoutes = require('../settingsRoutes');
+const tenderRoutes = require('../tenderRoutes');
 
 // Mount routes
 router.use('/auth', authRoutes);
@@ -25,5 +26,6 @@ router.use('/activity', activityRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/notes', notesRoutes);
 router.use('/settings', settingsRoutes);
+router.use('/tenders', tenderRoutes);
 
 module.exports = router;

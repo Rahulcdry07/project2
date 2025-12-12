@@ -8,6 +8,10 @@ const ActivityLogModel = require('./ActivityLog');
 const NotificationModel = require('./Notification');
 const NoteModel = require('./Note');
 const UserSettingsModel = require('./UserSettings');
+const TenderModel = require('./Tender');
+const TenderApplicationModel = require('./TenderApplication');
+const TenderDocumentModel = require('./TenderDocument');
+const ApplicationDocumentModel = require('./ApplicationDocument');
 const logger = NODE_ENV !== 'test' ? require('../utils/logger') : { info: () => {}, error: () => {} };
 
 // Initialize Sequelize with SQLite
@@ -23,6 +27,10 @@ const ActivityLog = ActivityLogModel(sequelize);
 const Notification = NotificationModel(sequelize);
 const Note = NoteModel(sequelize);
 const UserSettings = UserSettingsModel(sequelize);
+const Tender = TenderModel(sequelize);
+const TenderApplication = TenderApplicationModel(sequelize);
+const TenderDocument = TenderDocumentModel(sequelize);
+const ApplicationDocument = ApplicationDocumentModel(sequelize);
 
 // Set up associations
 User.hasMany(ActivityLog, { foreignKey: 'userId', as: 'activityLogs' });
@@ -36,6 +44,26 @@ Note.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
 User.hasOne(UserSettings, { foreignKey: 'userId', as: 'settings' });
 UserSettings.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+// Tender associations
+const models = {
+    User,
+    ActivityLog,
+    Notification,
+    Note,
+    UserSettings,
+    Tender,
+    TenderApplication,
+    TenderDocument,
+    ApplicationDocument
+};
+
+// Call associate function for tender models
+Object.keys(models).forEach(modelName => {
+    if (models[modelName].associate) {
+        models[modelName].associate(models);
+    }
+});
 
 // Test the database connection
 const testConnection = async () => {
@@ -56,5 +84,9 @@ module.exports = {
     Notification,
     Note,
     UserSettings,
+    Tender,
+    TenderApplication,
+    TenderDocument,
+    ApplicationDocument,
     testConnection
 };

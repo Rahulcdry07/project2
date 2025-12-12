@@ -19,6 +19,12 @@ import Notifications from './components/Notifications.jsx';
 import Notes from './components/Notes.jsx';
 import Upload from './components/Upload.jsx';
 
+// Tender components
+import TenderList from './components/tenders/TenderList';
+import TenderDetail from './components/tenders/TenderDetail';
+import TenderManagement from './components/tenders/TenderManagement';
+import TenderRecommendations from './components/tenders/TenderRecommendations';
+
 // Admin components
 import UserManagement from './components/admin/UserManagement';
 
@@ -61,6 +67,10 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             
+            {/* Tender routes (public) */}
+            <Route path="/tenders" element={<TenderList />} />
+            <Route path="/tenders/:id" element={<TenderDetail />} />
+            
             {/* Protected routes */}
             <Route 
               path="/dashboard" 
@@ -90,16 +100,24 @@ function App() {
               path="/notes" 
               element={<ProtectedRoute element={<Notes />} />} 
             />
+            <Route 
+              path="/recommendations" 
+              element={<ProtectedRoute element={<TenderRecommendations />} />} 
+            />
             
             {/* Admin routes */}
             <Route 
-              path="/admin" 
+              path="/admin/users" 
               element={<ProtectedRoute element={<UserManagement />} requireAdmin={true} />} 
+            />
+            <Route 
+              path="/admin/tenders" 
+              element={<ProtectedRoute element={<TenderManagement />} requireAdmin={true} />} 
             />
             
             {/* Default route */}
-            <Route path="/" element={<Navigate to="/dashboard" />} />
-            <Route path="*" element={<Navigate to="/dashboard" />} />
+            <Route path="/" element={<Navigate to="/tenders" />} />
+            <Route path="*" element={<Navigate to="/tenders" />} />
           </Routes>
         </main>
       </ErrorBoundary>
