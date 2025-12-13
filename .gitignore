@@ -55,3 +55,7 @@ lerna-debug.log*
 tmp/
 tmp/sessions/
 *.tmp
+.backend.pid
+.frontend.pid
+debug-login.js
+test_login.sh
