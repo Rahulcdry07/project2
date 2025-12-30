@@ -2,7 +2,6 @@
  * Model tests
  */
 const expect = require('chai').expect;
-const bcrypt = require('bcrypt');
 const { setupTestDatabase, teardownTestDatabase, getTestModels } = require('./setup');
 
 describe('Models', () => {

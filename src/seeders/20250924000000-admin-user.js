@@ -5,7 +5,19 @@ const bcrypt = require('bcrypt');
  * Seeder: Create Default Admin User
  */
 module.exports = {
-  up: async (queryInterface, _Sequelize) => {
+  up: async (queryInterface, Sequelize) => {
+    const existingUsers = await queryInterface.sequelize.query(
+      'SELECT id FROM "Users" WHERE email = :email LIMIT 1',
+      {
+        replacements: { email: 'admin@example.com' },
+        type: Sequelize.QueryTypes.SELECT
+      }
+    );
+
+    if (existingUsers.length > 0) {
+      return Promise.resolve();
+    }
+
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash('admin123', salt);

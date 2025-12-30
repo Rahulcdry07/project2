@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { logError } from '../utils/logger';
 
 /**
  * Custom hook for managing form state with validation
@@ -160,7 +161,7 @@ export const useForm = (initialValues, validateForm, onSubmit, customValidators 
                 const result = await submitHandler(values);
                 return result;
             } catch (error) {
-                console.error('Form submission error:', error);
+                logError('Form submission error:', error);
                 setErrors(prevErrors => ({
                     ...prevErrors,
                     form: error.message || 'An error occurred'
@@ -237,7 +238,7 @@ export const useLocalStorage = (key, initialValue) => {
             const item = window.localStorage.getItem(key);
             return item ? JSON.parse(item) : initialValue;
         } catch (error) {
-            console.error(error);
+            logError('Failed to read from localStorage:', error);
             return initialValue;
         }
     });
@@ -254,7 +255,7 @@ export const useLocalStorage = (key, initialValue) => {
             const item = window.localStorage.getItem(key);
             setStoredValue(item ? JSON.parse(item) : initialValue);
         } catch (error) {
-            console.error(error);
+            logError('Failed to refresh localStorage cache:', error);
             setStoredValue(initialValue);
         }
     // Only depend on key changes, not initialValue to avoid infinite loops
@@ -269,7 +270,7 @@ export const useLocalStorage = (key, initialValue) => {
             setStoredValue(parsedValue);
             window.localStorage.setItem(key, jsonString);
         } catch (error) {
-            console.error(error);
+            logError('Failed to persist localStorage value:', error);
         }
     };
     

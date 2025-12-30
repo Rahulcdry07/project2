@@ -6,24 +6,19 @@ const sinon = require('sinon');
 const jwt = require('jsonwebtoken');
 const express = require('express');
 const request = require('supertest');
-const rateLimit = require('express-rate-limit');
 
 // Import middleware
 const { authenticate, isAdmin } = require('../src/middleware/auth');
 const configureSecurityMiddleware = require('../src/middleware/security');
 const { metricsMiddleware } = require('../src/middleware/monitoring/metrics');
 const { JWT_SECRET } = require('../src/config/env');
-const { setupTestDatabase, teardownTestDatabase, getTestModels } = require('./setup');
+const { setupTestDatabase, teardownTestDatabase } = require('./setup');
 
 describe('Middleware', () => {
-  let User, sequelize;
 
   before(async function() {
     this.timeout(10000);
     await setupTestDatabase();
-    const testModels = getTestModels();
-    User = testModels.User;
-    sequelize = testModels.sequelize;
   });
 
   after(async function() {
@@ -180,13 +175,7 @@ describe('Middleware', () => {
         .expect((res) => {
           // CORS headers may vary based on configuration
           // Check for any CORS-related headers
-          const hasCorsHeaders = 
-            res.headers['access-control-allow-origin'] ||
-            res.headers['access-control-allow-methods'] ||
-            res.headers['access-control-allow-headers'];
-            
-          // If no CORS headers, that's also valid for same-origin requests
-          // Just ensure the request succeeds
+          // CORS headers may not appear if request is same-origin; ensure 200 status either way
           expect(res.status).to.equal(200);
         })
         .end(done);

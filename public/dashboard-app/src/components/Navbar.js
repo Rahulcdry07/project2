@@ -1,11 +1,12 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { isAuthenticated, getCurrentUser, clearAuthData, isAdmin } from '../utils/auth';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const user = getCurrentUser();
   const isAuth = isAuthenticated();
+  const userInitial = (user?.username || user?.email || '?').charAt(0).toUpperCase();
 
   const handleLogout = () => {
     clearAuthData();
@@ -13,7 +14,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav className="navbar navbar-expand-lg navbar-dark app-navbar sticky-top">
       <div className="container">
         <Link className="navbar-brand" to="/">
           <i className="bi bi-building me-2"></i>
@@ -30,32 +31,32 @@ const Navbar = () => {
         </button>
         
         <div className="collapse navbar-collapse" id="navbarNav">
-          <ul className="navbar-nav me-auto">
+          <ul className="navbar-nav me-auto align-items-lg-center">
             <li className="nav-item">
-              <Link className="nav-link" to="/tenders">
+              <NavLink className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} to="/tenders">
                 <i className="bi bi-search me-1"></i>
                 Browse Tenders
-              </Link>
+              </NavLink>
             </li>
             {isAuth && (
               <>
                 <li className="nav-item">
-                  <Link className="nav-link" to="/dashboard">
+                  <NavLink className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} to="/dashboard">
                     <i className="bi bi-house me-1"></i>
                     Dashboard
-                  </Link>
+                  </NavLink>
                 </li>
                 <li className="nav-item">
-                  <Link className="nav-link" to="/recommendations">
+                  <NavLink className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} to="/recommendations">
                     <i className="bi bi-star me-1"></i>
                     For You
-                  </Link>
+                  </NavLink>
                 </li>
                 <li className="nav-item">
-                  <Link className="nav-link" to="/profile">
+                  <NavLink className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} to="/profile">
                     <i className="bi bi-person me-1"></i>
                     Profile
-                  </Link>
+                  </NavLink>
                 </li>
               </>
             )}
@@ -87,12 +88,16 @@ const Navbar = () => {
             )}
           </ul>
           
-          <div className="navbar-nav">
+          <div className="navbar-nav align-items-lg-center gap-2">
             {isAuth ? (
               <>
-                <span className="navbar-text me-3">
-                  Welcome, {user?.username}
-                </span>
+                <div className="nav-user-chip">
+                  <span className="nav-user-avatar" aria-hidden="true">{userInitial}</span>
+                  <div className="d-flex flex-column">
+                    <span className="fw-semibold text-white-50">{user?.role || 'User'}</span>
+                    <span className="fw-semibold text-white">{user?.username}</span>
+                  </div>
+                </div>
                 <button 
                   className="btn btn-outline-light btn-sm" 
                   onClick={handleLogout}

@@ -21,6 +21,10 @@ module.exports = {
         : (process.env.DB_STORAGE || 'src/database.sqlite'),
     DB_LOGGING: process.env.DB_LOGGING === 'true',
     NODE_ENV: process.env.NODE_ENV || 'development',
+    DEFAULT_ADMIN_EMAIL: process.env.DEFAULT_ADMIN_EMAIL || 'admin@example.com',
+    DEFAULT_ADMIN_USERNAME: process.env.DEFAULT_ADMIN_USERNAME || 'admin',
+    DEFAULT_ADMIN_PASSWORD: process.env.DEFAULT_ADMIN_PASSWORD || 'admin123',
+    RESET_ADMIN_PASSWORD: process.env.RESET_ADMIN_PASSWORD === 'true',
     EMAIL_CONFIG: {
         host: process.env.MAIL_HOST,
         port: process.env.MAIL_PORT,

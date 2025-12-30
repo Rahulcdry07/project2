@@ -1,60 +1,356 @@
-<testsuites id="" name="" tests="22" failures="0" skipped="0" errors="0" time="20.801706999999997">
-<testsuite name="admin.spec.js" timestamp="2025-09-26T15:52:29.436Z" hostname="chromium" tests="4" failures="0" skipped="0" time="4.45" errors="0">
-<testcase name="Admin Panel › should display admin panel for admin users" classname="admin.spec.js" time="1.462">
+<testsuites id="" name="" tests="84" failures="3" skipped="0" errors="0" time="210.961675">
+<testsuite name="admin.spec.js" timestamp="2025-12-07T04:20:10.829Z" hostname="chromium" tests="4" failures="0" skipped="0" time="14.168" errors="0">
+<testcase name="Admin Panel › should display admin panel for admin users" classname="admin.spec.js" time="10.636">
 </testcase>
-<testcase name="Admin Panel › should load and display users in admin panel" classname="admin.spec.js" time="0.938">
+<testcase name="Admin Panel › should load and display users in admin panel" classname="admin.spec.js" time="0.994">
 </testcase>
-<testcase name="Admin Panel › should allow admin to update user roles" classname="admin.spec.js" time="0.974">
+<testcase name="Admin Panel › should allow admin to update user roles" classname="admin.spec.js" time="1.09">
 <system-out>
-<![CDATA[Role update controls not found - test passed as UI elements exist
+<![CDATA[2025-12-07 04:20:42 [[32minfo[39m]: Role update controls not found - test passed as UI elements exist {
+  "service": "dynamic-web-app"
+}
 ]]>
 </system-out>
 </testcase>
-<testcase name="Admin Panel › should allow admin to delete users" classname="admin.spec.js" time="1.076">
+<testcase name="Admin Panel › should allow admin to delete users" classname="admin.spec.js" time="1.448">
 </testcase>
 </testsuite>
-<testsuite name="api.spec.js" timestamp="2025-09-26T15:52:29.436Z" hostname="chromium" tests="8" failures="0" skipped="0" time="1.972" errors="0">
-<testcase name="API Tests › Authentication API › should register a new user" classname="api.spec.js" time="0.207">
+<testsuite name="api.spec.js" timestamp="2025-12-07T04:20:10.829Z" hostname="chromium" tests="8" failures="0" skipped="0" time="2.068" errors="0">
+<testcase name="API Tests › Authentication API › should register a new user" classname="api.spec.js" time="0.214">
 </testcase>
-<testcase name="API Tests › Authentication API › should login with valid credentials" classname="api.spec.js" time="0.291">
+<testcase name="API Tests › Authentication API › should login with valid credentials" classname="api.spec.js" time="0.372">
 </testcase>
-<testcase name="API Tests › Authentication API › should reject invalid login credentials" classname="api.spec.js" time="0.14">
+<testcase name="API Tests › Authentication API › should reject invalid login credentials" classname="api.spec.js" time="0.138">
 </testcase>
-<testcase name="API Tests › Authentication API › should verify email with valid token" classname="api.spec.js" time="0.252">
+<testcase name="API Tests › Authentication API › should verify email with valid token" classname="api.spec.js" time="0.213">
 </testcase>
-<testcase name="API Tests › Protected Routes › should access profile with valid token" classname="api.spec.js" time="0.328">
+<testcase name="API Tests › Protected Routes › should access profile with valid token" classname="api.spec.js" time="0.351">
 </testcase>
-<testcase name="API Tests › Protected Routes › should reject requests without token" classname="api.spec.js" time="0.287">
+<testcase name="API Tests › Protected Routes › should reject requests without token" classname="api.spec.js" time="0.318">
 </testcase>
-<testcase name="API Tests › Protected Routes › should reject requests with invalid token" classname="api.spec.js" time="0.301">
+<testcase name="API Tests › Protected Routes › should reject requests with invalid token" classname="api.spec.js" time="0.339">
 </testcase>
-<testcase name="API Tests › Health Check › should return healthy status" classname="api.spec.js" time="0.166">
-</testcase>
-</testsuite>
-<testsuite name="dashboard.spec.js" timestamp="2025-09-26T15:52:29.436Z" hostname="chromium" tests="4" failures="0" skipped="0" time="6.259" errors="0">
-<testcase name="Dashboard › should load dashboard for authenticated user" classname="dashboard.spec.js" time="0.876">
-</testcase>
-<testcase name="Dashboard › should display user information" classname="dashboard.spec.js" time="0.671">
-</testcase>
-<testcase name="Dashboard › should have working navigation" classname="dashboard.spec.js" time="0.803">
-</testcase>
-<testcase name="Dashboard › should handle unauthenticated dashboard access correctly" classname="dashboard.spec.js" time="3.909">
+<testcase name="API Tests › Health Check › should return healthy status" classname="api.spec.js" time="0.123">
 </testcase>
 </testsuite>
-<testsuite name="login.spec.js" timestamp="2025-09-26T15:52:29.436Z" hostname="chromium" tests="3" failures="0" skipped="0" time="5.709" errors="0">
-<testcase name="Login Flow › should login with valid credentials" classname="login.spec.js" time="3.997">
+<testsuite name="dashboard.spec.js" timestamp="2025-12-07T04:20:10.829Z" hostname="chromium" tests="4" failures="1" skipped="0" time="12.896" errors="0">
+<testcase name="Dashboard › should load dashboard for authenticated user" classname="dashboard.spec.js" time="6.088">
+<failure message="dashboard.spec.js:40:3 should load dashboard for authenticated user" type="FAILURE">
+<![CDATA[  [chromium] › dashboard.spec.js:40:3 › Dashboard › should load dashboard for authenticated user ───
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: /dashboard/i, level: 1 })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByRole('heading', { name: /dashboard/i, level: 1 })
+
+
+      42 |     
+      43 |     // Should see dashboard hero heading
+    > 44 |     await expect(page.getByRole('heading', { level: 1, name: /dashboard/i })).toBeVisible();
+         |                                                                               ^
+      45 |     await expect(page.locator('.container').first()).toBeVisible();
+      46 |   });
+      47 |
+        at /workspaces/project2/tests/playwright/dashboard.spec.js:44:79
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/dashboard-Dashboard-should-ea41b-oard-for-authenticated-user-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/dashboard-Dashboard-should-ea41b-oard-for-authenticated-user-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/dashboard-Dashboard-should-ea41b-oard-for-authenticated-user-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/dashboard-Dashboard-should-ea41b-oard-for-authenticated-user-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/dashboard-Dashboard-should-ea41b-oard-for-authenticated-user-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/dashboard-Dashboard-should-ea41b-oard-for-authenticated-user-chromium/error-context.md]]
+]]>
+</system-out>
 </testcase>
-<testcase name="Login Flow › should show error for invalid credentials" classname="login.spec.js" time="0.842">
+<testcase name="Dashboard › should display user information" classname="dashboard.spec.js" time="1.523">
 </testcase>
-<testcase name="Login Flow › should show error for non-existent user" classname="login.spec.js" time="0.87">
+<testcase name="Dashboard › should have working navigation" classname="dashboard.spec.js" time="1.065">
+</testcase>
+<testcase name="Dashboard › should handle unauthenticated dashboard access correctly" classname="dashboard.spec.js" time="4.22">
 </testcase>
 </testsuite>
-<testsuite name="smoke.spec.js" timestamp="2025-09-26T15:52:29.436Z" hostname="chromium" tests="3" failures="0" skipped="0" time="1.132" errors="0">
-<testcase name="Smoke Tests › backend server is running" classname="smoke.spec.js" time="0.119">
+<testsuite name="login.spec.js" timestamp="2025-12-07T04:20:10.829Z" hostname="chromium" tests="3" failures="0" skipped="0" time="6.479" errors="0">
+<testcase name="Login Flow › should login with valid credentials" classname="login.spec.js" time="4.254">
 </testcase>
-<testcase name="Smoke Tests › frontend loads correctly" classname="smoke.spec.js" time="0.574">
+<testcase name="Login Flow › should show error for invalid credentials" classname="login.spec.js" time="1.36">
 </testcase>
-<testcase name="Smoke Tests › can navigate to login page" classname="smoke.spec.js" time="0.439">
+<testcase name="Login Flow › should show error for non-existent user" classname="login.spec.js" time="0.865">
+</testcase>
+</testsuite>
+<testsuite name="register.spec.js" timestamp="2025-12-07T04:20:10.829Z" hostname="chromium" tests="6" failures="0" skipped="0" time="17.769" errors="0">
+<testcase name="User Registration › should display registration form" classname="register.spec.js" time="0.702">
+</testcase>
+<testcase name="User Registration › should register a new user successfully" classname="register.spec.js" time="4.034">
+</testcase>
+<testcase name="User Registration › should show error for duplicate email" classname="register.spec.js" time="3.035">
+</testcase>
+<testcase name="User Registration › should show error for duplicate username" classname="register.spec.js" time="3.036">
+</testcase>
+<testcase name="User Registration › should validate password length" classname="register.spec.js" time="2.921">
+</testcase>
+<testcase name="User Registration › should redirect to login after successful registration" classname="register.spec.js" time="4.041">
+</testcase>
+</testsuite>
+<testsuite name="smoke.spec.js" timestamp="2025-12-07T04:20:10.829Z" hostname="chromium" tests="3" failures="0" skipped="0" time="1.656" errors="0">
+<testcase name="Smoke Tests › backend server is running" classname="smoke.spec.js" time="0.134">
+</testcase>
+<testcase name="Smoke Tests › frontend loads correctly" classname="smoke.spec.js" time="0.816">
+</testcase>
+<testcase name="Smoke Tests › can navigate to login page" classname="smoke.spec.js" time="0.706">
+</testcase>
+</testsuite>
+<testsuite name="admin.spec.js" timestamp="2025-12-07T04:20:10.829Z" hostname="firefox" tests="4" failures="0" skipped="0" time="14.064" errors="0">
+<testcase name="Admin Panel › should display admin panel for admin users" classname="admin.spec.js" time="9.347">
+</testcase>
+<testcase name="Admin Panel › should load and display users in admin panel" classname="admin.spec.js" time="1.707">
+</testcase>
+<testcase name="Admin Panel › should allow admin to update user roles" classname="admin.spec.js" time="1.437">
+<system-out>
+<![CDATA[2025-12-07 04:21:51 [[32minfo[39m]: Role update controls not found - test passed as UI elements exist {
+  "service": "dynamic-web-app"
+}
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin Panel › should allow admin to delete users" classname="admin.spec.js" time="1.573">
+</testcase>
+</testsuite>
+<testsuite name="api.spec.js" timestamp="2025-12-07T04:20:10.829Z" hostname="firefox" tests="8" failures="0" skipped="0" time="3.559" errors="0">
+<testcase name="API Tests › Authentication API › should register a new user" classname="api.spec.js" time="0.469">
+</testcase>
+<testcase name="API Tests › Authentication API › should login with valid credentials" classname="api.spec.js" time="0.464">
+</testcase>
+<testcase name="API Tests › Authentication API › should reject invalid login credentials" classname="api.spec.js" time="0.352">
+</testcase>
+<testcase name="API Tests › Authentication API › should verify email with valid token" classname="api.spec.js" time="0.424">
+</testcase>
+<testcase name="API Tests › Protected Routes › should access profile with valid token" classname="api.spec.js" time="0.594">
+</testcase>
+<testcase name="API Tests › Protected Routes › should reject requests without token" classname="api.spec.js" time="0.468">
+</testcase>
+<testcase name="API Tests › Protected Routes › should reject requests with invalid token" classname="api.spec.js" time="0.486">
+</testcase>
+<testcase name="API Tests › Health Check › should return healthy status" classname="api.spec.js" time="0.302">
+</testcase>
+</testsuite>
+<testsuite name="dashboard.spec.js" timestamp="2025-12-07T04:20:10.829Z" hostname="firefox" tests="4" failures="1" skipped="0" time="14.327" errors="0">
+<testcase name="Dashboard › should load dashboard for authenticated user" classname="dashboard.spec.js" time="6.131">
+<failure message="dashboard.spec.js:40:3 should load dashboard for authenticated user" type="FAILURE">
+<![CDATA[  [firefox] › dashboard.spec.js:40:3 › Dashboard › should load dashboard for authenticated user ────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: /dashboard/i, level: 1 })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByRole('heading', { name: /dashboard/i, level: 1 })
+
+
+      42 |     
+      43 |     // Should see dashboard hero heading
+    > 44 |     await expect(page.getByRole('heading', { level: 1, name: /dashboard/i })).toBeVisible();
+         |                                                                               ^
+      45 |     await expect(page.locator('.container').first()).toBeVisible();
+      46 |   });
+      47 |
+        at /workspaces/project2/tests/playwright/dashboard.spec.js:44:79
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/dashboard-Dashboard-should-ea41b-oard-for-authenticated-user-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/dashboard-Dashboard-should-ea41b-oard-for-authenticated-user-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/dashboard-Dashboard-should-ea41b-oard-for-authenticated-user-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/dashboard-Dashboard-should-ea41b-oard-for-authenticated-user-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/dashboard-Dashboard-should-ea41b-oard-for-authenticated-user-firefox/video.webm]]
+
+[[ATTACHMENT|test-results/dashboard-Dashboard-should-ea41b-oard-for-authenticated-user-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Dashboard › should display user information" classname="dashboard.spec.js" time="2.851">
+</testcase>
+<testcase name="Dashboard › should have working navigation" classname="dashboard.spec.js" time="1.191">
+</testcase>
+<testcase name="Dashboard › should handle unauthenticated dashboard access correctly" classname="dashboard.spec.js" time="4.154">
+</testcase>
+</testsuite>
+<testsuite name="login.spec.js" timestamp="2025-12-07T04:20:10.829Z" hostname="firefox" tests="3" failures="0" skipped="0" time="7.049" errors="0">
+<testcase name="Login Flow › should login with valid credentials" classname="login.spec.js" time="4.381">
+</testcase>
+<testcase name="Login Flow › should show error for invalid credentials" classname="login.spec.js" time="1.497">
+</testcase>
+<testcase name="Login Flow › should show error for non-existent user" classname="login.spec.js" time="1.171">
+</testcase>
+</testsuite>
+<testsuite name="register.spec.js" timestamp="2025-12-07T04:20:10.829Z" hostname="firefox" tests="6" failures="0" skipped="0" time="18.114" errors="0">
+<testcase name="User Registration › should display registration form" classname="register.spec.js" time="0.885">
+</testcase>
+<testcase name="User Registration › should register a new user successfully" classname="register.spec.js" time="4.071">
+</testcase>
+<testcase name="User Registration › should show error for duplicate email" classname="register.spec.js" time="3.024">
+</testcase>
+<testcase name="User Registration › should show error for duplicate username" classname="register.spec.js" time="3.156">
+</testcase>
+<testcase name="User Registration › should validate password length" classname="register.spec.js" time="3.003">
+</testcase>
+<testcase name="User Registration › should redirect to login after successful registration" classname="register.spec.js" time="3.975">
+</testcase>
+</testsuite>
+<testsuite name="smoke.spec.js" timestamp="2025-12-07T04:20:10.829Z" hostname="firefox" tests="3" failures="0" skipped="0" time="2.538" errors="0">
+<testcase name="Smoke Tests › backend server is running" classname="smoke.spec.js" time="0.388">
+</testcase>
+<testcase name="Smoke Tests › frontend loads correctly" classname="smoke.spec.js" time="1.318">
+</testcase>
+<testcase name="Smoke Tests › can navigate to login page" classname="smoke.spec.js" time="0.832">
+</testcase>
+</testsuite>
+<testsuite name="admin.spec.js" timestamp="2025-12-07T04:20:10.829Z" hostname="Mobile Chrome" tests="4" failures="0" skipped="0" time="5.592" errors="0">
+<testcase name="Admin Panel › should display admin panel for admin users" classname="admin.spec.js" time="1.906">
+</testcase>
+<testcase name="Admin Panel › should load and display users in admin panel" classname="admin.spec.js" time="1.026">
+</testcase>
+<testcase name="Admin Panel › should allow admin to update user roles" classname="admin.spec.js" time="1.302">
+<system-out>
+<![CDATA[2025-12-07 04:22:46 [[32minfo[39m]: Role update controls not found - test passed as UI elements exist {
+  "service": "dynamic-web-app"
+}
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin Panel › should allow admin to delete users" classname="admin.spec.js" time="1.358">
+</testcase>
+</testsuite>
+<testsuite name="api.spec.js" timestamp="2025-12-07T04:20:10.829Z" hostname="Mobile Chrome" tests="8" failures="0" skipped="0" time="2.556" errors="0">
+<testcase name="API Tests › Authentication API › should register a new user" classname="api.spec.js" time="0.262">
+</testcase>
+<testcase name="API Tests › Authentication API › should login with valid credentials" classname="api.spec.js" time="0.369">
+</testcase>
+<testcase name="API Tests › Authentication API › should reject invalid login credentials" classname="api.spec.js" time="0.173">
+</testcase>
+<testcase name="API Tests › Authentication API › should verify email with valid token" classname="api.spec.js" time="0.315">
+</testcase>
+<testcase name="API Tests › Protected Routes › should access profile with valid token" classname="api.spec.js" time="0.405">
+</testcase>
+<testcase name="API Tests › Protected Routes › should reject requests without token" classname="api.spec.js" time="0.418">
+</testcase>
+<testcase name="API Tests › Protected Routes › should reject requests with invalid token" classname="api.spec.js" time="0.416">
+</testcase>
+<testcase name="API Tests › Health Check › should return healthy status" classname="api.spec.js" time="0.198">
+</testcase>
+</testsuite>
+<testsuite name="dashboard.spec.js" timestamp="2025-12-07T04:20:10.829Z" hostname="Mobile Chrome" tests="4" failures="1" skipped="0" time="13.734" errors="0">
+<testcase name="Dashboard › should load dashboard for authenticated user" classname="dashboard.spec.js" time="6.386">
+<failure message="dashboard.spec.js:40:3 should load dashboard for authenticated user" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › dashboard.spec.js:40:3 › Dashboard › should load dashboard for authenticated user 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: /dashboard/i, level: 1 })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByRole('heading', { name: /dashboard/i, level: 1 })
+
+
+      42 |     
+      43 |     // Should see dashboard hero heading
+    > 44 |     await expect(page.getByRole('heading', { level: 1, name: /dashboard/i })).toBeVisible();
+         |                                                                               ^
+      45 |     await expect(page.locator('.container').first()).toBeVisible();
+      46 |   });
+      47 |
+        at /workspaces/project2/tests/playwright/dashboard.spec.js:44:79
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/dashboard-Dashboard-should-ea41b-oard-for-authenticated-user-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/dashboard-Dashboard-should-ea41b-oard-for-authenticated-user-Mobile-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/dashboard-Dashboard-should-ea41b-oard-for-authenticated-user-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/dashboard-Dashboard-should-ea41b-oard-for-authenticated-user-Mobile-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/dashboard-Dashboard-should-ea41b-oard-for-authenticated-user-Mobile-Chrome/video.webm]]
+
+[[ATTACHMENT|test-results/dashboard-Dashboard-should-ea41b-oard-for-authenticated-user-Mobile-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Dashboard › should display user information" classname="dashboard.spec.js" time="1.677">
+</testcase>
+<testcase name="Dashboard › should have working navigation" classname="dashboard.spec.js" time="1.516">
+</testcase>
+<testcase name="Dashboard › should handle unauthenticated dashboard access correctly" classname="dashboard.spec.js" time="4.155">
+</testcase>
+</testsuite>
+<testsuite name="login.spec.js" timestamp="2025-12-07T04:20:10.829Z" hostname="Mobile Chrome" tests="3" failures="0" skipped="0" time="6.85" errors="0">
+<testcase name="Login Flow › should login with valid credentials" classname="login.spec.js" time="4.484">
+</testcase>
+<testcase name="Login Flow › should show error for invalid credentials" classname="login.spec.js" time="1.339">
+</testcase>
+<testcase name="Login Flow › should show error for non-existent user" classname="login.spec.js" time="1.027">
+</testcase>
+</testsuite>
+<testsuite name="register.spec.js" timestamp="2025-12-07T04:20:10.829Z" hostname="Mobile Chrome" tests="6" failures="0" skipped="0" time="18.092" errors="0">
+<testcase name="User Registration › should display registration form" classname="register.spec.js" time="0.706">
+</testcase>
+<testcase name="User Registration › should register a new user successfully" classname="register.spec.js" time="3.913">
+</testcase>
+<testcase name="User Registration › should show error for duplicate email" classname="register.spec.js" time="3.256">
+</testcase>
+<testcase name="User Registration › should show error for duplicate username" classname="register.spec.js" time="3.121">
+</testcase>
+<testcase name="User Registration › should validate password length" classname="register.spec.js" time="2.985">
+</testcase>
+<testcase name="User Registration › should redirect to login after successful registration" classname="register.spec.js" time="4.111">
+</testcase>
+</testsuite>
+<testsuite name="smoke.spec.js" timestamp="2025-12-07T04:20:10.829Z" hostname="Mobile Chrome" tests="3" failures="0" skipped="0" time="2.18" errors="0">
+<testcase name="Smoke Tests › backend server is running" classname="smoke.spec.js" time="0.199">
+</testcase>
+<testcase name="Smoke Tests › frontend loads correctly" classname="smoke.spec.js" time="1.21">
+</testcase>
+<testcase name="Smoke Tests › can navigate to login page" classname="smoke.spec.js" time="0.771">
 </testcase>
 </testsuite>
 </testsuites>

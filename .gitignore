@@ -52,6 +52,11 @@ tmp/
 .cache/
 .phpunit.cache/
 
+# Process ID files
+*.pid
+.backend.pid
+.frontend.pid
+
 # Scripts (if they become redundant again)
 run_*.sh
 *_env.sh
@@ -61,3 +66,5 @@ cleanup.sh
 # Generated files
 audit-report.json
 audit-summary.md
+playwright-results.json
+playwright-results.xml

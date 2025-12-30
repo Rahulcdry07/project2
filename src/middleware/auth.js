@@ -3,6 +3,7 @@
  */
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../config/env');
+const logger = require('../utils/logger');
 
 /**
  * Middleware to authenticate JWT tokens
@@ -11,27 +12,27 @@ const { JWT_SECRET } = require('../config/env');
  * @param {Function} next - Express next function
  */
 function authenticate(req, res, next) {
-    console.log('[AuthMiddleware] authenticate called');
+    logger.info('[AuthMiddleware] authenticate called');
     
     const authHeader = req.headers.authorization;
     
     if (!authHeader) {
-        console.log('[AuthMiddleware] No authorization header found');
+        logger.warn('[AuthMiddleware] No authorization header found');
         return res.status(401).json({ error: 'No token provided.' });
     }
     
-    console.log(`[AuthMiddleware] Authorization header: ${authHeader.substring(0, 20)}...`);
+    logger.debug(`[AuthMiddleware] Authorization header: ${authHeader.substring(0, 20)}...`);
     
     const token = authHeader.split(' ')[1];
     
     if (!token) {
-        console.log('[AuthMiddleware] Token not found in authorization header');
+        logger.warn('[AuthMiddleware] Token not found in authorization header');
         return res.status(401).json({ error: 'No token provided.' });
     }
     
     jwt.verify(token, JWT_SECRET, (err, decoded) => {
         if (err) {
-            console.log(`[AuthMiddleware] Token verification failed: ${err.name}`);
+            logger.warn(`[AuthMiddleware] Token verification failed: ${err.name}`);
             if (err.name === 'TokenExpiredError') {
                 return res.status(401).json({ error: 'Token expired.' });
             }
@@ -41,7 +42,7 @@ function authenticate(req, res, next) {
         req.userId = decoded.userId;
         req.userRole = decoded.role; // Attach user role to request
         
-        console.log(`[AuthMiddleware] Token verified successfully. User ID: ${decoded.userId}, Role: ${decoded.role}`);
+        logger.info(`[AuthMiddleware] Token verified successfully. User ID: ${decoded.userId}, Role: ${decoded.role}`);
         
         next();
     });
@@ -54,13 +55,13 @@ function authenticate(req, res, next) {
  * @param {Function} next - Express next function
  */
 const isAdmin = async (req, res, next) => {
-    console.log(`[AuthMiddleware] isAdmin check for user ID: ${req.userId}, Role: ${req.userRole}`);
+    logger.info(`[AuthMiddleware] isAdmin check for user ID: ${req.userId}, Role: ${req.userRole}`);
     
     if (req.userRole === 'admin') {
-        console.log('[AuthMiddleware] Admin access granted');
+        logger.debug('[AuthMiddleware] Admin access granted');
         next();
     } else {
-        console.log('[AuthMiddleware] Admin access denied');
+        logger.warn('[AuthMiddleware] Admin access denied');
         res.status(403).json({ error: 'Forbidden. Admin access required.' });
     }
 };

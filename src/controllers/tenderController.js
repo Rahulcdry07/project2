@@ -10,6 +10,9 @@ module.exports = {
     async list(req, res) {
         try {
             const { category, location, status, q } = req.query;
+            const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+            const pageSizeRaw = parseInt(req.query.pageSize, 10) || 9;
+            const pageSize = Math.min(Math.max(pageSizeRaw, 1), 50);
             const where = {};
             if (category) where.category = category;
             if (location) where.location = location;
@@ -21,15 +24,27 @@ module.exports = {
                     { organization: { [Op.like]: `%${q}%` } }
                 ];
             }
-            const tenders = await Tender.findAll({
+            const { count, rows } = await Tender.findAndCountAll({
                 where,
+                limit: pageSize,
+                offset: (page - 1) * pageSize,
+                distinct: true,
                 order: [['published_date', 'DESC']],
                 include: [
                     { model: User, as: 'creator', attributes: ['id', 'username', 'email'] },
                     { model: TenderDocument, as: 'documents' }
                 ]
             });
-            res.json({ success: true, tenders });
+            res.json({
+                success: true,
+                tenders: rows,
+                pagination: {
+                    page,
+                    pageSize,
+                    total: count,
+                    totalPages: Math.max(Math.ceil(count / pageSize), 1)
+                }
+            });
         } catch (err) {
             res.status(500).json({ success: false, error: err.message });
         }

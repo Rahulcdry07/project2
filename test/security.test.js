@@ -4,23 +4,17 @@
 const expect = require('chai').expect;
 const request = require('supertest');
 const express = require('express');
-const rateLimit = require('express-rate-limit');
-const helmet = require('helmet');
 
 // Import security-related modules
 const configureSecurityMiddleware = require('../src/middleware/security');
-const { setupTestDatabase, teardownTestDatabase, getTestModels } = require('./setup');
+const { setupTestDatabase, teardownTestDatabase } = require('./setup');
 
 describe('Security', () => {
   let app;
-  let User, sequelize;
 
   before(async function() {
     this.timeout(10000);
     await setupTestDatabase();
-    const testModels = getTestModels();
-    User = testModels.User;
-    sequelize = testModels.sequelize;
   });
 
   after(async function() {

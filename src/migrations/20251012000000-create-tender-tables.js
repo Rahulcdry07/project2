@@ -418,7 +418,7 @@ module.exports = {
     await queryInterface.addIndex('TenderApplications', ['tender_id', 'applicant_id'], { unique: true });
   },
 
-  down: async (queryInterface, Sequelize) => {
+  down: async (queryInterface, _Sequelize) => {
     await queryInterface.dropTable('ApplicationDocuments');
     await queryInterface.dropTable('TenderDocuments');
     await queryInterface.dropTable('TenderApplications');

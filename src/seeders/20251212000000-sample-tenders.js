@@ -144,10 +144,25 @@ module.exports = {
       }
     ];
 
-    await queryInterface.bulkInsert('Tenders', sampleTenders, {});
+    const referenceNumbers = sampleTenders.map(tender => tender.reference_number);
+
+    const existingTenders = await queryInterface.sequelize.query(
+      'SELECT reference_number FROM "Tenders" WHERE reference_number IN (:referenceNumbers)',
+      {
+        replacements: { referenceNumbers },
+        type: Sequelize.QueryTypes.SELECT
+      }
+    );
+
+    const existingRefs = new Set(existingTenders.map(tender => tender.reference_number));
+    const tendersToInsert = sampleTenders.filter(tender => !existingRefs.has(tender.reference_number));
+
+    if (tendersToInsert.length > 0) {
+      await queryInterface.bulkInsert('Tenders', tendersToInsert, {});
+    }
   },
 
-  async down(queryInterface, Sequelize) {
+  async down(queryInterface, _Sequelize) {
     await queryInterface.bulkDelete('Tenders', null, {});
   }
 };

@@ -1,4 +1,5 @@
 // @ts-check
+/* global localStorage */
 const { test, expect } = require('@playwright/test');
 
 /**
@@ -39,9 +40,8 @@ test.describe('Dashboard', () => {
   test('should load dashboard for authenticated user', async ({ page }) => {
     await page.goto('/dashboard');
     
-    // Should see dashboard content
-    await expect(page.locator('h1, h2')).toContainText('Dashboard');
-    // Use more flexible container selector
+    // Should see dashboard hero heading
+    await expect(page.getByRole('heading', { level: 1, name: /dashboard/i })).toBeVisible();
     await expect(page.locator('.container').first()).toBeVisible();
   });
 
@@ -63,8 +63,8 @@ test.describe('Dashboard', () => {
     await expect(page.locator('nav, .navbar')).toBeVisible();
     
     // Test profile link if it exists
-    const profileLink = page.locator('a[href*="profile"], a:has-text("Profile")');
-    if (await profileLink.isVisible()) {
+    const profileLink = page.locator('nav').getByRole('link', { name: /^Profile$/i }).first();
+    if (await profileLink.count()) {
       await profileLink.click();
       await expect(page).toHaveURL(/.*profile/);
     }

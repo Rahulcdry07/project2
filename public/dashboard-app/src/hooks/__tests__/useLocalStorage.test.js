@@ -1,6 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useLocalStorage } from '../useForm';
+import * as logger from '../../utils/logger';
+
+vi.mock('../../utils/logger', () => ({
+  logError: vi.fn(),
+  logInfo: vi.fn(),
+  logWarn: vi.fn(),
+  logDebug: vi.fn(),
+}));
 
 // Mock localStorage
 const localStorageMock = {
@@ -48,14 +56,15 @@ describe('useLocalStorage Hook', () => {
 
     it('handles invalid JSON in localStorage', () => {
       localStorageMock.getItem.mockReturnValue('invalid json');
-      console.error = vi.fn();
+      const logErrorSpy = logger.logError;
+      logErrorSpy.mockClear();
       
       const { result } = renderHook(() => 
         useLocalStorage('testKey', 'defaultValue')
       );
 
       expect(result.current[0]).toBe('defaultValue');
-      expect(console.error).toHaveBeenCalled();
+      expect(logErrorSpy).toHaveBeenCalled();
     });
 
     it('handles different data types as initial values', () => {
@@ -197,7 +206,8 @@ describe('useLocalStorage Hook', () => {
       localStorageMock.setItem.mockImplementation(() => {
         throw new Error('Storage quota exceeded');
       });
-      console.error = vi.fn();
+      const logErrorSpy = logger.logError;
+      logErrorSpy.mockClear();
       
       const { result } = renderHook(() => 
         useLocalStorage('testKey', 'initial')
@@ -209,21 +219,22 @@ describe('useLocalStorage Hook', () => {
 
       // Value should still update in state
       expect(result.current[0]).toBe('newValue');
-      expect(console.error).toHaveBeenCalled();
+      expect(logErrorSpy).toHaveBeenCalled();
     });
 
     it('handles localStorage.getItem errors', () => {
       localStorageMock.getItem.mockImplementation(() => {
         throw new Error('Storage access denied');
       });
-      console.error = vi.fn();
+      const logErrorSpy = logger.logError;
+      logErrorSpy.mockClear();
       
       const { result } = renderHook(() => 
         useLocalStorage('testKey', 'defaultValue')
       );
 
       expect(result.current[0]).toBe('defaultValue');
-      expect(console.error).toHaveBeenCalled();
+      expect(logErrorSpy).toHaveBeenCalled();
     });
   });
 

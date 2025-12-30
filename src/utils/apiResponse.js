@@ -1,6 +1,7 @@
 /**
  * API response utilities
  */
+const logger = require('./logger');
 
 /**
  * Standardizes success responses
@@ -59,7 +60,7 @@ exports.sendValidationError = (res, errors) => {
  * @param {Function} next - Express next function
  */
 exports.errorHandler = (err, req, res, _next) => {
-    console.error('Global error:', err);
+    logger.error('Global error:', err);
     
     // Check if this is a Sequelize validation error
     if (err.name === 'SequelizeValidationError') {

@@ -1,5 +1,7 @@
 // @ts-check
+/* global localStorage */
 const { test, expect } = require('@playwright/test');
+const logger = require('../../src/utils/logger');
 
 /**
  * Admin Tests
@@ -96,7 +98,7 @@ test.describe('Admin Panel', () => {
       await expect(page.locator('.alert-success, .toast-success')).toBeVisible();
     } else {
       // Role update functionality might not be implemented yet
-      console.log('Role update controls not found - test passed as UI elements exist');
+      logger.info('Role update controls not found - test passed as UI elements exist');
     }
   });
 

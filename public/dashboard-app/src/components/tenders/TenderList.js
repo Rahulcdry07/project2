@@ -2,7 +2,6 @@
  * TenderList component - Main page for browsing tenders
  * Similar to TenderDetail.com homepage with search and filtering
  */
-/* eslint-disable jsx-a11y/label-has-associated-control */
 import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { tenderAPI } from '../../services/api';
@@ -144,6 +143,9 @@ const TenderList = () => {
         status: 'Active',
         q: ''
     });
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(9);
+    const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
 
     const categories = [
         'Construction', 'IT Services', 'Consulting', 'Supplies', 
@@ -166,14 +168,24 @@ const TenderList = () => {
                 Object.entries(filters).filter(([, value]) => value !== '')
             );
             
-            const response = await tenderAPI.getTenders(cleanFilters);
+            const response = await tenderAPI.getTenders({
+                ...cleanFilters,
+                page,
+                pageSize
+            });
+            const paginationMeta = response.pagination || { total: response.tenders?.length || 0, totalPages: 1 };
+            if (paginationMeta.totalPages && paginationMeta.totalPages > 0 && page > paginationMeta.totalPages) {
+                setPage(paginationMeta.totalPages);
+                return;
+            }
             setTenders(response.tenders || []);
+            setPagination(paginationMeta);
         } catch (err) {
             setError(err.message || 'Failed to fetch tenders');
         } finally {
             setLoading(false);
         }
-    }, [filters]);
+    }, [filters, page, pageSize]);
 
     useEffect(() => {
         fetchTenders();
@@ -184,6 +196,7 @@ const TenderList = () => {
             ...prev,
             [key]: value
         }));
+        setPage(1);
     };
 
     const clearFilters = () => {
@@ -193,7 +206,30 @@ const TenderList = () => {
             status: 'Active',
             q: ''
         });
+        setPage(1);
     };
+
+    const handlePageSizeChange = (event) => {
+        setPageSize(Number(event.target.value));
+        setPage(1);
+    };
+
+    const goToPreviousPage = () => {
+        setPage(prev => Math.max(prev - 1, 1));
+    };
+
+    const goToNextPage = () => {
+        setPage(prev => {
+            const totalPages = pagination.totalPages || 1;
+            return Math.min(prev + 1, totalPages);
+        });
+    };
+
+    const totalTenders = pagination.total ?? tenders.length;
+    const totalPages = pagination.totalPages || 1;
+    const startItem = totalTenders === 0 ? 0 : (page - 1) * pageSize + 1;
+    const endItem = totalTenders === 0 ? 0 : Math.min(page * pageSize, totalTenders);
+    const pageSizeOptions = [6, 9, 12, 24];
 
     if (loading) {
         return <LoadingSpinner message="Loading tenders..." />;
@@ -295,8 +331,60 @@ const TenderList = () => {
                                         Clear Filters
                                     </button>
                                     <span className="text-muted">
-                                        {tenders.length} tender{tenders.length !== 1 ? 's' : ''} found
+                                        {totalTenders} tender{totalTenders !== 1 ? 's' : ''} found
                                     </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Pagination controls */}
+            <div className="row mb-4">
+                <div className="col-12">
+                    <div className="card">
+                        <div className="card-body d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                            <div>
+                                <div className="fw-semibold">Results</div>
+                                <small className="text-muted">
+                                    {totalTenders === 0
+                                        ? 'No tenders match the current filters.'
+                                        : `Showing ${startItem}-${endItem} of ${totalTenders}`}
+                                </small>
+                            </div>
+                            <div className="d-flex flex-column flex-md-row align-items-md-center gap-3">
+                                <div>
+                                    <label htmlFor="page-size-select" className="form-label mb-0 me-2">Per page</label>
+                                    <select
+                                        id="page-size-select"
+                                        className="form-select d-inline-block w-auto"
+                                        value={pageSize}
+                                        onChange={handlePageSizeChange}
+                                    >
+                                        {pageSizeOptions.map(size => (
+                                            <option key={size} value={size}>{size}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="btn-group" role="group" aria-label="Pagination controls">
+                                    <button
+                                        className="btn btn-outline-secondary"
+                                        onClick={goToPreviousPage}
+                                        disabled={page === 1 || totalTenders === 0}
+                                    >
+                                        Previous
+                                    </button>
+                                    <span className="btn btn-outline-secondary disabled">
+                                        Page {totalTenders === 0 ? 0 : page} of {totalTenders === 0 ? 0 : totalPages}
+                                    </span>
+                                    <button
+                                        className="btn btn-outline-secondary"
+                                        onClick={goToNextPage}
+                                        disabled={page === totalPages || totalTenders === 0}
+                                    >
+                                        Next
+                                    </button>
                                 </div>
                             </div>
                         </div>

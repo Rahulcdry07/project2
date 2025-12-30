@@ -11,18 +11,16 @@ const profileController = require('../src/controllers/profileController');
 const adminController = require('../src/controllers/adminController');
 
 // Import utilities
-const { sendVerificationEmail, sendPasswordResetEmail } = require('../src/utils/email');
 const { setupTestDatabase, teardownTestDatabase, getTestModels } = require('./setup');
 
 describe('Controllers', () => {
-  let User, sequelize;
+  let User;
 
   before(async function() {
     this.timeout(10000);
     await setupTestDatabase();
     const testModels = getTestModels();
     User = testModels.User;
-    sequelize = testModels.sequelize;
   });
 
   after(async function() {

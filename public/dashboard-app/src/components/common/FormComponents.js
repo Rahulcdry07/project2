@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { logError } from '../../utils/logger';
 
 /**
  * Error Boundary Component
@@ -15,8 +16,7 @@ export class ErrorBoundary extends React.Component {
     }
 
     componentDidCatch(error, errorInfo) {
-        // eslint-disable-next-line no-console
-        console.error('Error caught by boundary:', error, errorInfo);
+        logError('Error caught by boundary:', error, errorInfo);
     }
 
     render() {

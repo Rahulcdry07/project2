@@ -10,6 +10,7 @@ const { User } = require('../models');
 const { JWT_SECRET } = require('../config/env');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/email');
 const { sendSuccess, sendError, sendValidationError } = require('../utils/apiResponse');
+const logger = require('../utils/logger');
 
 /**
  * Register a new user
@@ -17,17 +18,17 @@ const { sendSuccess, sendError, sendValidationError } = require('../utils/apiRes
  * @param {Object} res - Express response object
  */
 exports.register = async (req, res) => {
-    console.log('Received registration request with body:', req.body);
+    logger.info('Received registration request with body:', req.body);
     try {
         const { username, email, password } = req.body;
 
         if (!username || !email || !password) {
-            console.log('Validation failed: Missing fields');
+            logger.warn('Validation failed: Missing fields');
             return sendValidationError(res, { message: 'Please fill in all fields.' });
         }
 
         if (password.length < 6) {
-            console.log('Validation failed: Password too short');
+            logger.warn('Validation failed: Password too short');
             return sendValidationError(res, { message: 'Password must be at least 6 characters long.' });
         }
 
@@ -62,7 +63,7 @@ exports.register = async (req, res) => {
             201
         );
     } catch (error) {
-        console.error('Error during registration:', error);
+        logger.error('Error during registration:', error);
         return sendError(res, error.message, 400);
     }
 };

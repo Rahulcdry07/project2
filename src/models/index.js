@@ -8,6 +8,7 @@ const TenderModel = require('./Tender');
 const TenderApplicationModel = require('./TenderApplication');
 const TenderDocumentModel = require('./TenderDocument');
 const ApplicationDocumentModel = require('./ApplicationDocument');
+const logger = require('../utils/logger');
 
 // Initialize Sequelize with SQLite
 const sequelize = new Sequelize({
@@ -33,9 +34,9 @@ const models = {
 };
 
 // Call associate function for each model if it exists
-Object.keys(models).forEach(modelName => {
-    if (models[modelName].associate) {
-        models[modelName].associate(models);
+Object.values(models).forEach(model => {
+    if (typeof model.associate === 'function') {
+        model.associate(models);
     }
 });
 
@@ -43,10 +44,10 @@ Object.keys(models).forEach(modelName => {
 const testConnection = async () => {
     try {
         await sequelize.authenticate();
-        console.log('Database connection has been established successfully.');
+        logger.info('Database connection has been established successfully.');
         return true;
     } catch (error) {
-        console.error('Unable to connect to the database:', error);
+        logger.error('Unable to connect to the database:', error);
         return false;
     }
 };

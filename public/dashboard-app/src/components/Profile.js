@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { userAPI } from '../services/api';
 import { getCurrentUser, setAuthData, getToken } from '../utils/auth';
+import { logError } from '../utils/logger';
 
 const Profile = () => {
   const [user, setUser] = useState(getCurrentUser());
@@ -55,8 +56,7 @@ const Profile = () => {
         recentlyViewed: []
       });
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('Failed to load user activity:', err);
+      logError('Failed to load user activity:', err);
     }
   };
 

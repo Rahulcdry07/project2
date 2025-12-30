@@ -2,6 +2,7 @@
  * Admin controller
  */
 const { User } = require('../models');
+const logger = require('../utils/logger');
 
 /**
  * Get all users
@@ -9,8 +10,8 @@ const { User } = require('../models');
  * @param {Object} res - Express response object
  */
 exports.getAllUsers = async (req, res) => {
-    console.log('[AdminController] getAllUsers called');
-    console.log('[AdminController] Request user:', { id: req.userId, role: req.userRole });
+    logger.info('[AdminController] getAllUsers called');
+    logger.debug('[AdminController] Request user:', { id: req.userId, role: req.userRole });
     
     try {
         const users = await User.findAll({
@@ -28,13 +29,13 @@ exports.getAllUsers = async (req, res) => {
             updatedAt: user.updatedAt
         }));
         
-        console.log(`[AdminController] Found ${mappedUsers.length} users`);
-        console.log('[AdminController] User data sample:', 
+        logger.info(`[AdminController] Found ${mappedUsers.length} users`);
+        logger.debug('[AdminController] User data sample:', 
             mappedUsers.length > 0 ? JSON.stringify(mappedUsers[0]) : 'No users found');
         
         res.json(mappedUsers);
     } catch (error) {
-        console.error('[AdminController] Error in getAllUsers:', error);
+        logger.error('[AdminController] Error in getAllUsers:', error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -48,23 +49,23 @@ exports.updateUserRole = async (req, res) => {
     const userId = req.params.id;
     const { role } = req.body;
     
-    console.log(`[AdminController] updateUserRole called for user ID: ${userId}`);
-    console.log(`[AdminController] New role: ${role}`);
-    console.log('[AdminController] Request user:', { id: req.userId, role: req.userRole });
+    logger.info(`[AdminController] updateUserRole called for user ID: ${userId}`);
+    logger.debug(`[AdminController] New role: ${role}`);
+    logger.debug('[AdminController] Request user:', { id: req.userId, role: req.userRole });
     
     try {
         const user = await User.findByPk(userId);
         
         if (!user) {
-            console.log(`[AdminController] User with ID ${userId} not found`);
+            logger.warn(`[AdminController] User with ID ${userId} not found`);
             return res.status(404).json({ error: 'User not found' });
         }
         
-        console.log(`[AdminController] Found user: ${user.username}, current role: ${user.role}`);
+        logger.debug(`[AdminController] Found user: ${user.username}, current role: ${user.role}`);
         
         await user.update({ role });
         
-        console.log(`[AdminController] Role updated successfully to: ${role}`);
+        logger.info(`[AdminController] Role updated successfully to: ${role}`);
         
         const { id, username, email, role: userRole, is_verified } = user;
         res.json({ 
@@ -75,7 +76,7 @@ exports.updateUserRole = async (req, res) => {
             emailVerified: is_verified === true
         });
     } catch (error) {
-        console.error('[AdminController] Error in updateUserRole:', error);
+        logger.error('[AdminController] Error in updateUserRole:', error);
         res.status(400).json({ error: error.message });
     }
 };
@@ -88,25 +89,25 @@ exports.updateUserRole = async (req, res) => {
 exports.deleteUser = async (req, res) => {
     const userId = req.params.id;
     
-    console.log(`[AdminController] deleteUser called for user ID: ${userId}`);
-    console.log('[AdminController] Request user:', { id: req.userId, role: req.userRole });
+    logger.info(`[AdminController] deleteUser called for user ID: ${userId}`);
+    logger.debug('[AdminController] Request user:', { id: req.userId, role: req.userRole });
     
     try {
         const user = await User.findByPk(userId);
         
         if (!user) {
-            console.log(`[AdminController] User with ID ${userId} not found`);
+            logger.warn(`[AdminController] User with ID ${userId} not found`);
             return res.status(404).json({ error: 'User not found' });
         }
         
-        console.log(`[AdminController] Found user: ${user.username}, role: ${user.role}`);
+        logger.debug(`[AdminController] Found user: ${user.username}, role: ${user.role}`);
         
         await user.destroy();
-        console.log(`[AdminController] User ${user.username} deleted successfully`);
+        logger.info(`[AdminController] User ${user.username} deleted successfully`);
         
         res.json({ message: 'User deleted successfully.' });
     } catch (error) {
-        console.error('[AdminController] Error in deleteUser:', error);
+        logger.error('[AdminController] Error in deleteUser:', error);
         res.status(500).json({ error: error.message });
     }
 };

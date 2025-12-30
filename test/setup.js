@@ -1,6 +1,7 @@
 const { Sequelize } = require('sequelize');
 const { DB_STORAGE, DB_LOGGING } = require('../src/config/env');
 const UserModel = require('../src/models/User');
+const logger = require('../src/utils/logger');
 
 // Create a separate sequelize instance for tests
 let testSequelize = null;
@@ -11,7 +12,7 @@ let databaseClosed = false;
 
 // Test setup and teardown
 const setupTestDatabase = async function() {
-  console.log('Setting up test database...');
+  logger.info('Setting up test database...');
   
   // Create new sequelize instance if needed
   if (!testSequelize || databaseClosed) {
@@ -27,21 +28,23 @@ const setupTestDatabase = async function() {
   }
   
   try {
+    await testSequelize.query('PRAGMA foreign_keys = OFF;');
     await testSequelize.sync({ force: true });
-    console.log('Database synchronized successfully');
+    await testSequelize.query('PRAGMA foreign_keys = ON;');
+    logger.info('Database synchronized successfully');
   } catch (error) {
-    console.error('Error syncing database:', error);
+    logger.error('Error syncing database:', error);
     throw error;
   }
 };
 
 const teardownTestDatabase = async function() {
   if (databaseClosed || !testSequelize) {
-    console.log('Database already closed, skipping cleanup');
+    logger.debug('Database already closed, skipping cleanup');
     return;
   }
   
-  console.log('Cleaning up test database...');
+  logger.info('Cleaning up test database...');
   
   try {
     // Close database connection
@@ -49,9 +52,9 @@ const teardownTestDatabase = async function() {
     databaseClosed = true;
     testSequelize = null;
     testUser = null;
-    console.log('Database connection closed');
+    logger.info('Database connection closed');
   } catch (error) {
-    console.error('Error closing database connection:', error);
+    logger.error('Error closing database connection:', error);
     databaseClosed = true;
     testSequelize = null;
     testUser = null;
@@ -71,7 +74,7 @@ const getTestModels = () => {
         await testSequelize.authenticate();
         return true;
       } catch (error) {
-        console.error('Test database connection failed:', error);
+        logger.error('Test database connection failed:', error);
         return false;
       }
     }

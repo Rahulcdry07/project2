@@ -4,7 +4,7 @@
  * Seeder: Create Test Users
  */
 module.exports = {
-  up: async (queryInterface, _Sequelize) => {
+  up: async (queryInterface, Sequelize) => {
     const bcrypt = require('bcrypt');
     const salt = await bcrypt.genSalt(10);
     
@@ -22,8 +22,24 @@ module.exports = {
         updatedAt: new Date()
       });
     }
+
+    const emails = users.map(user => user.email);
+    const existingUsers = await queryInterface.sequelize.query(
+      'SELECT email FROM "Users" WHERE email IN (:emails)',
+      {
+        replacements: { emails },
+        type: Sequelize.QueryTypes.SELECT
+      }
+    );
+
+    const existingEmails = new Set(existingUsers.map(user => user.email));
+    const usersToInsert = users.filter(user => !existingEmails.has(user.email));
     
-    return queryInterface.bulkInsert('Users', users);
+    if (usersToInsert.length === 0) {
+      return Promise.resolve();
+    }
+    
+    return queryInterface.bulkInsert('Users', usersToInsert);
   },
 
   down: async (queryInterface, Sequelize) => {

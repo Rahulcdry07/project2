@@ -3,6 +3,7 @@
  */
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+const logger = require('./utils/logger');
 
 // Swagger definition
 const swaggerOptions = {
@@ -95,5 +96,5 @@ module.exports = (app) => {
     res.send(swaggerSpec);
   });
   
-  console.log('Swagger documentation available at /api-docs');
+  logger.info('Swagger documentation available at /api-docs');
 };

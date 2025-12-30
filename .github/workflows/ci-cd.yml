@@ -103,29 +103,14 @@ jobs:
       - name: Install frontend dependencies
         run: cd public/dashboard-app && npm ci
 
-      - name: Build frontend for testing
-        run: cd public/dashboard-app && npm run build
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
 
-      - name: Run Cypress tests
-        uses: cypress-io/github-action@v6
-        with:
-          start: npm run start:ci
-          wait-on: 'http://localhost:3000'
-          browser: chrome
-          headless: true
+      - name: Run Playwright tests
+        run: npx playwright test
         env:
           JWT_SECRET: test-jwt-secret
           NODE_ENV: test
-
-      - name: Upload Cypress artifacts
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: cypress-artifacts
-          path: |
-            cypress/screenshots
-            cypress/videos
-          retention-days: 7
 
   build:
     name: Build Application

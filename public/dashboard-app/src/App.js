@@ -52,9 +52,10 @@ function App() {
   return (
     <Router>
       <ErrorBoundary>
-        <Navbar />
-        <main className="container-fluid py-3">
-          <Routes>
+        <div className="app-shell">
+          <Navbar />
+          <main className="app-main">
+            <Routes>
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -82,6 +83,10 @@ function App() {
             
             {/* Admin routes */}
             <Route 
+              path="/admin" 
+              element={<ProtectedRoute element={<UserManagement />} requireAdmin={true} />} 
+            />
+            <Route 
               path="/admin/users" 
               element={<ProtectedRoute element={<UserManagement />} requireAdmin={true} />} 
             />
@@ -93,8 +98,9 @@ function App() {
             {/* Default route */}
             <Route path="/" element={<Navigate to="/tenders" />} />
             <Route path="*" element={<Navigate to="/tenders" />} />
-          </Routes>
-        </main>
+            </Routes>
+          </main>
+        </div>
       </ErrorBoundary>
     </Router>
   );

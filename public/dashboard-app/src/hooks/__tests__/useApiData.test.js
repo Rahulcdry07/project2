@@ -1,16 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { useApiData } from '../useForm';
 
-// Mock console.error to avoid noise in tests
-const originalConsoleError = console.error;
-beforeEach(() => {
-  console.error = vi.fn();
-});
-
-afterEach(() => {
-  console.error = originalConsoleError;
-});
+vi.mock('../../utils/logger', () => ({
+  logError: vi.fn(),
+  logInfo: vi.fn(),
+  logWarn: vi.fn(),
+  logDebug: vi.fn(),
+}));
 
 describe('useApiData Hook', () => {
   describe('Successful API calls', () => {

@@ -1,6 +1,7 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const path = require('path');
 const bcrypt = require('bcrypt');
+const logger = require('./utils/logger');
 require('dotenv').config();
 
 // Initialize Sequelize with SQLite
@@ -14,9 +15,9 @@ const sequelize = new Sequelize({
 (async () => {
   try {
     await sequelize.authenticate();
-    console.log('Database connection has been established successfully.');
+    logger.info('Database connection has been established successfully.');
   } catch (error) {
-    console.error('Unable to connect to the database:', error);
+    logger.error('Unable to connect to the database:', error);
     process.exit(1); // Exit with error code
   }
 })();

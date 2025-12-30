@@ -1,7 +1,7 @@
 const expect = require('chai').expect;
 const request = require('supertest');
 const app = require('../src/app'); // Use app instead of server
-const { User } = require('../src/models');
+const { User, Tender, TenderDocument } = require('../src/models');
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../src/config/env');
 const { setupTestDatabase, teardownTestDatabase } = require('./setup');
@@ -615,10 +615,101 @@ describe('Admin API', () => {
   });
 });
 
+describe('Tender API', () => {
+  let creator;
+
+  const buildTenderPayload = (index, userId) => ({
+    title: `Infrastructure Upgrade Package ${index}`,
+    description: `Detailed scope of work for infrastructure upgrade package ${index}, covering procurement, compliance, and delivery milestones.`,
+    reference_number: `TND-${String(index + 1).padStart(4, '0')}`,
+    organization: `City Works Dept ${index}`,
+    category: 'Construction',
+    location: 'New York',
+    estimated_value: 1000000 + index * 1000,
+    currency: 'USD',
+    submission_deadline: new Date(Date.now() + (index + 30) * 24 * 60 * 60 * 1000),
+    published_date: new Date(Date.now() - index * 24 * 60 * 60 * 1000),
+    status: 'Active',
+    contact_person: 'Procurement Lead',
+    contact_email: 'procurement@example.com',
+    contact_phone: '+1-555-0100',
+    requirements: 'Provide project history, financials, and safety record.',
+    documents_required: ['Insurance certificate', 'Financial statements'],
+    eligibility_criteria: 'Licensed contractors with relevant experience.',
+    evaluation_criteria: 'Cost 40%, Technical 40%, Experience 20%.',
+    tags: ['construction', 'capital'],
+    is_featured: index % 2 === 0,
+    created_by: userId
+  });
+
+  before(async () => {
+    await Tender.sync();
+    await TenderDocument.sync();
+  });
+
+  beforeEach(async () => {
+    await TenderDocument.destroy({ where: {} });
+    await Tender.destroy({ where: {} });
+    await User.destroy({ where: {} });
+
+    creator = await User.create({
+      username: 'tenderadmin',
+      email: 'tenderadmin@example.com',
+      password: 'securepass123'
+    });
+  });
+
+  afterEach(async () => {
+    await TenderDocument.destroy({ where: {} });
+    await Tender.destroy({ where: {} });
+    await User.destroy({ where: {} });
+  });
+
+  it('should return paginated tenders with metadata for requested page', async function() {
+    this.timeout(TEST_TIMEOUT);
+    const totalTenders = 12;
+    const tenders = Array.from({ length: totalTenders }, (_, index) => buildTenderPayload(index, creator.id));
+    await Tender.bulkCreate(tenders);
+
+    const res = await request(app)
+      .get('/api/tenders?page=2&pageSize=5')
+      .expect(200);
+
+    expect(res.body.success).to.be.true;
+    expect(res.body.tenders).to.have.lengthOf(5);
+    expect(res.body.pagination).to.include({
+      page: 2,
+      pageSize: 5,
+      total: totalTenders,
+      totalPages: Math.ceil(totalTenders / 5)
+    });
+
+    const returnedRefs = res.body.tenders.map(tender => tender.reference_number);
+    const expectedRefs = [5, 6, 7, 8, 9].map(i => `TND-${String(i + 1).padStart(4, '0')}`);
+    expect(returnedRefs).to.deep.equal(expectedRefs);
+  });
+
+  it('should cap pageSize and clamp invalid page values', async function() {
+    this.timeout(TEST_TIMEOUT);
+    const totalTenders = 60;
+    const tenders = Array.from({ length: totalTenders }, (_, index) => buildTenderPayload(index, creator.id));
+    await Tender.bulkCreate(tenders);
+
+    const res = await request(app)
+      .get('/api/tenders?page=0&pageSize=200')
+      .expect(200);
+
+    expect(res.body.pagination.page).to.equal(1);
+    expect(res.body.pagination.pageSize).to.equal(50);
+    expect(res.body.tenders).to.have.lengthOf(50);
+    expect(res.body.pagination.total).to.equal(totalTenders);
+    expect(res.body.pagination.totalPages).to.equal(Math.ceil(totalTenders / 50));
+  });
+});
+
 describe('Authentication Middleware', () => {
   let token;
   let expiredToken;
-  let userId;
   
   beforeEach(async () => {
     await User.destroy({ where: {} });
@@ -635,7 +726,6 @@ describe('Authentication Middleware', () => {
     const user = await User.findOne({ where: { email: 'test@example.com' } });
     user.is_verified = true;
     await user.save();
-    userId = user.id;
     
     // Create tokens
     token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '30m' });

@@ -2,7 +2,6 @@
  * TenderManagement component - Admin interface for managing tenders
  * Create, edit, delete tenders
  */
-/* eslint-disable jsx-a11y/label-has-associated-control */
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { tenderAPI } from '../../services/api';
@@ -142,6 +141,7 @@ const TenderForm = ({ tender, onSubmit, onCancel, loading }) => {
                             <div className="mb-3">
                                 <label htmlFor="tender-description" className="form-label">Description *</label>
                                 <textarea
+                                    id="tender-description"
                                     className={`form-control ${errors.description ? 'is-invalid' : ''}`}
                                     name="description"
                                     rows="4"
@@ -154,8 +154,9 @@ const TenderForm = ({ tender, onSubmit, onCancel, loading }) => {
 
                             <div className="row">
                                 <div className="col-md-6 mb-3">
-                                    <label className="form-label">Organization *</label>
+                                    <label htmlFor="organization-input" className="form-label">Organization *</label>
                                     <input
+                                        id="organization-input"
                                         type="text"
                                         className={`form-control ${errors.organization ? 'is-invalid' : ''}`}
                                         name="organization"
@@ -167,8 +168,9 @@ const TenderForm = ({ tender, onSubmit, onCancel, loading }) => {
                                 </div>
                                 
                                 <div className="col-md-3 mb-3">
-                                    <label className="form-label">Category</label>
+                                    <label htmlFor="category-select" className="form-label">Category</label>
                                     <select
+                                        id="category-select"
                                         className="form-select"
                                         name="category"
                                         value={formData.category}
@@ -183,8 +185,9 @@ const TenderForm = ({ tender, onSubmit, onCancel, loading }) => {
                                 </div>
                                 
                                 <div className="col-md-3 mb-3">
-                                    <label className="form-label">Location *</label>
+                                    <label htmlFor="location-input" className="form-label">Location *</label>
                                     <input
+                                        id="location-input"
                                         type="text"
                                         className={`form-control ${errors.location ? 'is-invalid' : ''}`}
                                         name="location"
@@ -198,8 +201,9 @@ const TenderForm = ({ tender, onSubmit, onCancel, loading }) => {
 
                             <div className="row">
                                 <div className="col-md-4 mb-3">
-                                    <label className="form-label">Estimated Value</label>
+                                    <label htmlFor="estimated-value" className="form-label">Estimated Value</label>
                                     <input
+                                        id="estimated-value"
                                         type="number"
                                         className="form-control"
                                         name="estimated_value"
@@ -212,8 +216,9 @@ const TenderForm = ({ tender, onSubmit, onCancel, loading }) => {
                                 </div>
                                 
                                 <div className="col-md-2 mb-3">
-                                    <label className="form-label">Currency</label>
+                                    <label htmlFor="currency-select" className="form-label">Currency</label>
                                     <select
+                                        id="currency-select"
                                         className="form-select"
                                         name="currency"
                                         value={formData.currency}
@@ -228,8 +233,9 @@ const TenderForm = ({ tender, onSubmit, onCancel, loading }) => {
                                 </div>
                                 
                                 <div className="col-md-3 mb-3">
-                                    <label className="form-label">Submission Deadline *</label>
+                                    <label htmlFor="submission-deadline" className="form-label">Submission Deadline *</label>
                                     <input
+                                        id="submission-deadline"
                                         type="datetime-local"
                                         className={`form-control ${errors.submission_deadline ? 'is-invalid' : ''}`}
                                         name="submission_deadline"
@@ -240,8 +246,9 @@ const TenderForm = ({ tender, onSubmit, onCancel, loading }) => {
                                 </div>
                                 
                                 <div className="col-md-3 mb-3">
-                                    <label className="form-label">Published Date</label>
+                                    <label htmlFor="published-date" className="form-label">Published Date</label>
                                     <input
+                                        id="published-date"
                                         type="date"
                                         className="form-control"
                                         name="published_date"
@@ -260,8 +267,9 @@ const TenderForm = ({ tender, onSubmit, onCancel, loading }) => {
                         </div>
                         <div className="card-body">
                             <div className="mb-3">
-                                <label className="form-label">Requirements</label>
+                                <label htmlFor="requirements-text" className="form-label">Requirements</label>
                                 <textarea
+                                    id="requirements-text"
                                     className="form-control"
                                     name="requirements"
                                     rows="3"
@@ -272,8 +280,9 @@ const TenderForm = ({ tender, onSubmit, onCancel, loading }) => {
                             </div>
 
                             <div className="mb-3">
-                                <label className="form-label">Eligibility Criteria</label>
+                                <label htmlFor="eligibility-text" className="form-label">Eligibility Criteria</label>
                                 <textarea
+                                    id="eligibility-text"
                                     className="form-control"
                                     name="eligibility_criteria"
                                     rows="3"
@@ -284,8 +293,9 @@ const TenderForm = ({ tender, onSubmit, onCancel, loading }) => {
                             </div>
 
                             <div className="mb-3">
-                                <label className="form-label">Evaluation Criteria</label>
+                                <label htmlFor="evaluation-text" className="form-label">Evaluation Criteria</label>
                                 <textarea
+                                    id="evaluation-text"
                                     className="form-control"
                                     name="evaluation_criteria"
                                     rows="3"
@@ -307,8 +317,9 @@ const TenderForm = ({ tender, onSubmit, onCancel, loading }) => {
                         </div>
                         <div className="card-body">
                             <div className="mb-3">
-                                <label className="form-label">Status</label>
+                                <label htmlFor="status-select" className="form-label">Status</label>
                                 <select
+                                    id="status-select"
                                     className="form-select"
                                     name="status"
                                     value={formData.status}
@@ -323,13 +334,14 @@ const TenderForm = ({ tender, onSubmit, onCancel, loading }) => {
 
                             <div className="form-check">
                                 <input
+                                    id="featured-checkbox"
                                     className="form-check-input"
                                     type="checkbox"
                                     name="is_featured"
                                     checked={formData.is_featured}
                                     onChange={handleChange}
                                 />
-                                <label className="form-check-label">
+                                <label className="form-check-label" htmlFor="featured-checkbox">
                                     Featured Tender
                                 </label>
                             </div>
@@ -343,8 +355,9 @@ const TenderForm = ({ tender, onSubmit, onCancel, loading }) => {
                         </div>
                         <div className="card-body">
                             <div className="mb-3">
-                                <label className="form-label">Contact Person</label>
+                                <label htmlFor="contact-person" className="form-label">Contact Person</label>
                                 <input
+                                    id="contact-person"
                                     type="text"
                                     className="form-control"
                                     name="contact_person"
@@ -355,8 +368,9 @@ const TenderForm = ({ tender, onSubmit, onCancel, loading }) => {
                             </div>
 
                             <div className="mb-3">
-                                <label className="form-label">Contact Email</label>
+                                <label htmlFor="contact-email" className="form-label">Contact Email</label>
                                 <input
+                                    id="contact-email"
                                     type="email"
                                     className={`form-control ${errors.contact_email ? 'is-invalid' : ''}`}
                                     name="contact_email"
@@ -368,8 +382,9 @@ const TenderForm = ({ tender, onSubmit, onCancel, loading }) => {
                             </div>
 
                             <div className="mb-3">
-                                <label className="form-label">Contact Phone</label>
+                                <label htmlFor="contact-phone" className="form-label">Contact Phone</label>
                                 <input
+                                    id="contact-phone"
                                     type="tel"
                                     className="form-control"
                                     name="contact_phone"
