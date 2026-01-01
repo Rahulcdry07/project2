@@ -1,3 +1,4 @@
+/* eslint-env mocha */
 /**
  * Controller tests - Unit tests for controller logic
  */
@@ -10,37 +11,23 @@ const authController = require('../src/controllers/authController');
 const profileController = require('../src/controllers/profileController');
 const adminController = require('../src/controllers/adminController');
 
-// Import utilities
-const { sendVerificationEmail, sendPasswordResetEmail } = require('../src/utils/email');
-const { setupTestDatabase, teardownTestDatabase, getTestModels } = require('./setup');
+// Use main models (now configured to sqlite in test env)
+const { User, sequelize } = require('../src/models');
 
 describe('Controllers', () => {
-  let User, sequelize;
-
-  before(async function() {
+  before(async function () {
     this.timeout(10000);
-    await setupTestDatabase();
-    const testModels = getTestModels();
-    User = testModels.User;
-    sequelize = testModels.sequelize;
-    // Ensure User table exists
-    await User.sync({ force: true });
+    await sequelize.sync({ force: true });
   });
 
-  after(async function() {
+  after(async function () {
     this.timeout(5000);
-    await teardownTestDatabase();
+    await User.destroy({ where: {}, truncate: true, cascade: true, force: true });
   });
 
-  beforeEach(async function() {
+  beforeEach(async function () {
     this.timeout(5000);
-    try {
-      await User.sequelize.query('PRAGMA foreign_keys = OFF');
-      await User.destroy({ where: {}, force: true });
-      await User.sequelize.query('PRAGMA foreign_keys = ON');
-    } catch (error) {
-      await User.sync({ force: true });
-    }
+    await User.destroy({ where: {}, truncate: true, cascade: true, force: true });
   });
 
   describe('Auth Controller', () => {
@@ -48,11 +35,11 @@ describe('Controllers', () => {
 
     beforeEach(() => {
       req = {
-        body: {}
+        body: {},
       };
       res = {
         status: sinon.stub().returnsThis(),
-        json: sinon.stub().returnsThis()
+        json: sinon.stub().returnsThis(),
       };
     });
 
@@ -61,7 +48,7 @@ describe('Controllers', () => {
         req.body = {
           username: 'testuser',
           email: 'test@example.com',
-          password: 'password123'
+          password: 'password123',
         };
 
         await authController.register(req, res);
@@ -85,13 +72,13 @@ describe('Controllers', () => {
         await User.create({
           username: 'existinguser',
           email: 'test@example.com',
-          password: 'password123'
+          password: 'password123',
         });
 
         req.body = {
           username: 'newuser',
           email: 'test@example.com', // duplicate email
-          password: 'password456'
+          password: 'password456',
         };
 
         await authController.register(req, res);
@@ -108,13 +95,13 @@ describe('Controllers', () => {
         await User.create({
           username: 'testuser',
           email: 'existing@example.com',
-          password: 'password123'
+          password: 'password123',
         });
 
         req.body = {
           username: 'testuser', // duplicate username
           email: 'test@example.com',
-          password: 'password456'
+          password: 'password456',
         };
 
         await authController.register(req, res);
@@ -129,7 +116,7 @@ describe('Controllers', () => {
       it('should validate required fields', async () => {
         req.body = {
           username: 'testuser',
-          email: 'test@example.com'
+          email: 'test@example.com',
           // missing password
         };
 
@@ -145,7 +132,7 @@ describe('Controllers', () => {
         req.body = {
           username: 'testuser',
           email: 'test@example.com',
-          password: '12345' // too short
+          password: '12345', // too short
         };
 
         await authController.register(req, res);
@@ -164,14 +151,14 @@ describe('Controllers', () => {
           username: 'loginuser',
           email: 'login@example.com',
           password: await bcrypt.hash('password123', 10),
-          is_verified: true
+          is_verified: true,
         });
       });
 
       it('should login verified user with correct credentials', async () => {
         req.body = {
           email: 'login@example.com',
-          password: 'password123'
+          password: 'password123',
         };
 
         await authController.login(req, res);
@@ -187,7 +174,7 @@ describe('Controllers', () => {
       it('should reject login with wrong password', async () => {
         req.body = {
           email: 'login@example.com',
-          password: 'wrongpassword'
+          password: 'wrongpassword',
         };
 
         await authController.login(req, res);
@@ -201,7 +188,7 @@ describe('Controllers', () => {
       it('should reject login for non-existent user', async () => {
         req.body = {
           email: 'nonexistent@example.com',
-          password: 'password123'
+          password: 'password123',
         };
 
         await authController.login(req, res);
@@ -218,12 +205,12 @@ describe('Controllers', () => {
           username: 'unverifieduser',
           email: 'unverified@example.com',
           password: await bcrypt.hash('password123', 10),
-          is_verified: false
+          is_verified: false,
         });
 
         req.body = {
           email: 'unverified@example.com',
-          password: 'password123'
+          password: 'password123',
         };
 
         await authController.login(req, res);
@@ -238,13 +225,13 @@ describe('Controllers', () => {
     describe('verifyEmail method', () => {
       it('should verify user with valid token', async () => {
         const verificationToken = 'valid-verification-token';
-        
+
         await User.create({
           username: 'verifyuser',
           email: 'verify@example.com',
           password: 'password123',
           is_verified: false,
-          verification_token: verificationToken
+          verification_token: verificationToken,
         });
 
         req.body = { token: verificationToken };
@@ -280,7 +267,7 @@ describe('Controllers', () => {
           username: 'resetuser',
           email: 'reset@example.com',
           password: 'password123',
-          is_verified: true
+          is_verified: true,
         });
       });
 
@@ -325,14 +312,14 @@ describe('Controllers', () => {
           password: 'oldpassword123',
           is_verified: true,
           reset_token: resetToken,
-          reset_token_expires_at: resetTokenExpiresAt
+          reset_token_expires_at: resetTokenExpiresAt,
         });
       });
 
       it('should reset password with valid token', async () => {
         req.body = {
           token: resetToken,
-          password: 'newpassword123'
+          password: 'newpassword123',
         };
 
         await authController.resetPassword(req, res);
@@ -351,7 +338,7 @@ describe('Controllers', () => {
       it('should reject invalid reset token', async () => {
         req.body = {
           token: 'invalid-token',
-          password: 'newpassword123'
+          password: 'newpassword123',
         };
 
         await authController.resetPassword(req, res);
@@ -365,7 +352,7 @@ describe('Controllers', () => {
       it('should validate new password length', async () => {
         req.body = {
           token: resetToken,
-          password: '12345' // too short
+          password: '12345', // too short
         };
 
         await authController.resetPassword(req, res);
@@ -397,16 +384,16 @@ describe('Controllers', () => {
         username: 'profileuser',
         email: 'profile@example.com',
         password: 'password123',
-        is_verified: true
+        is_verified: true,
       });
 
       req = {
         userId: testUser.id,
-        body: {}
+        body: {},
       };
       res = {
         status: sinon.stub().returnsThis(),
-        json: sinon.stub().returnsThis()
+        json: sinon.stub().returnsThis(),
       };
     });
 
@@ -436,7 +423,7 @@ describe('Controllers', () => {
       it('should update user profile successfully', async () => {
         req.body = {
           username: 'updateduser',
-          email: 'updated@example.com'
+          email: 'updated@example.com',
         };
 
         await profileController.updateProfile(req, res);
@@ -467,12 +454,12 @@ describe('Controllers', () => {
         await User.create({
           username: 'anotheruser',
           email: 'another@example.com',
-          password: 'password123'
+          password: 'password123',
         });
 
         req.body = {
           username: 'profileuser',
-          email: 'another@example.com' // This should cause a unique constraint error
+          email: 'another@example.com', // This should cause a unique constraint error
         };
 
         await profileController.updateProfile(req, res);
@@ -493,7 +480,7 @@ describe('Controllers', () => {
         email: 'admin@example.com',
         password: 'password123',
         role: 'admin',
-        is_verified: true
+        is_verified: true,
       });
 
       regularUser = await User.create({
@@ -501,7 +488,7 @@ describe('Controllers', () => {
         email: 'user@example.com',
         password: 'password123',
         role: 'user',
-        is_verified: true
+        is_verified: true,
       });
 
       req = {
@@ -509,11 +496,11 @@ describe('Controllers', () => {
         userRole: 'admin',
         params: {},
         body: {},
-        query: {} // Add query object for pagination
+        query: {}, // Add query object for pagination
       };
       res = {
         status: sinon.stub().returnsThis(),
-        json: sinon.stub().returnsThis()
+        json: sinon.stub().returnsThis(),
       };
     });
 
@@ -527,7 +514,7 @@ describe('Controllers', () => {
         expect(responseData.data).to.be.an('array');
         expect(responseData.pagination).to.be.an('object');
         expect(responseData.data.length).to.equal(2);
-        
+
         // Check that passwords are excluded
         responseData.data.forEach(user => {
           expect(user.password).to.be.undefined;
@@ -539,9 +526,9 @@ describe('Controllers', () => {
       it('should handle admin operations correctly', async () => {
         // This test verifies the admin controller works with valid operations
         expect(res.json.called).to.be.false; // Not yet called
-        
+
         await adminController.getAllUsers(req, res);
-        
+
         expect(res.json.called).to.be.true;
       });
     });
