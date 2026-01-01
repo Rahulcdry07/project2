@@ -11,10 +11,11 @@ const logger = require('./utils/logger');
 validateEnv();
 
 // Sync the database and start the server
-sequelize.sync()
+sequelize
+  .sync()
   .then(() => {
-    app.listen(PORT, '0.0.0.0', () => {
-      logger.info(`Server is running on http://0.0.0.0:${PORT}`);
+    app.listen(PORT, 'localhost', () => {
+      logger.info(`Server is running on http://localhost:${PORT}`);
     });
   })
   .catch(error => {

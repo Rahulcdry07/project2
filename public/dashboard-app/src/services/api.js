@@ -332,3 +332,6 @@ export const tenderAPI = {
     });
   },
 };
+
+// Export API_URL for other components
+export { API_URL };

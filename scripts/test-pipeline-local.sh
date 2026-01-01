@@ -47,10 +47,16 @@ echo ""
 
 # Step 2: Backend Tests
 print_step "🧪 Step 2: Running Backend Tests..."
-if npm run test:backend; then
-    print_success "Backend tests completed successfully"
+# Setup test database first
+if bash scripts/setup-test-db.sh; then
+    if npm run test:backend; then
+        print_success "Backend tests completed successfully"
+    else
+        print_error "Backend tests failed"
+        exit 1
+    fi
 else
-    print_error "Backend tests failed"
+    print_error "Test database setup failed"
     exit 1
 fi
 echo ""
@@ -132,38 +138,93 @@ echo ""
 
 # Step 7: E2E Tests (optional, can be slow)
 if [ "$1" = "--full" ] || [ "$1" = "--e2e" ]; then
-    print_step "🎭 Step 7: Running E2E Tests..."
-    if command -v cypress &> /dev/null; then
-        # Start server in background for E2E tests
-        echo "  Starting server for E2E tests..."
-        NODE_ENV=test npm run start:ci &
-        SERVER_PID=$!
+    print_step "🎭 Step 7: Running E2E Tests (Playwright)..."
+    if command -v playwright &> /dev/null || [ -d "node_modules/@playwright/test" ]; then
+        # Cleanup any existing processes first
+        pkill -9 -f "node.*server.js" 2>/dev/null || true
+        pkill -9 -f "react-scripts" 2>/dev/null || true
+        sleep 2
         
-        # Wait for server to start
-        sleep 5
+        # Start backend server in background
+        echo "  Starting backend server (port 3000)..."
+        NODE_ENV=test node src/server.js > /tmp/backend-test.log 2>&1 &
+        BACKEND_PID=$!
         
-        # Check if server is running
-        if curl -s http://localhost:3000/api/health > /dev/null; then
-            echo "  Server is running, starting E2E tests..."
-            if npm run cy:run; then
+        # Start frontend server in background  
+        echo "  Starting frontend server (port 3001)..."
+        cd public/dashboard-app
+        PORT=3001 npm start > /tmp/frontend-test.log 2>&1 &
+        FRONTEND_PID=$!
+        cd ../..
+        
+        # Wait for servers to start with timeout
+        echo "  Waiting for servers to be ready..."
+        MAX_WAIT=30
+        WAIT_COUNT=0
+        BACKEND_READY=false
+        FRONTEND_READY=false
+        
+        while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
+            if [ "$BACKEND_READY" = false ] && curl -s http://localhost:3000/api/health > /dev/null 2>&1; then
+                BACKEND_READY=true
+                echo "  ✓ Backend ready (http://localhost:3000)"
+            fi
+            
+            if [ "$FRONTEND_READY" = false ] && curl -s http://localhost:3001 > /dev/null 2>&1; then
+                FRONTEND_READY=true
+                echo "  ✓ Frontend ready (http://localhost:3001)"
+            fi
+            
+            if [ "$BACKEND_READY" = true ] && [ "$FRONTEND_READY" = true ]; then
+                break
+            fi
+            
+            sleep 1
+            WAIT_COUNT=$((WAIT_COUNT + 1))
+        done
+        
+        if [ "$BACKEND_READY" = true ] && [ "$FRONTEND_READY" = true ]; then
+            echo "  Running Playwright E2E tests..."
+            if npm run playwright:test; then
                 print_success "E2E tests completed successfully"
+                E2E_EXIT=0
             else
                 print_error "E2E tests failed"
-                kill $SERVER_PID 2>/dev/null || true
-                exit 1
+                E2E_EXIT=1
             fi
         else
-            print_error "Server failed to start for E2E tests"
-            kill $SERVER_PID 2>/dev/null || true
-            exit 1
+            print_error "Servers failed to start within ${MAX_WAIT}s"
+            [ "$BACKEND_READY" = false ] && echo "  ✗ Backend not responding (check /tmp/backend-test.log)"
+            [ "$FRONTEND_READY" = false ] && echo "  ✗ Frontend not responding (check /tmp/frontend-test.log)"
+            E2E_EXIT=1
         fi
         
-        # Kill the server
-        kill $SERVER_PID 2>/dev/null || true
-        echo "  Server stopped"
+        # Aggressive cleanup of all processes
+        echo "  Stopping servers..."
+        kill -9 $BACKEND_PID 2>/dev/null || true
+        kill -9 $FRONTEND_PID 2>/dev/null || true
+        
+        # Kill any child processes
+        pkill -9 -P $BACKEND_PID 2>/dev/null || true
+        pkill -9 -P $FRONTEND_PID 2>/dev/null || true
+        
+        # Kill by port
+        lsof -ti:3000 | xargs kill -9 2>/dev/null || true
+        lsof -ti:3001 | xargs kill -9 2>/dev/null || true
+        
+        # Final cleanup
+        pkill -9 -f "node.*server.js" 2>/dev/null || true
+        pkill -9 -f "react-scripts" 2>/dev/null || true
+        
+        sleep 2
+        
+        if [ $E2E_EXIT -ne 0 ]; then
+            exit 1
+        fi
     else
-        print_warning "Cypress not available, skipping E2E tests"
-        echo "  Install Cypress with: npm install cypress --save-dev"
+        print_warning "Playwright not available, skipping E2E tests"
+        echo "  Install with: npm install @playwright/test --save-dev"
+        echo "  Then run: npx playwright install"
     fi
     echo ""
 else

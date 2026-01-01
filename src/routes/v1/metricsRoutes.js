@@ -1,5 +1,6 @@
 const express = require('express');
 const { metricsEndpoint } = require('../../middleware/monitoring/metrics');
+const { authenticate } = require('../../middleware/auth');
 
 const router = express.Router();
 
@@ -20,6 +21,6 @@ const router = express.Router();
  *       500:
  *         description: Server error
  */
-router.get('/', metricsEndpoint);
+router.get('/', authenticate, metricsEndpoint);
 
 module.exports = router;

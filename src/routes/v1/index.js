@@ -15,6 +15,8 @@ const notificationRoutes = require('./notificationRoutes');
 const notesRoutes = require('./notesRoutes');
 const settingsRoutes = require('./settingsRoutes');
 const tenderRoutes = require('./tenderRoutes');
+const dsrRoutes = require('./dsrRoutes');
+const pdfRoutes = require('../pdfRoutes');
 
 // Mount routes
 router.use('/auth', authRoutes);
@@ -27,5 +29,7 @@ router.use('/notifications', notificationRoutes);
 router.use('/notes', notesRoutes);
 router.use('/settings', settingsRoutes);
 router.use('/tenders', tenderRoutes);
+router.use('/dsr', dsrRoutes);
+router.use('/pdf', pdfRoutes);
 
 module.exports = router;

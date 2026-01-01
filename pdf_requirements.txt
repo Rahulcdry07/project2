@@ -1,0 +1,4 @@
+# PDF to JSON Conversion Requirements
+# Install with: pip3 install -r pdf_requirements.txt
+
+PyMuPDF>=1.23.0

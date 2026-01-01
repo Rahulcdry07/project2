@@ -55,7 +55,20 @@ lerna-debug.log*
 tmp/
 tmp/sessions/
 *.tmp
+
+# Process ID files
+*.pid
 .backend.pid
 .frontend.pid
+
+# Debug and test utility files
 debug-login.js
+test-login-debug.js
+test-frontend-login.js
+test-db-connection.js
+reset-admin.js
 test_login.sh
+
+# Backup files
+*.backup
+*_backup_*.sql

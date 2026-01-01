@@ -12,16 +12,21 @@ const logger = require('../utils/logger');
  * @param {Object} options - Configuration options
  */
 const configureSecurityMiddleware = (app, options = {}) => {
-  // Check if we're in test mode
+  // Check if we're in test or development mode
   const isTestMode = process.env.NODE_ENV === 'test' || process.env.CYPRESS_TESTING === 'true';
-  
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
   const {
-    rateLimitMax = isTestMode ? 1000 : 100, // Higher limit for tests
-    rateLimitWindowMs = isTestMode ? 1 * 60 * 1000 : 60 * 60 * 1000, // 1 minute for tests, 1 hour for production
+    rateLimitMax = isTestMode ? 10000 : isDevelopment ? 1000 : 100, // Higher limits for dev/test
+    rateLimitWindowMs = isTestMode
+      ? 15 * 60 * 1000
+      : isDevelopment
+        ? 1 * 60 * 1000
+        : 60 * 60 * 1000, // 1 min for dev, 15 min for test, 1 hour for prod
     corsOrigins = ['http://localhost:3000', 'http://0.0.0.0:3000', 'http://localhost:3001'],
     trustProxy = true,
   } = options;
-  
+
   // Set trust proxy if needed
   if (trustProxy) {
     app.set('trust proxy', 1);
@@ -40,13 +45,17 @@ const configureSecurityMiddleware = (app, options = {}) => {
     message: 'Too many requests from this IP, please try again later',
     standardHeaders: true,
     legacyHeaders: false,
+    skip: req => {
+      // Skip rate limiting for test routes in test/dev mode
+      return (isTestMode || isDevelopment) && req.path.startsWith('/api/test');
+    },
     handler: (req, res, next, options) => {
-      logger.warn(`Rate limit exceeded for IP: ${req.ip}`);
+      logger.warn(`Rate limit exceeded for IP: ${req.ip}, Path: ${req.path}`);
       res.status(options.statusCode).json({
         status: 'error',
         message: options.message,
       });
-    }
+    },
   });
 
   // Apply rate limiting to API routes
@@ -73,12 +82,12 @@ const configureSecurityMiddleware = (app, options = {}) => {
     app.use(
       helmet.contentSecurityPolicy({
         directives: {
-          defaultSrc: ['\'self\''],
-          scriptSrc: ['\'self\'', '\'unsafe-inline\'', '\'unsafe-eval\''],
-          styleSrc: ['\'self\'', '\'unsafe-inline\'', 'https://fonts.googleapis.com'],
-          fontSrc: ['\'self\'', 'https://fonts.gstatic.com'],
-          imgSrc: ['\'self\'', 'data:', 'https://via.placeholder.com'],
-          connectSrc: ['\'self\'', 'https://api.example.com'],
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'"],
+          styleSrc: ["'self'", 'https://fonts.googleapis.com'],
+          fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+          imgSrc: ["'self'", 'data:', 'https://via.placeholder.com'],
+          connectSrc: ["'self'", 'https://api.example.com'],
         },
       })
     );

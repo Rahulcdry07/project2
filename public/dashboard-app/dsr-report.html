@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSR Cost Estimation Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .confidence-high { color: #198754; }
+        .confidence-medium { color: #fd7e14; }
+        .confidence-low { color: #dc3545; }
+        .report-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .summary-card { border-left: 4px solid #007bff; }
+        .matched-item { background-color: #f8f9fa; }
+        .unmatched-item { background-color: #fff3cd; border-left: 4px solid #ffc107; }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container-fluid py-4">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-10">
+                <div class="card shadow">
+                    <div class="card-header report-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 class="mb-1"><i class="bi bi-file-earmark-text me-2"></i>DSR Cost Estimation Report</h2>
+                                <small id="report-id">Report ID: Loading...</small>
+                            </div>
+                            <div class="text-end">
+                                <div class="small opacity-75">Generated</div>
+                                <div id="generated-at">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <!-- Summary Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h4 class="mb-3"><i class="bi bi-bar-chart me-2"></i>Summary</h4>
+                                <div class="row g-3" id="summary-cards">
+                                    <!-- Summary cards will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detailed Breakdown -->
+                        <div class="row">
+                            <div class="col-12">
+                                <h4 class="mb-3"><i class="bi bi-list-check me-2"></i>Detailed Breakdown</h4>
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="breakdown-table">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Description</th>
+                                                <th>Quantity</th>
+                                                <th>Unit</th>
+                                                <th>Rate</th>
+                                                <th>Amount</th>
+                                                <th>DSR Code</th>
+                                                <th>Confidence</th>
+                                                <th>Category</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="breakdown-body">
+                                            <!-- Table rows will be populated by JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Matches Section -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <h4 class="mb-3"><i class="bi bi-search me-2"></i>Matching Details</h4>
+                                <div id="matches-section">
+                                    <!-- Match details will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer text-center">
+                        <button class="btn btn-primary me-2" onclick="window.print()">
+                            <i class="bi bi-printer me-1"></i>Print Report
+                        </button>
+                        <button class="btn btn-secondary" onclick="downloadReport()">
+                            <i class="bi bi-download me-1"></i>Download JSON
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let reportData = null;
+
+        // Get report ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const reportId = urlParams.get('id');
+
+        if (!reportId) {
+            document.body.innerHTML = '<div class="container text-center py-5"><div class="alert alert-danger"><h4>Report ID is required</h4><p>Please provide a valid report ID in the URL.</p></div></div>';
+        } else {
+            loadReport(reportId);
+        }
+
+        async function loadReport(id) {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('Authentication required');
+                }
+
+                const response = await fetch(`/api/v1/dsr/report/${id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.message || 'Failed to load report');
+                }
+
+                reportData = result.data;
+                renderReport();
+
+            } catch (error) {
+                console.error('Error loading report:', error);
+                document.body.innerHTML = `
+                    <div class="container text-center py-5">
+                        <div class="alert alert-danger">
+                            <h4><i class="bi bi-exclamation-triangle me-2"></i>Error Loading Report</h4>
+                            <p>${error.message}</p>
+                            <button class="btn btn-primary" onclick="window.history.back()">Go Back</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderReport() {
+            if (!reportData) return;
+
+            // Update header
+            document.getElementById('report-id').textContent = `Report ID: ${reportData.report_id}`;
+            document.getElementById('generated-at').textContent = new Date(reportData.generated_at).toLocaleString();
+
+            // Render summary cards
+            renderSummary();
+
+            // Render breakdown table
+            renderBreakdown();
+
+            // Render matches
+            renderMatches();
+        }
+
+        function renderSummary() {
+            const summary = reportData.summary;
+            const cardsHtml = `
+                <div class="col-md-3">
+                    <div class="card summary-card h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-cash-stack text-primary fs-1 mb-2"></i>
+                            <h5 class="card-title">Total Cost</h5>
+                            <h3 class="text-primary">₹${formatCurrency(summary.total_cost)}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card summary-card h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-check-circle text-success fs-1 mb-2"></i>
+                            <h5 class="card-title">Matched Items</h5>
+                            <h3 class="text-success">${summary.matched_items}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card summary-card h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-x-circle text-warning fs-1 mb-2"></i>
+                            <h5 class="card-title">Unmatched Items</h5>
+                            <h3 class="text-warning">${summary.unmatched_items}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card summary-card h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-percent text-info fs-1 mb-2"></i>
+                            <h5 class="card-title">Match Rate</h5>
+                            <h3 class="text-info">${summary.matched_percentage}%</h3>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('summary-cards').innerHTML = cardsHtml;
+        }
+
+        function renderBreakdown() {
+            const tbody = document.getElementById('breakdown-body');
+            tbody.innerHTML = '';
+
+            reportData.detailed_breakdown.forEach(item => {
+                const confidenceClass = getConfidenceClass(item.match_confidence);
+                const rowClass = item.matched ? 'matched-item' : 'unmatched-item';
+
+                const row = document.createElement('tr');
+                row.className = rowClass;
+                row.innerHTML = `
+                    <td>${item.description}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.unit}</td>
+                    <td>₹${formatCurrency(item.rate)}</td>
+                    <td><strong>₹${formatCurrency(item.amount)}</strong></td>
+                    <td><code>${item.dsr_code || 'N/A'}</code></td>
+                    <td><span class="${confidenceClass}">${(item.match_confidence * 100).toFixed(1)}%</span></td>
+                    <td><span class="badge bg-secondary">${item.category}</span></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderMatches() {
+            const container = document.getElementById('matches-section');
+            container.innerHTML = '';
+
+            if (!reportData.matches || reportData.matches.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">No matching data available.</div>';
+                return;
+            }
+
+            reportData.matches.forEach((match, index) => {
+                const card = document.createElement('div');
+                card.className = 'card mb-3';
+                card.innerHTML = `
+                    <div class="card-header">
+                        <strong>${match.extracted.description}</strong>
+                        <span class="badge ${match.dsr_item ? 'bg-success' : 'bg-warning'} float-end">
+                            ${match.dsr_item ? 'Matched' : 'Unmatched'}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Extracted Item</h6>
+                                <p class="mb-1"><strong>Quantity:</strong> ${match.extracted.quantity} ${match.extracted.unit}</p>
+                                <p class="mb-1"><strong>Raw Text:</strong> ${match.extracted.raw_text}</p>
+                            </div>
+                            ${match.dsr_item ? `
+                            <div class="col-md-6">
+                                <h6>DSR Match</h6>
+                                <p class="mb-1"><strong>Code:</strong> ${match.dsr_item.item_code}</p>
+                                <p class="mb-1"><strong>Description:</strong> ${match.dsr_item.description}</p>
+                                <p class="mb-1"><strong>Rate:</strong> ₹${formatCurrency(match.dsr_item.rate)}/${match.dsr_item.unit}</p>
+                                <p class="mb-1"><strong>Category:</strong> ${match.dsr_item.category}</p>
+                                <p class="mb-1"><strong>Confidence:</strong> <span class="${getConfidenceClass(match.match_score)}">${(match.match_score * 100).toFixed(1)}%</span></p>
+                            </div>
+                            ` : ''}
+                        </div>
+                        ${match.all_matches && match.all_matches.length > 1 ? `
+                        <div class="mt-3">
+                            <h6>Other Matches Considered:</h6>
+                            <div class="row">
+                                ${match.all_matches.slice(1).map(alt => `
+                                    <div class="col-md-4 mb-2">
+                                        <div class="border rounded p-2 small">
+                                            <strong>${alt.item_code}</strong><br>
+                                            ${alt.description}<br>
+                                            ₹${formatCurrency(alt.rate)}/${alt.unit}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function getConfidenceClass(confidence) {
+            if (confidence >= 0.8) return 'confidence-high';
+            if (confidence >= 0.5) return 'confidence-medium';
+            return 'confidence-low';
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-IN').format(amount);
+        }
+
+        function downloadReport() {
+            if (!reportData) return;
+
+            const dataStr = JSON.stringify(reportData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+
+            const exportFileDefaultName = `dsr-report-${reportData.report_id}.json`;
+
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+    </script>
+</body>
+</html></content>
+<parameter name="filePath">/Users/rahulchaudhary/project2/public/dashboard-app/dsr-report.html

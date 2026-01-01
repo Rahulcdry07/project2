@@ -17,13 +17,11 @@ const logFormat = winston.format.combine(
 const consoleFormat = winston.format.combine(
   winston.format.colorize(),
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-  winston.format.printf(
-    ({ timestamp, level, message, ...meta }) => {
-      return `${timestamp} [${level}]: ${message} ${
-        Object.keys(meta).length ? JSON.stringify(meta, null, 2) : ''
-      }`;
-    }
-  )
+  winston.format.printf(({ timestamp, level, message, ...meta }) => {
+    return `${timestamp} [${level}]: ${message} ${
+      Object.keys(meta).length ? JSON.stringify(meta, null, 2) : ''
+    }`;
+  })
 );
 
 // Define log directory
@@ -35,48 +33,52 @@ const logger = winston.createLogger({
   format: logFormat,
   defaultMeta: { service: 'dynamic-web-app' },
   transports: [
-    // Write logs to file in production
-    ...(NODE_ENV === 'production'
+    // Error logs - always enabled
+    new winston.transports.File({
+      filename: path.join(logDir, 'error.log'),
+      level: 'error',
+      maxsize: 5242880, // 5MB
+      maxFiles: 5,
+    }),
+    // Combined logs - always enabled
+    new winston.transports.File({
+      filename: path.join(logDir, 'combined.log'),
+      maxsize: 5242880, // 5MB
+      maxFiles: 5,
+    }),
+    // Debug logs - development only
+    ...(NODE_ENV !== 'production'
       ? [
           new winston.transports.File({
-            filename: path.join(logDir, 'error.log'),
-            level: 'error',
+            filename: path.join(logDir, 'debug.log'),
+            level: 'debug',
             maxsize: 5242880, // 5MB
-            maxFiles: 5,
-          }),
-          new winston.transports.File({
-            filename: path.join(logDir, 'combined.log'),
-            maxsize: 5242880, // 5MB
-            maxFiles: 5,
+            maxFiles: 3,
           }),
         ]
       : []),
-    // Console logging for all environments
-    new winston.transports.Console({
-      format: consoleFormat,
-    }),
   ],
   // Handle uncaught exceptions and unhandled rejections
   exceptionHandlers: [
-    new winston.transports.Console({
-      format: consoleFormat,
+    new winston.transports.File({
+      filename: path.join(logDir, 'exceptions.log'),
+      maxsize: 5242880, // 5MB
+      maxFiles: 5,
     }),
-    ...(NODE_ENV === 'production'
-      ? [
-          new winston.transports.File({
-            filename: path.join(logDir, 'exceptions.log'),
-            maxsize: 5242880, // 5MB
-            maxFiles: 5,
-          }),
-        ]
-      : []),
+  ],
+  rejectionHandlers: [
+    new winston.transports.File({
+      filename: path.join(logDir, 'rejections.log'),
+      maxsize: 5242880, // 5MB
+      maxFiles: 5,
+    }),
   ],
   exitOnError: false,
 });
 
 // Create a stream object for Morgan integration
 logger.stream = {
-  write: (message) => {
+  write: message => {
     logger.info(message.trim());
   },
 };

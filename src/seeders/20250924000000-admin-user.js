@@ -8,8 +8,8 @@ module.exports = {
   up: async (queryInterface, _Sequelize) => {
     // Hash password
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash('admin123', salt);
-    
+    const hashedPassword = await bcrypt.hash('Admin123!', salt);
+
     return queryInterface.bulkInsert('Users', [
       {
         username: 'admin',
@@ -18,14 +18,14 @@ module.exports = {
         role: 'admin',
         is_verified: true,
         createdAt: new Date(),
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     ]);
   },
 
   down: async (queryInterface, _Sequelize) => {
-    return queryInterface.bulkDelete('Users', { 
-      email: 'admin@example.com' 
+    return queryInterface.bulkDelete('Users', {
+      email: 'admin@example.com',
     });
-  }
+  },
 };

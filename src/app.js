@@ -21,15 +21,17 @@ const app = express();
 app.set('trust proxy', 1);
 
 // Compression middleware (must be early in the middleware stack)
-app.use(compression({
+app.use(
+  compression({
     filter: (req, res) => {
-        if (req.headers['x-no-compression']) {
-            return false;
-        }
-        return compression.filter(req, res);
+      if (req.headers['x-no-compression']) {
+        return false;
+      }
+      return compression.filter(req, res);
     },
-    level: 6 // Compression level (0-9, default 6)
-}));
+    level: 6, // Compression level (0-9, default 6)
+  })
+);
 
 // Middleware
 app.use(express.json());
@@ -46,9 +48,9 @@ app.use(express.static(path.join(__dirname, '../public/dashboard-app/build')));
 // API routes
 app.use('/api', routes);
 
-// Only mount test routes in test environment
-if (NODE_ENV === 'test') {
-    app.use('/api/test', testRoutes);
+// Mount test routes in test and development environments
+if (NODE_ENV === 'test' || NODE_ENV === 'development') {
+  app.use('/api/test', testRoutes);
 }
 
 // Setup Swagger documentation
@@ -56,7 +58,7 @@ setupSwagger(app);
 
 // Serve React app for all routes that don't start with /api
 app.get(/^(?!\/api).*/, (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/dashboard-app/build', 'index.html'));
+  res.sendFile(path.join(__dirname, '../public/dashboard-app/build', 'index.html'));
 });
 
 // Global error handler

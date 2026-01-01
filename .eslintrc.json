@@ -1,3 +1,30 @@
 {
-  "extends": "./config/eslint/.eslintrc.json"
+  "root": true,
+  "env": {
+    "node": true,
+    "es6": true
+  },
+  "extends": ["eslint:recommended", "plugin:security/recommended"],
+  "parserOptions": {
+    "ecmaVersion": 2020,
+    "sourceType": "module"
+  },
+  "ignorePatterns": [
+    "public/dashboard-app/**/*",
+    "node_modules/**/*",
+    "build/**/*",
+    "dist/**/*",
+    "*.min.js"
+  ],
+  "plugins": ["security"],
+  "rules": {
+    "no-console": "warn",
+    "semi": ["error", "always"],
+    "quotes": ["error", "single", { "allowTemplateLiterals": true }],
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "no-undef": "error",
+    "security/detect-object-injection": "warn",
+    "security/detect-non-literal-fs-filename": "warn",
+    "security/detect-non-literal-regexp": "warn"
+  }
 }

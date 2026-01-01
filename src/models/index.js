@@ -2,7 +2,8 @@
  * Database configuration and models
  */
 const { Sequelize } = require('sequelize');
-const { DB_STORAGE, DB_LOGGING, NODE_ENV } = require('../config/env');
+const { NODE_ENV } = require('../config/env');
+const dbConfig = require('../config/database');
 const UserModel = require('./User');
 const ActivityLogModel = require('./ActivityLog');
 const NotificationModel = require('./Notification');
@@ -12,26 +13,23 @@ const TenderModel = require('./Tender');
 const TenderApplicationModel = require('./TenderApplication');
 const TenderDocumentModel = require('./TenderDocument');
 const ApplicationDocumentModel = require('./ApplicationDocument');
-const logger = NODE_ENV !== 'test' ? require('../utils/logger') : { info: () => {}, error: () => {} };
+const DSRItemModel = require('./DSRItem');
+const logger =
+  NODE_ENV !== 'test' ? require('../utils/logger') : { info: () => {}, error: () => {} };
 
-// Initialize Sequelize with SQLite
-const sequelize = new Sequelize({
-    dialect: 'sqlite',
-    storage: DB_STORAGE,
-    logging: DB_LOGGING,
-    dialectOptions: {
-        // Enable foreign key constraints
-        foreignKeys: true
-    },
-    define: {
-        // Ensure foreign keys are properly handled
-        underscored: false,
-        timestamps: true
-    }
-});
+// Get environment-specific configuration
+const env = NODE_ENV || 'development';
+// Disable security warning - env is validated and safe
+// eslint-disable-next-line security/detect-object-injection
+const config = dbConfig[env];
 
-// Enable foreign keys for SQLite
-sequelize.query('PRAGMA foreign_keys = ON');
+// Initialize Sequelize with environment configuration
+const sequelize = new Sequelize(config);
+
+// Enable foreign keys for SQLite (if using SQLite)
+if (config.dialect === 'sqlite') {
+  sequelize.query('PRAGMA foreign_keys = ON');
+}
 
 // Initialize models
 const User = UserModel(sequelize);
@@ -43,6 +41,7 @@ const Tender = TenderModel(sequelize);
 const TenderApplication = TenderApplicationModel(sequelize);
 const TenderDocument = TenderDocumentModel(sequelize);
 const ApplicationDocument = ApplicationDocumentModel(sequelize);
+const DSRItem = DSRItemModel(sequelize);
 
 // Set up associations
 User.hasMany(ActivityLog, { foreignKey: 'userId', as: 'activityLogs', onDelete: 'CASCADE' });
@@ -59,48 +58,50 @@ UserSettings.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
 // Tender associations
 const models = {
-    User,
-    ActivityLog,
-    Notification,
-    Note,
-    UserSettings,
-    Tender,
-    TenderApplication,
-    TenderDocument,
-    ApplicationDocument
+  User,
+  ActivityLog,
+  Notification,
+  Note,
+  UserSettings,
+  Tender,
+  TenderApplication,
+  TenderDocument,
+  ApplicationDocument,
+  DSRItem,
 };
 
 // Call associate function for tender models
 /* eslint-disable security/detect-object-injection */
 Object.keys(models).forEach(modelName => {
-    if (models[modelName].associate) {
-        models[modelName].associate(models);
-    }
+  if (models[modelName].associate) {
+    models[modelName].associate(models);
+  }
 });
 /* eslint-enable security/detect-object-injection */
 
 // Test the database connection
 const testConnection = async () => {
-    try {
-        await sequelize.authenticate();
-        logger.info('Database connection has been established successfully.');
-        return true;
-    } catch (error) {
-        logger.error('Unable to connect to the database', { error: error.message });
-        return false;
-    }
+  try {
+    await sequelize.authenticate();
+    logger.info('Database connection has been established successfully.');
+    return true;
+  } catch (error) {
+    logger.error('Unable to connect to the database', { error: error.message });
+    return false;
+  }
 };
 
 module.exports = {
-    sequelize,
-    User,
-    ActivityLog,
-    Notification,
-    Note,
-    UserSettings,
-    Tender,
-    TenderApplication,
-    TenderDocument,
-    ApplicationDocument,
-    testConnection
+  sequelize,
+  User,
+  ActivityLog,
+  Notification,
+  Note,
+  UserSettings,
+  Tender,
+  TenderApplication,
+  TenderDocument,
+  ApplicationDocument,
+  DSRItem,
+  testConnection,
 };
